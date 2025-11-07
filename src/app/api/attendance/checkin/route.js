@@ -1,412 +1,188 @@
-// // // app/api/attendance/checkout/route.js
-// // import { NextResponse } from "next/server";
-// // import connectDB from "@/lib/mongodb";
-// // import Attendance from "@/Models/Attendance";
-// // import Shift from "@/Models/Shift";
-// // import { verifyToken, getUserIdFromToken } from "@/lib/jwt";
-// // import Agent from "@/Models/Agent";
-
-// // // Helper to parse "HH:MM" into Date object on a given date
-// // function parseShiftDateTime(baseDate, timeStr) {
-// //   const [hh, mm] = timeStr.split(":").map(Number);
-// //   const dt = new Date(baseDate);
-// //   dt.setHours(hh, mm, 0, 0);
-// //   return dt;
-// // }
-
-// // // app/api/attendance/checkin/route.js
-// // export async function POST(request) {
-// //   try {
-// //     await connectDB();
-
-// //     // Authentication
-// //     const authHeader = request.headers.get('authorization');
-// //     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-// //       return NextResponse.json({ success: false, message: "Not authenticated" }, { status: 401 });
-// //     }
-    
-// //     const token = authHeader.replace('Bearer ', '');
-// //     const decoded = verifyToken(token);
-    
-// //     if (!decoded) {
-// //       return NextResponse.json({ success: false, message: "Invalid token" }, { status: 401 });
-// //     }
-
-// //     const body = await request.json();
-// //     const { shiftId, location, userType = 'agent' } = body;
-
-// //     const userId = getUserIdFromToken(decoded);
-
-// //     // ✅ FIXED: Today's date range properly
-// //     const now = new Date();
-// //     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-// //     const todayEnd = new Date(todayStart);
-// //     todayEnd.setDate(todayEnd.getDate() + 1);
-
-// //     // ✅ FIXED: Check if already checked in today - PROPER QUERY
-// //     const existingAttendance = await Attendance.findOne({
-// //       $or: [
-// //         { agent: userId },
-// //         { user: userId }
-// //       ],
-// //       checkInTime: { 
-// //         $gte: todayStart, 
-// //         $lt: todayEnd 
-// //       }
-// //     });
-
-// //     if (existingAttendance) {
-// //       return NextResponse.json({ 
-// //         success: false, 
-// //         message: "Already checked in for today." 
-// //       }, { status: 400 });
-// //     }
-
-// //     // Create new attendance
-// //     const attendanceData = {
-// //       shift: shiftId,
-// //       checkInTime: now,
-// //       checkInLocation: location || null,
-// //       status: 'present'
-// //     };
-
-// //     // ✅ FIXED: Assign to correct field based on userType
-// //     if (userType === 'agent') {
-// //       attendanceData.agent = userId;
-// //     } else {
-// //       attendanceData.user = userId;
-// //     }
-
-// //     const attendance = new Attendance(attendanceData);
-// //     await attendance.save();
-
-// //     // Populate and return
-// //     const populated = await Attendance.findById(attendance._id)
-// //       .populate("user", "firstName lastName email")
-// //       .populate("agent", "agentName agentId email")
-// //       .populate("shift", "name startTime endTime hours days")
-// //       // .populate("manager", "firstName lastName email");
-
-// //     return NextResponse.json({ 
-// //       success: true, 
-// //       message: "Checked in successfully!", 
-// //       data: populated 
-// //     });
-
-// //   } catch (error) {
-// //     console.error("POST /api/attendance/checkin error:", error);
-// //     return NextResponse.json({ 
-// //       success: false, 
-// //       message: error.message 
-// //     }, { status: 500 });
-// //   }
-// // }
-
-
-// // app/api/attendance/checkin/route.js
-// import { NextResponse } from "next/server";
-// import connectDB from "@/lib/mongodb";
-// import Attendance from "@/Models/Attendance";
-// import Shift from "@/Models/Shift";
-// import { verifyToken, getUserIdFromToken } from "@/lib/jwt";
-
-// function parseShiftDateTime(baseDate, timeStr) {
-//   const [hh, mm] = timeStr.split(":").map(Number);
-//   const dt = new Date(baseDate);
-//   dt.setHours(hh, mm, 0, 0);
-//   return dt;
-// }
-
-// export async function POST(request) {
-//   try {
-//     await connectDB();
-
-//     // Authentication
-//     const authHeader = request.headers.get('authorization');
-//     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-//       return NextResponse.json({ success: false, message: "Not authenticated" }, { status: 401 });
-//     }
-    
-//     const token = authHeader.replace('Bearer ', '');
-//     const decoded = verifyToken(token);
-    
-//     if (!decoded) {
-//       return NextResponse.json({ success: false, message: "Invalid token" }, { status: 401 });
-//     }
-
-//     const body = await request.json();
-//     const { shiftId, location, userType = 'agent' } = body;
-
-//     const userId = getUserIdFromToken(decoded);
-
-//     // ✅ FIXED: Today's date range properly
-//     const now = new Date();
-//     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-//     const todayEnd = new Date(todayStart);
-//     todayEnd.setDate(todayEnd.getDate() + 1);
-
-//     console.log('🔍 Check-in Request:', {
-//       userId,
-//       shiftId,
-//       now: now.toLocaleString(),
-//       todayStart: todayStart.toLocaleString(),
-//       todayEnd: todayEnd.toLocaleString()
-//     });
-
-//     // ✅ FIXED: Check if already checked in today - PROPER QUERY
-//     const existingAttendance = await Attendance.findOne({
-//       $or: [
-//         { agent: userId },
-//         { user: userId }
-//       ],
-//       checkInTime: { 
-//         $gte: todayStart, 
-//         $lt: todayEnd 
-//       }
-//     });
-
-//     if (existingAttendance) {
-//       return NextResponse.json({ 
-//         success: false, 
-//         message: "Already checked in for today." 
-//       }, { status: 400 });
-//     }
-
-//     // Get shift details for timing calculation
-//     const shift = await Shift.findById(shiftId);
-//     if (!shift) {
-//       return NextResponse.json({ 
-//         success: false, 
-//         message: "Shift not found" 
-//       }, { status: 404 });
-//     }
-
-//     // ✅ FIXED: PROPER LATE CALCULATION
-//     let isLate = false;
-//     let lateMinutes = 0;
-    
-//     const shiftStartTime = parseShiftDateTime(todayStart, shift.startTime);
-    
-//     console.log('🕒 Timing Comparison:', {
-//       now: now.toLocaleString(),
-//       shiftStart: shiftStartTime.toLocaleString(),
-//       shiftStartTime: shift.startTime
-//     });
-
-//     // Check if current time is after shift start time
-//     if (now > shiftStartTime) {
-//       isLate = true;
-//       lateMinutes = Math.floor((now - shiftStartTime) / (1000 * 60)); // Convert to minutes
-//       console.log('⏰ Late Calculation:', {
-//         isLate,
-//         lateMinutes,
-//         timeDifference: now - shiftStartTime
-//       });
-//     }
-
-//     // Create new attendance
-//     const attendanceData = {
-//       shift: shiftId,
-//       checkInTime: now,
-//       checkInLocation: location || null,
-//       status: 'present',
-//       isLate: isLate,
-//       lateMinutes: lateMinutes
-//     };
-
-//     // ✅ FIXED: Assign to correct field based on userType
-//     if (userType === 'agent') {
-//       attendanceData.agent = userId;
-//     } else {
-//       attendanceData.user = userId;
-//     }
-
-//     const attendance = new Attendance(attendanceData);
-//     await attendance.save();
-
-//     // Populate and return
-//     const populated = await Attendance.findById(attendance._id)
-//       .populate("user", "firstName lastName email")
-//       .populate("agent", "agentName agentId email")
-//       .populate("shift", "name startTime endTime hours days");
-
-//     console.log('✅ Check-in Successful:', {
-//       attendanceId: populated._id,
-//       checkInTime: populated.checkInTime,
-//       isLate: populated.isLate,
-//       lateMinutes: populated.lateMinutes
-//     });
-
-//     let successMessage = "Checked in successfully!";
-//     if (isLate) {
-//       successMessage = `Checked in successfully! (Late by ${lateMinutes} minutes)`;
-//     }
-
-//     return NextResponse.json({ 
-//       success: true, 
-//       message: successMessage, 
-//       data: populated 
-//     });
-
-//   } catch (error) {
-//     console.error("POST /api/attendance/checkin error:", error);
-//     return NextResponse.json({ 
-//       success: false, 
-//       message: error.message 
-//     }, { status: 500 });
-//   }
-// }
-
-
 // app/api/attendance/checkin/route.js
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Attendance from "@/Models/Attendance";
 import Shift from "@/Models/Shift";
+import Holiday from "@/Models/Holiday";
+import WeeklyOff from "@/Models/WeeklyOff";
+import Agent from "@/Models/Agent";
+import User from "@/Models/User";
 import { verifyToken, getUserIdFromToken } from "@/lib/jwt";
-
-function parseShiftDateTime(baseDate, timeStr) {
-  const [hh, mm] = timeStr.split(":").map(Number);
-  const dt = new Date(baseDate);
-  dt.setHours(hh, mm, 0, 0);
-  return dt;
-}
+import {
+  isHoliday,
+  isWeeklyOff,
+  isShiftDay,
+  parseShiftDateTime,
+  getTimeDifferenceInMinutes,
+  getTodayDateRange,
+} from "@/lib/attendanceUtils";
 
 export async function POST(request) {
   try {
     await connectDB();
 
-    // Authentication
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    // 🔐 Auth check
+    const authHeader = request.headers.get("authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
       return NextResponse.json({ success: false, message: "Not authenticated" }, { status: 401 });
     }
-    
-    const token = authHeader.replace('Bearer ', '');
+
+    const token = authHeader.replace("Bearer ", "");
     const decoded = verifyToken(token);
-    
     if (!decoded) {
       return NextResponse.json({ success: false, message: "Invalid token" }, { status: 401 });
     }
 
     const body = await request.json();
-    const { shiftId, location, userType = 'agent' } = body;
+    const { shiftId, location, userType = "agent" } = body;
 
-    // Get user ID from token
-    let userId;
-    try {
-      userId = getUserIdFromToken(decoded);
-      console.log('🔍 Check-in User ID:', userId);
-    } catch (error) {
-      return NextResponse.json({ 
-        success: false, 
-        message: "Invalid token data: " + error.message 
-      }, { status: 401 });
+    if (!shiftId) {
+      return NextResponse.json({ success: false, message: "Shift ID is required" }, { status: 400 });
     }
 
-    // Today's date range
-    const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const todayEnd = new Date(todayStart);
-    todayEnd.setDate(todayEnd.getDate() + 1);
+    const userId = getUserIdFromToken(decoded);
 
-    console.log('🔍 Check-in Request Details:', {
+    // 🔹 Get timezone-aware date range (Pakistan)
+    const { todayStart, todayEnd, now } = getTodayDateRange("Asia/Karachi");
+
+    console.log("🔍 Check-in Request (Pakistan Time):", {
       userId,
-      userType,
       shiftId,
-      todayStart: todayStart.toISOString(),
-      todayEnd: todayEnd.toISOString()
+      currentTime: now.toLocaleString("en-PK", { timeZone: "Asia/Karachi" }),
     });
 
-    // Check for existing attendance
-    let query = {};
-    
-    if (userType === 'agent') {
-      query.agent = userId;
-    } else {
-      query.user = userId;
-    }
-    
-    query.checkInTime = { $gte: todayStart, $lt: todayEnd };
-
-    const existingAttendance = await Attendance.findOne(query);
-
-    if (existingAttendance) {
-      return NextResponse.json({ 
-        success: false, 
-        message: "Already checked in for today." 
+    // Step 1️⃣: Existing attendance
+    const query = {
+      date: { $gte: todayStart, $lt: todayEnd },
+      [userType === "agent" ? "agent" : "user"]: userId,
+    };
+    const existing = await Attendance.findOne(query);
+    if (existing) {
+      return NextResponse.json({
+        success: false,
+        message: "Already checked in today.",
       }, { status: 400 });
     }
 
-    // Get shift details
+    // Step 2️⃣: Holiday check
+    const holiday = await isHoliday(now);
+    if (holiday) {
+      const attendance = await Attendance.create({
+        [userType === "agent" ? "agent" : "user"]: userId,
+        shift: shiftId,
+        date: todayStart,
+        status: "holiday",
+        notes: `Auto-marked: ${holiday.name}`,
+      });
+      return NextResponse.json({
+        success: true,
+        message: `Today is a holiday (${holiday.name})`,
+        data: attendance,
+      });
+    }
+
+    // Step 3️⃣: Weekly off
+    const weeklyOff = await isWeeklyOff(now);
+    if (weeklyOff) {
+      const attendance = await Attendance.create({
+        [userType === "agent" ? "agent" : "user"]: userId,
+        shift: shiftId,
+        date: todayStart,
+        status: "weekly_off",
+        notes: `Auto-marked: ${weeklyOff.name}`,
+      });
+      return NextResponse.json({
+        success: true,
+        message: `Today is a weekly off (${weeklyOff.name})`,
+        data: attendance,
+      });
+    }
+
+    // Step 4️⃣: Check shift
+    const shiftValid = await isShiftDay(shiftId, now);
+    if (!shiftValid) {
+      return NextResponse.json({
+        success: false,
+        message: "No shift assigned for today.",
+      }, { status: 400 });
+    }
+
+    // Step 5️⃣: Get shift
     const shift = await Shift.findById(shiftId);
     if (!shift) {
-      return NextResponse.json({ 
-        success: false, 
-        message: "Shift not found" 
-      }, { status: 404 });
+      return NextResponse.json({ success: false, message: "Shift not found" }, { status: 404 });
     }
 
-    // Late calculation
+    console.log("🕒 Shift Info:", {
+      name: shift.name,
+      start: shift.startTime,
+      end: shift.endTime,
+      days: shift.days,
+    });
+
+    // Step 6️⃣: Calculate late
+    const shiftStart = parseShiftDateTime(todayStart, shift.startTime);
+    const grace = 15; // minutes
+    const diffMinutes = getTimeDifferenceInMinutes(shiftStart, now);
+
+    console.log("⏰ Timing Info (Asia/Karachi):", {
+      shiftStart: shiftStart.toLocaleString("en-PK", { timeZone: "Asia/Karachi" }),
+      checkIn: now.toLocaleString("en-PK", { timeZone: "Asia/Karachi" }),
+      diffMinutes,
+      grace,
+    });
+
     let isLate = false;
     let lateMinutes = 0;
-    
-    const shiftStartTime = parseShiftDateTime(todayStart, shift.startTime);
-    
-    if (now > shiftStartTime) {
+    let status = "present";
+
+    if (diffMinutes > grace) {
       isLate = true;
-      lateMinutes = Math.floor((now - shiftStartTime) / (1000 * 60));
+      lateMinutes = diffMinutes;
+      status = "late";
     }
 
-    // Create attendance
-    const attendanceData = {
+    // Step 7️⃣: Save attendance
+    const attendance = await Attendance.create({
+      [userType === "agent" ? "agent" : "user"]: userId,
       shift: shiftId,
-      checkInTime: now,
-      checkInLocation: location || null,
-      status: 'present',
-      isLate: isLate,
-      lateMinutes: lateMinutes
-    };
-
-    // Assign to correct field
-    if (userType === 'agent') {
-      attendanceData.agent = userId;
-    } else {
-      attendanceData.user = userId;
-    }
-
-    const attendance = new Attendance(attendanceData);
-    await attendance.save();
-
-    // Populate and return
-    const populated = await Attendance.findById(attendance._id)
-      .populate("agent", "agentName agentId email")
-      .populate("shift", "name startTime endTime hours days");
-
-    console.log('✅ Check-in Successful:', {
-      attendanceId: populated._id,
-      agent: populated.agent,
-      checkInTime: populated.checkInTime,
-      isLate: populated.isLate,
-      lateMinutes: populated.lateMinutes
+      date: todayStart,
+      // checkInTime: now,
+      // checkInLocation: location || null,
+      checkInTime: new Date(),
+  checkInLocation: location || null,
+      status,
+      isLate,
+      lateMinutes,
     });
 
-    let successMessage = "Checked in successfully!";
+    // Step 8️⃣: Response
+    let msg = "Checked in successfully ✅";
     if (isLate) {
-      successMessage = `Checked in successfully! (Late by ${lateMinutes} minutes)`;
+      msg = `Checked in ⚠️ Late by ${lateMinutes} minutes`;
+    } else if (diffMinutes > 0) {
+      msg = "Checked in ✅ Within grace period";
+    } else {
+      msg = "Checked in 🎉 On time";
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      message: successMessage, 
-      data: populated 
-    });
+    const populated = await Attendance.findById(attendance._id)
+      .populate(userType === "agent" ? "agent" : "user", "name email userId")
+      .populate("shift", "name startTime endTime days");
 
-  } catch (error) {
-    console.error("POST /api/attendance/checkin error:", error);
-    return NextResponse.json({ 
-      success: false, 
-      message: error.message 
-    }, { status: 500 });
+    return NextResponse.json({
+      success: true,
+      message: msg,
+      data: populated,
+      lateInfo: {
+        isLate,
+        lateMinutes,
+        shiftStartTime: shift.startTime,
+        checkInTime: now.toLocaleString("en-PK", { timeZone: "Asia/Karachi" }),
+      },
+    });
+  } catch (err) {
+    console.error("❌ Check-in Error:", err);
+    return NextResponse.json({ success: false, message: err.message }, { status: 500 });
   }
 }

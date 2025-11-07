@@ -3,20 +3,32 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import LeaveRequest from "@/Models/LeaveRequest";
 import Attendance from "@/Models/Attendance";
-import { verifyToken } from "@/lib/jwt";
+import Agent from "@/Models/Agent";
+import User from "@/Models/User";
+import { verifyToken, getUserIdFromToken } from "@/lib/jwt";
 
 export async function POST(request) {
   try {
     await connectDB();
 
-    const token = request.cookies.get("token")?.value;
-    if (!token) return NextResponse.json({ success: false, message: "Not authenticated" }, { status: 401 });
-
+    // ✅ Correct token extraction from headers
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ success: false, message: "Not authenticated" }, { status: 401 });
+    }
+    
+    const token = authHeader.replace('Bearer ', '');
     const decoded = verifyToken(token);
-    if (!decoded) return NextResponse.json({ success: false, message: "Invalid token" }, { status: 401 });
+    
+    if (!decoded) {
+      return NextResponse.json({ success: false, message: "Invalid token" }, { status: 401 });
+    }
+
+    const userId = getUserIdFromToken(decoded);
+    const userType = decoded.type || 'agent'; // ✅ Get user type from token
 
     const body = await request.json();
-    const { leaveType, startDate, endDate, reason, userType = 'user' } = body;
+    const { leaveType, startDate, endDate, reason } = body;
 
     if (!leaveType || !startDate || !endDate || !reason) {
       return NextResponse.json({ success: false, message: "All fields are required" }, { status: 400 });
@@ -30,10 +42,11 @@ export async function POST(request) {
       status: "pending"
     };
 
+    // ✅ Correct user assignment based on type
     if (userType === 'agent') {
-      leaveData.agent = decoded.userId;
+      leaveData.agent = userId;
     } else {
-      leaveData.user = decoded.userId;
+      leaveData.user = userId;
     }
 
     const leaveRequest = await LeaveRequest.create(leaveData);
@@ -53,20 +66,30 @@ export async function GET(request) {
   try {
     await connectDB();
 
-    const token = request.cookies.get("token")?.value;
-    if (!token) return NextResponse.json({ success: false, message: "Not authenticated" }, { status: 401 });
-
+    // ✅ Same token extraction for GET
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ success: false, message: "Not authenticated" }, { status: 401 });
+    }
+    
+    const token = authHeader.replace('Bearer ', '');
     const decoded = verifyToken(token);
-    if (!decoded) return NextResponse.json({ success: false, message: "Invalid token" }, { status: 401 });
+    
+    if (!decoded) {
+      return NextResponse.json({ success: false, message: "Invalid token" }, { status: 401 });
+    }
+
+    const userId = getUserIdFromToken(decoded);
+    const userType = decoded.type || 'agent';
 
     const { searchParams } = new URL(request.url);
-    const userType = searchParams.get("userType") || 'user';
+    const requestUserType = searchParams.get("userType") || userType;
 
     const query = {};
-    if (userType === 'agent') {
-      query.agent = decoded.userId;
+    if (requestUserType === 'agent') {
+      query.agent = userId;
     } else {
-      query.user = decoded.userId;
+      query.user = userId;
     }
 
     const leaveRequests = await LeaveRequest.find(query)
