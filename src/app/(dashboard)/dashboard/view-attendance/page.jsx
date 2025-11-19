@@ -14,13 +14,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Calendar, Users, CheckCircle, XCircle, Clock, Plus, Trash2, PlayCircle, ToggleLeft, ToggleRight, Edit, ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { Loader2, Calendar, Users, CheckCircle, XCircle, Clock, Plus, Trash2, PlayCircle, ToggleLeft, ToggleRight, Edit, ChevronLeft, ChevronRight, Download, X } from "lucide-react";
 import { toast } from "sonner";
 import CustomModal from "@/components/ui/customModal";
 import Link from "next/link";
 import GlobalData from "@/components/common/GlobalData";
 
 export default function AdminAttendancePage() {
+  // default current month in YYYY-MM for initial load
+  const currentMonth = new Date().toISOString().slice(0, 7);
   // State variables
   const [attendance, setAttendance] = useState([]);
   const [leaveRequests, setLeaveRequests] = useState([]);
@@ -1940,10 +1942,9 @@ export default function AdminAttendancePage() {
           </TabsTrigger>
         </TabsList>
 
+        {/* <FiltersSection /> */}
+        {/* <StatsCards /> */}
         <TabsContent value="attendance" className="space-y-6">
-          {/* <FiltersSection /> */}
-          {/* <StatsCards /> */}
-
           <Card>
             <CardHeader>
               <CardTitle>Attendance Records</CardTitle>
@@ -1952,12 +1953,49 @@ export default function AdminAttendancePage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <GlobalData
+              {/* <GlobalData
                 title="Attendance Records"
                 fetcher={async ({ page, limit, search, ...rest } = {}) => {
-                  // flatten params to what adminService expects
                   const params = { page: page || 1, limit: limit || 10, ...rest };
                   if (search) params.search = search;
+
+                  // Date normalization logic
+                  try {
+                    if (params.month) {
+                      const m = params.month;
+                      const [y, mm] = String(m).split('-').map(Number);
+                      if (!Number.isNaN(y) && !Number.isNaN(mm)) {
+                        const year = y;
+                        const monthIndex = mm - 1;
+                        const firstDay = new Date(year, monthIndex, 1);
+                        const lastDay = new Date(year, monthIndex + 1, 0);
+                        const pad = (n) => String(n).padStart(2, '0');
+                        params.fromDate = `${firstDay.getFullYear()}-${pad(firstDay.getMonth() + 1)}-${pad(firstDay.getDate())}`;
+                        params.toDate = `${lastDay.getFullYear()}-${pad(lastDay.getMonth() + 1)}-${pad(lastDay.getDate())}`;
+                      }
+                      delete params.month;
+                    }
+
+                    if (params.fromDate && params.toDate) {
+                      const d1 = new Date(params.fromDate);
+                      const d2 = new Date(params.toDate);
+                      if (d1 > d2) {
+                        const tmp = params.fromDate;
+                        params.fromDate = params.toDate;
+                        params.toDate = tmp;
+                      }
+                    }
+                  } catch (e) {
+                    console.warn('Date normalization failed', e);
+                  }
+
+                  if (params.fromDate) params.startDate = params.fromDate;
+                  if (params.toDate) params.endDate = params.toDate;
+
+                  Object.keys(params).forEach((k) => {
+                    if (params[k] === '' || params[k] === null || params[k] === undefined) delete params[k];
+                  });
+
                   return await adminService.getAllAttendance(params);
                 }}
                 columns={attendanceColumns}
@@ -1966,7 +2004,80 @@ export default function AdminAttendancePage() {
                 searchEnabled={true}
                 filterKeys={["status"]}
                 filterOptionsMap={attendanceFilterOptionsMap}
-                initialFilters={{ userType: "all", status: "all" }}
+                initialFilters={{ userType: "all", status: "all", month: currentMonth }}
+                customFilters={(filters, onFilterChange, { renderDateFilters }) => renderDateFilters()}
+              /> */}
+              <GlobalData
+                title="Attendance Records"
+                fetcher={async ({ page, limit, search, ...rest } = {}) => {
+                  const params = { page: page || 1, limit: limit || 10, ...rest };
+                  if (search) params.search = search;
+
+                  // Sirf monthly filter ka logic rakho
+                  try {
+                    if (params.month) {
+                      const m = params.month;
+                      const [y, mm] = String(m).split('-').map(Number);
+                      if (!Number.isNaN(y) && !Number.isNaN(mm)) {
+                        const year = y;
+                        const monthIndex = mm - 1;
+                        const firstDay = new Date(year, monthIndex, 1);
+                        const lastDay = new Date(year, monthIndex + 1, 0);
+                        const pad = (n) => String(n).padStart(2, '0');
+                        params.fromDate = `${firstDay.getFullYear()}-${pad(firstDay.getMonth() + 1)}-${pad(firstDay.getDate())}`;
+                        params.toDate = `${lastDay.getFullYear()}-${pad(lastDay.getMonth() + 1)}-${pad(lastDay.getDate())}`;
+                      }
+                      delete params.month;
+                    }
+                  } catch (e) {
+                    console.warn('Date normalization failed', e);
+                  }
+
+                  // fromDate aur toDate ko startDate aur endDate mein convert karo
+                  if (params.fromDate) params.startDate = params.fromDate;
+                  if (params.toDate) params.endDate = params.toDate;
+
+                  // Empty values remove karo
+                  Object.keys(params).forEach((k) => {
+                    if (params[k] === '' || params[k] === null || params[k] === undefined) delete params[k];
+                  });
+
+                  return await adminService.getAllAttendance(params);
+                }}
+                columns={attendanceColumns}
+                serverSide={true}
+                rowsPerPage={5}
+                searchEnabled={true}
+                filterKeys={["status"]}
+                filterOptionsMap={attendanceFilterOptionsMap}
+                initialFilters={{ userType: "all", status: "all", month: currentMonth }}
+                customFilters={(filters, onFilterChange) => (
+                  <div className="mb-4 flex flex-wrap gap-3 items-end">
+                    {/* Sirf monthly filter rakho */}
+                    <div className="space-y-1">
+                      <Label className="text-sm">Select Month</Label>
+                      <input
+                        type="month"
+                        value={filters.month || ''}
+                        onChange={(e) => onFilterChange('month', e.target.value)}
+                        className="border rounded px-3 py-2 text-sm w-40"
+                      />
+                    </div>
+
+                    {/* Clear filter button agar month select kiya hai */}
+                    {filters.month && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onFilterChange('month', '')}
+                        className="h-10"
+                      >
+                        <X className="h-4 w-4 mr-1" />
+                        Clear Month
+                      </Button>
+                    )}
+                  </div>
+                )}
               />
             </CardContent>
           </Card>
