@@ -28,6 +28,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 export default function Users() {
   const { user, hasPermission } = useAuth();
@@ -58,30 +59,50 @@ export default function Users() {
 
   // Edit user state
   const [editingUser, setEditingUser] = useState(null);
+  const [viewOnly, setViewOnly] = useState(false);
+  // Edit role state
+  const [editingRole, setEditingRole] = useState(null);
+  // Change user role modal state
+  const [roleChangeOpen, setRoleChangeOpen] = useState(false);
+  const [roleChangeUser, setRoleChangeUser] = useState(null);
+  const [roleChangeValue, setRoleChangeValue] = useState('');
 
   // Role form state
+  const DEFAULT_PERMISSIONS = {
+    user: { view: false, create: false, edit: false, delete: false, export: false, approve: false, change_role: false },
+    // category: { view: false, create: false, edit: false, delete: false, export: false, approve: false },
+    // product: { view: false, create: false, edit: false, delete: false, export: false, approve: false },
+    // order: { view: false, create: false, edit: false, delete: false, export: false, approve: false, update_status: false },
+    // inventory: { view: false, create: false, edit: false, delete: false, export: false, approve: false },
+    analytics: { view: false, export: false },
+    settings: { view: false, edit: false, manage_roles: false },
+    // hr: { view: false, create: false, edit: false, delete: false, payroll: false, attendance: false, leave_approve: false },
+    // finance: { view: false, create: false, edit: false, delete: false, approve_payments: false, export_reports: false },
+    // crm: {
+    //   clients: { view: false, create: false, edit: false, delete: false, export: false, approve: false },
+    //   leads: { view: false, create: false, edit: false, delete: false, export: false, approve: false },
+    //   tickets: { view: false, create: false, edit: false, delete: false, export: false, approve: false }
+    // },
+    website_bookings: { view: false, edit: false, manage_status: false, export: false, delete: false },
+    reports: { sales: false, finance: false, hr: false, performance: false, export_all: false },
+    progress: { view_own: false, view_all: false, export: false },
+    agent: { view: false, create: false, edit: false, delete: false, export: false, approve: false },
+    shift: { view: false, create: false, edit: false, delete: false, export: false, approve: false },
+    booking: { view: false, create: false, edit: false, delete: false, export: false, approve: false, update_status: false },
+    promoCode: { view: false, create: false, edit: false, delete: false, export: false, approve: false },
+    notification: { view: false, create: false, edit: false, delete: false, export: false, approve: false },
+    attendance: { view: false, create: false, edit: false, delete: false, export: false, manage_leave: false },
+    leaveRequest: { view: false, create: false, edit: false, delete: false, export: false, approve: false },
+    holiday: { view: false, create: false, edit: false, delete: false, export: false, approve: false },
+    weeklyOff: { view: false, create: false, edit: false, delete: false, export: false, approve: false },
+    contact: { view: false, create: false, edit: false, delete: false, export: false, approve: false },
+    role: { view: false, create: false, edit: false, delete: false, manage_roles: false }
+  };
+
   const [roleForm, setRoleForm] = useState({
     name: '',
     description: '',
-    permissions: {
-      user: { view: false, create: false, edit: false, delete: false, export: false, approve: false, change_role: false },
-      category: { view: false, create: false, edit: false, delete: false, export: false, approve: false },
-      product: { view: false, create: false, edit: false, delete: false, export: false, approve: false },
-      order: { view: false, create: false, edit: false, delete: false, export: false, approve: false, update_status: false },
-      inventory: { view: false, create: false, edit: false, delete: false, export: false, approve: false },
-      analytics: { view: false, export: false },
-      settings: { view: false, edit: false, manage_roles: false },
-      hr: { view: false, create: false, edit: false, delete: false, payroll: false, attendance: false, leave_approve: false },
-      finance: { view: false, create: false, edit: false, delete: false, approve_payments: false, export_reports: false },
-      crm: {
-        clients: { view: false, create: false, edit: false, delete: false, export: false, approve: false },
-        leads: { view: false, create: false, edit: false, delete: false, export: false, approve: false },
-        tickets: { view: false, create: false, edit: false, delete: false, export: false, approve: false }
-      },
-      website_bookings: { view: false, edit: false, manage_status: false, export: false, delete: false },
-      reports: { sales: false, finance: false, hr: false, performance: false, export_all: false },
-      progress: { view_own: false, view_all: false, export: false }
-    }
+    permissions: JSON.parse(JSON.stringify(DEFAULT_PERMISSIONS))
   });
 
   // Load users and roles
@@ -94,23 +115,24 @@ export default function Users() {
     try {
       const response = await fetch('/api/users');
       const data = await response.json();
-            console.log('User Data', data);
+      console.log('User Data', data);
       if (data.success) {
         setUsers(data.data.users || []);
       }
     } catch (error) {
+      toast.error('Failed to load users');
       showMessage('error', 'Failed to load users');
     }
   };
 
   const loadRoles = async () => {
     try {
-      const response = await fetch('/api/roles');
-      const data = await response.json();
+      const data = await roleService.getAll();
       if (data.success) {
         setRoles(data.data || []);
       }
     } catch (error) {
+      toast.error('Failed to load roles');
       showMessage('error', 'Failed to load roles');
     }
   };
@@ -138,28 +160,23 @@ export default function Users() {
         return;
       }
 
-      const response = await fetch('/api/users', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userForm),
-      });
-
-      const data = await response.json();
+      const data = await userService.create(userForm);
 
       console.log('User Data', data);
-      
+
 
       if (data.success) {
+        toast.success('User created successfully');
         showMessage('success', 'User created successfully');
         resetUserForm();
         setUserDialogOpen(false);
         loadUsers();
       } else {
+        toast.error('Failed to create user');
         showMessage('error', data.error || 'Failed to create user');
       }
     } catch (error) {
+      toast.error('Failed to create user');
       showMessage('error', 'Failed to create user');
     } finally {
       setLoading(false);
@@ -167,8 +184,9 @@ export default function Users() {
   };
 
   // Edit user handlers
-  const handleEditUser = (user) => {
+  const handleEditUser = (user, mode = 'edit') => {
     setEditingUser(user);
+    setViewOnly(mode === 'view');
     setUserForm({
       firstName: user.firstName,
       lastName: user.lastName,
@@ -188,25 +206,20 @@ export default function Users() {
     setLoading(true);
 
     try {
-      const response = await fetch(`/api/users/${editingUser._id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userForm),
-      });
-
-      const data = await response.json();
+      const data = await userService.update(editingUser._id, userForm);
 
       if (data.success) {
+        toast.success('User updated successfully');
         showMessage('success', 'User updated successfully');
         resetUserForm();
         setUserDialogOpen(false);
         loadUsers();
       } else {
+        toast.error('Failed to update user');
         showMessage('error', data.error || 'Failed to update user');
       }
     } catch (error) {
+      toast.error('Failed to update user');
       showMessage('error', 'Failed to update user');
     } finally {
       setLoading(false);
@@ -241,19 +254,37 @@ export default function Users() {
   // Role form handlers
   const handleRoleFormChange = (e) => {
     const { name, value, type, checked } = e.target;
-
     if (name.startsWith('permissions.')) {
-      const [, module, action] = name.split('.');
-      setRoleForm(prev => ({
-        ...prev,
-        permissions: {
-          ...prev.permissions,
-          [module]: {
-            ...prev.permissions[module],
-            [action]: type === 'checkbox' ? checked : value
+      const parts = name.split('.');
+      // supports: permissions.module.action  OR permissions.module.action.subaction
+      if (parts.length === 3) {
+        const [, module, action] = parts;
+        setRoleForm(prev => ({
+          ...prev,
+          permissions: {
+            ...prev.permissions,
+            [module]: {
+              ...prev.permissions[module],
+              [action]: type === 'checkbox' ? checked : value
+            }
           }
-        }
-      }));
+        }));
+      } else if (parts.length === 4) {
+        const [, module, action, sub] = parts;
+        setRoleForm(prev => ({
+          ...prev,
+          permissions: {
+            ...prev.permissions,
+            [module]: {
+              ...prev.permissions[module],
+              [action]: {
+                ...(prev.permissions[module]?.[action] || {}),
+                [sub]: type === 'checkbox' ? checked : value
+              }
+            }
+          }
+        }));
+      }
     } else {
       setRoleForm(prev => ({ ...prev, [name]: value }));
     }
@@ -261,91 +292,160 @@ export default function Users() {
 
   // Select all permissions for a module
   const handleSelectAll = (module) => {
-    setRoleForm(prev => ({
-      ...prev,
-      permissions: {
-        ...prev.permissions,
-        [module]: Object.keys(prev.permissions[module]).reduce((acc, action) => {
-          acc[action] = true;
-          return acc;
-        }, {})
+    setRoleForm(prev => {
+      const moduleObj = prev.permissions?.[module] || {};
+      let keys = Object.keys(moduleObj);
+      if (keys.length === 0) {
+        const modDef = permissionModules.find(m => m.name === module);
+        if (modDef && Array.isArray(modDef.permissions)) keys = modDef.permissions;
       }
-    }));
+
+      const newModule = keys.reduce((acc, action) => {
+        const current = prev.permissions?.[module]?.[action];
+        if (current && typeof current === 'object') {
+          // set all nested sub-permissions to true
+          acc[action] = Object.keys(current).reduce((s, k) => { s[k] = true; return s; }, {});
+        } else {
+          acc[action] = true;
+        }
+        return acc;
+      }, {});
+
+      return {
+        ...prev,
+        permissions: {
+          ...prev.permissions,
+          [module]: newModule
+        }
+      };
+    });
   };
 
   // Deselect all permissions for a module
   const handleDeselectAll = (module) => {
-    setRoleForm(prev => ({
-      ...prev,
-      permissions: {
-        ...prev.permissions,
-        [module]: Object.keys(prev.permissions[module]).reduce((acc, action) => {
-          acc[action] = false;
-          return acc;
-        }, {})
+    setRoleForm(prev => {
+      const moduleObj = prev.permissions?.[module] || {};
+      let keys = Object.keys(moduleObj);
+      if (keys.length === 0) {
+        const modDef = permissionModules.find(m => m.name === module);
+        if (modDef && Array.isArray(modDef.permissions)) keys = modDef.permissions;
       }
-    }));
+
+      const newModule = keys.reduce((acc, action) => {
+        const current = prev.permissions?.[module]?.[action];
+        if (current && typeof current === 'object') {
+          acc[action] = Object.keys(current).reduce((s, k) => { s[k] = false; return s; }, {});
+        } else {
+          acc[action] = false;
+        }
+        return acc;
+      }, {});
+
+      return {
+        ...prev,
+        permissions: {
+          ...prev.permissions,
+          [module]: newModule
+        }
+      };
+    });
   };
 
   const handleRoleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
     try {
-      const response = await fetch('/api/roles', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(roleForm),
-      });
+      let res;
+      // normalize permissions to match DEFAULT_PERMISSIONS shape
+      const normalizePermissions = (input) => {
+        const out = {};
+        for (const modKey of Object.keys(DEFAULT_PERMISSIONS)) {
+          const defaultMod = DEFAULT_PERMISSIONS[modKey];
+          const currentMod = input?.[modKey];
+          if (typeof defaultMod === 'object' && !Array.isArray(defaultMod)) {
+            out[modKey] = {};
+            for (const actionKey of Object.keys(defaultMod)) {
+              const defaultAction = defaultMod[actionKey];
+              const currentAction = currentMod?.[actionKey];
+              if (typeof defaultAction === 'object' && !Array.isArray(defaultAction)) {
+                out[modKey][actionKey] = {};
+                for (const subKey of Object.keys(defaultAction)) {
+                  out[modKey][actionKey][subKey] = !!(currentAction && currentAction[subKey]);
+                }
+              } else {
+                out[modKey][actionKey] = !!currentAction;
+              }
+            }
+          } else {
+            out[modKey] = !!currentMod;
+          }
+        }
+        return out;
+      };
 
-      const data = await response.json();
+      const payload = { ...roleForm, permissions: normalizePermissions(roleForm.permissions) };
+
+      if (editingRole) {
+        // update via roleService
+        var data = await roleService.update(editingRole._id, payload);
+      } else {
+        // create via roleService
+        var data = await roleService.create(payload);
+      }
 
       if (data.success) {
-        showMessage('success', 'Role created successfully');
+        toast.success(editingRole ? 'Role updated successfully' : 'Role created successfully');
+        showMessage('success', editingRole ? 'Role updated successfully' : 'Role created successfully');
         resetRoleForm();
         setRoleDialogOpen(false);
+        setEditingRole(null);
         loadRoles();
       } else {
-        showMessage('error', data.error || 'Failed to create role');
+        toast.error('Failed to save role');
+        showMessage('error', data.error || 'Failed to save role');
       }
     } catch (error) {
-      showMessage('error', 'Failed to create role');
+      toast.error('Failed to save role');
+      showMessage('error', 'Failed to save role');
     } finally {
       setLoading(false);
     }
   };
 
   const resetRoleForm = () => {
-    setRoleForm({
-      name: '',
-      description: '',
-      permissions: {
-        user: { view: false, create: false, edit: false, delete: false, export: false, approve: false, change_role: false },
-        category: { view: false, create: false, edit: false, delete: false, export: false, approve: false },
-        product: { view: false, create: false, edit: false, delete: false, export: false, approve: false },
-        order: { view: false, create: false, edit: false, delete: false, export: false, approve: false, update_status: false },
-        inventory: { view: false, create: false, edit: false, delete: false, export: false, approve: false },
-        analytics: { view: false, export: false },
-        settings: { view: false, edit: false, manage_roles: false },
-        hr: { view: false, create: false, edit: false, delete: false, payroll: false, attendance: false, leave_approve: false },
-        finance: { view: false, create: false, edit: false, delete: false, approve_payments: false, export_reports: false },
-        crm: {
-          clients: { view: false, create: false, edit: false, delete: false, export: false, approve: false },
-          leads: { view: false, create: false, edit: false, delete: false, export: false, approve: false },
-          tickets: { view: false, create: false, edit: false, delete: false, export: false, approve: false }
-        },
-        website_bookings: { view: false, edit: false, manage_status: false, export: false, delete: false },
-        reports: { sales: false, finance: false, hr: false, performance: false, export_all: false },
-        progress: { view_own: false, view_all: false, export: false }
-      }
-    });
+    setRoleForm({ name: '', description: '', permissions: JSON.parse(JSON.stringify(DEFAULT_PERMISSIONS)) });
   };
 
   const openRoleDialog = () => {
     resetRoleForm();
     setRoleDialogOpen(true);
+  };
+
+  const handleEditRole = (role) => {
+    setEditingRole(role);
+    // populate roleForm from role
+    setRoleForm(prev => ({
+      ...prev,
+      name: role.name || '',
+      description: role.description || '',
+      permissions: role.permissions || prev.permissions
+    }));
+    setRoleDialogOpen(true);
+  };
+
+  const handleDeleteRole = async (roleId) => {
+    if (!window.confirm('Delete this role? This cannot be undone.')) return;
+    try {
+      const data = await roleService.delete(roleId);
+      if (data.success) {
+        showMessage('success', 'Role deleted');
+        loadRoles();
+      } else {
+        showMessage('error', data.error || 'Failed to delete role');
+      }
+    } catch (err) {
+      showMessage('error', 'Failed to delete role');
+    }
   };
 
   const closeRoleDialog = () => {
@@ -357,12 +457,7 @@ export default function Users() {
     if (!window.confirm('Are you sure you want to delete this user?')) return;
 
     try {
-      const response = await fetch(`/api/users/${userId}`, {
-        method: 'DELETE',
-      });
-
-      const data = await response.json();
-
+      const data = await userService.delete(userId);
       if (data.success) {
         showMessage('success', 'User deleted successfully');
         loadUsers();
@@ -376,16 +471,7 @@ export default function Users() {
 
   const handleToggleUserStatus = async (userId, currentStatus) => {
     try {
-      const response = await fetch(`/api/users/${userId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ isActive: !currentStatus }),
-      });
-
-      const data = await response.json();
-
+      const data = await userService.updateStatus(userId, !currentStatus);
       if (data.success) {
         showMessage('success', `User ${!currentStatus ? 'activated' : 'deactivated'} successfully`);
         loadUsers();
@@ -406,30 +492,6 @@ export default function Users() {
       permissions: ['view', 'create', 'edit', 'delete', 'export', 'approve', 'change_role']
     },
     {
-      name: 'category',
-      title: 'Category Management',
-      description: 'Manage product categories',
-      permissions: ['view', 'create', 'edit', 'delete', 'export', 'approve']
-    },
-    {
-      name: 'product',
-      title: 'Product Management',
-      description: 'Manage products and inventory',
-      permissions: ['view', 'create', 'edit', 'delete', 'export', 'approve']
-    },
-    {
-      name: 'order',
-      title: 'Order Management',
-      description: 'Manage customer orders',
-      permissions: ['view', 'create', 'edit', 'delete', 'export', 'approve', 'update_status']
-    },
-    {
-      name: 'inventory',
-      title: 'Inventory Management',
-      description: 'Manage stock and inventory',
-      permissions: ['view', 'create', 'edit', 'delete', 'export', 'approve']
-    },
-    {
       name: 'analytics',
       title: 'Analytics',
       description: 'View and export reports',
@@ -442,40 +504,70 @@ export default function Users() {
       permissions: ['view', 'edit', 'manage_roles']
     },
     {
-      name: 'hr',
-      title: 'HR Management',
-      description: 'Manage human resources',
-      permissions: ['view', 'create', 'edit', 'delete', 'payroll', 'attendance', 'leave_approve']
+      name: 'agent',
+      title: 'Agent Management',
+      description: 'Manage agents and their profiles',
+      permissions: ['view', 'create', 'edit', 'delete', 'export', 'approve']
     },
     {
-      name: 'finance',
-      title: 'Finance Management',
-      description: 'Manage financial operations',
-      permissions: ['view', 'create', 'edit', 'delete', 'approve_payments', 'export_reports']
+      name: 'shift',
+      title: 'Shift Management',
+      description: 'Manage shifts and schedules',
+      permissions: ['view', 'create', 'edit', 'delete', 'export', 'approve']
     },
     {
-      name: 'crm',
-      title: 'CRM Module',
-      description: 'Manage customer relationships',
-      permissions: ['clients', 'leads', 'tickets']
+      name: 'booking',
+      title: 'Booking Management',
+      description: 'Manage bookings and update status',
+      permissions: ['view', 'create', 'edit', 'delete', 'export', 'approve', 'update_status']
     },
     {
-      name: 'website_bookings',
-      title: 'Website Bookings',
-      description: 'Manage website booking requests',
-      permissions: ['view', 'edit', 'manage_status', 'export', 'delete']
+      name: 'promoCode',
+      title: 'Promo Codes',
+      description: 'Manage promo codes and discounts',
+      permissions: ['view', 'create', 'edit', 'delete', 'export', 'approve']
     },
     {
-      name: 'reports',
-      title: 'Reports',
-      description: 'Access various reports',
-      permissions: ['sales', 'finance', 'hr', 'performance', 'export_all']
+      name: 'notification',
+      title: 'Notifications',
+      description: 'Send and manage notifications',
+      permissions: ['view', 'create', 'edit', 'delete', 'export', 'approve']
     },
     {
-      name: 'progress',
-      title: 'Progress Tracking',
-      description: 'Track agent and employee progress',
-      permissions: ['view_own', 'view_all', 'export']
+      name: 'attendance',
+      title: 'Attendance',
+      description: 'Manage attendance, leaves and exports',
+      permissions: ['view', 'create', 'edit', 'delete', 'export', 'manage_leave']
+    },
+    {
+      name: 'leaveRequest',
+      title: 'Leave Requests',
+      description: 'Approve or reject leave requests',
+      permissions: ['view', 'create', 'edit', 'delete', 'export', 'approve']
+    },
+    {
+      name: 'holiday',
+      title: 'Holidays',
+      description: 'Manage system holidays',
+      permissions: ['view', 'create', 'edit', 'delete', 'export', 'approve']
+    },
+    {
+      name: 'weeklyOff',
+      title: 'Weekly Offs',
+      description: 'Manage weekly off days',
+      permissions: ['view', 'create', 'edit', 'delete', 'export', 'approve']
+    },
+    {
+      name: 'contact',
+      title: 'Contacts / Messages',
+      description: 'Manage contact messages',
+      permissions: ['view', 'create', 'edit', 'delete', 'export', 'approve']
+    },
+    {
+      name: 'role',
+      title: 'Role Management',
+      description: 'Manage roles and permissions',
+      permissions: ['view', 'create', 'edit', 'delete', 'manage_roles']
     }
   ];
 
@@ -486,8 +578,8 @@ export default function Users() {
       key: 'name',
       render: (u) => (
         <div className="flex items-center gap-4">
-          <div className="flex-shrink-0">
-            <div className="h-12 w-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-sm">
+          <div className="shrink-0">
+            <div className="h-12 w-12 bg-linear-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-sm">
               <span className="text-white font-semibold text-sm">{u.firstName?.charAt(0)}{u.lastName?.charAt(0)}</span>
             </div>
           </div>
@@ -500,26 +592,44 @@ export default function Users() {
     },
     { label: 'Email', key: 'email', render: (u) => <div className="text-sm text-gray-700">{u.email}</div> },
     { label: 'Role', key: 'role', render: (u) => <span className="capitalize text-sm">{u.role?.name}</span> },
-    { label: 'Status', key: 'status', render: (u) => (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${u.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-        {u.isActive ? 'Active' : 'Inactive'}
-      </span>
-    ) },
+    {
+      label: 'Status', key: 'status', render: (u) => (
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${u.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+          {u.isActive ? 'Active' : 'Inactive'}
+        </span>
+      )
+    },
     {
       label: 'Actions',
       key: 'actions',
       align: 'right',
       render: (u) => (
         <div className="flex items-center justify-end gap-2">
-          <button onClick={() => handleEditUser(u)} className="inline-flex items-center px-3 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-sm font-medium transition-colors border border-blue-200">
-            <Edit className="h-4 w-4 mr-1" /> Edit
-          </button>
-          <button onClick={() => handleToggleUserStatus(u._id, u.isActive)} className={`inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${u.isActive ? 'bg-orange-50 text-orange-700 hover:bg-orange-100 border border-orange-200' : 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200'}`}>
-            <Power className="h-4 w-4 mr-1" /> {u.isActive ? 'Deactivate' : 'Activate'}
-          </button>
+          {hasPermission('user', 'edit') ? (
+            <button onClick={() => handleEditUser(u, 'edit')} className="inline-flex items-center px-3 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-sm font-medium transition-colors border border-blue-200">
+              <Edit className="h-4 w-4 mr-1" /> Edit
+            </button>
+          ) : hasPermission('user', 'view') ? (
+            <button onClick={() => handleEditUser(u, 'view')} className="inline-flex items-center px-3 py-2 bg-white text-gray-700 hover:bg-gray-50 rounded-lg text-sm font-medium transition-colors border border-gray-200">
+              <User className="h-4 w-4 mr-1" /> View
+            </button>
+          ) : null}
+
+          {hasPermission('user', 'edit') && (
+            <button onClick={() => handleToggleUserStatus(u._id, u.isActive)} className={`inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${u.isActive ? 'bg-orange-50 text-orange-700 hover:bg-orange-100 border border-orange-200' : 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200'}`}>
+              <Power className="h-4 w-4 mr-1" /> {u.isActive ? 'Deactivate' : 'Activate'}
+            </button>
+          )}
+
           {hasPermission('user', 'delete') && (
             <button onClick={() => handleDeleteUser(u._id)} className="inline-flex items-center px-3 py-2 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg text-sm font-medium transition-colors border border-red-200">
               <Trash2 className="h-4 w-4 mr-1" /> Delete
+            </button>
+          )}
+
+          {(hasPermission('user', 'change_role') || hasPermission('role', 'manage_roles') || hasPermission('user', 'edit')) && (
+            <button onClick={() => { setRoleChangeUser(u); setRoleChangeValue(u.role?._id || ''); setRoleChangeOpen(true); }} className="inline-flex items-center px-3 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg text-sm font-medium transition-colors border border-indigo-200">
+              <Shield className="h-4 w-4 mr-1" /> Change Role
             </button>
           )}
         </div>
@@ -530,16 +640,32 @@ export default function Users() {
   const roleColumns = [
     { label: 'Role', key: 'name', render: (r) => <div className="text-sm font-semibold capitalize">{r.name.replace(/_/g, ' ')}</div> },
     { label: 'Description', key: 'description', render: (r) => <div className="text-sm text-gray-600">{r.description}</div> },
-    { label: 'Status', key: 'isActive', render: (r) => (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${r.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-        {r.isActive ? 'Active' : 'Inactive'}
-      </span>
-    ) },
+    {
+      label: 'Status', key: 'isActive', render: (r) => (
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${r.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+          {r.isActive ? 'Active' : 'Inactive'}
+        </span>
+      )
+    },
+    {
+      label: 'Actions',
+      align: 'right',
+      render: (r) => (
+        <div className="flex items-center justify-end gap-2">
+          <button onClick={() => handleEditRole(r)} className="inline-flex items-center px-3 py-2 bg-yellow-50 text-yellow-700 hover:bg-yellow-100 rounded-lg text-sm font-medium transition-colors border border-yellow-200">
+            <Edit className="h-4 w-4 mr-1" /> Edit
+          </button>
+          <button onClick={() => handleDeleteRole(r._id)} className="inline-flex items-center px-3 py-2 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg text-sm font-medium transition-colors border border-red-200">
+            <Trash2 className="h-4 w-4 mr-1" /> Delete
+          </button>
+        </div>
+      )
+    }
   ];
 
   return (
     <div className="min-h-scree bg-white p-4 md:p-6">
-      <div className="max-w-7xl overflow-auto mx-auto space-y-6">
+      <div className="max-w-7xl overflow-x-auto mx-auto space-y-6">
         {/* Header Card */}
         <Card className="shadow-lg border-0 bg-white text-black">
           <CardHeader className="pb-4">
@@ -707,7 +833,7 @@ export default function Users() {
               {editingUser ? 'Update user information' : 'Add a new user to the system with appropriate role and permissions'}
             </DialogDescription>
           </DialogHeader>
-          
+
           <form onSubmit={editingUser ? handleEditUserSubmit : handleUserSubmit} className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mt-4">
             <div className="space-y-2">
               <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">
@@ -720,6 +846,7 @@ export default function Users() {
                 required
                 value={userForm.firstName}
                 onChange={handleUserFormChange}
+                disabled={viewOnly}
                 className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 placeholder="Enter first name"
               />
@@ -736,6 +863,7 @@ export default function Users() {
                 required
                 value={userForm.lastName}
                 onChange={handleUserFormChange}
+                disabled={viewOnly}
                 className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 placeholder="Enter last name"
               />
@@ -754,7 +882,7 @@ export default function Users() {
                 onChange={handleUserFormChange}
                 className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 placeholder="Enter email address"
-                disabled={editingUser}
+                disabled={editingUser || viewOnly}
               />
             </div>
 
@@ -771,6 +899,7 @@ export default function Users() {
                   minLength="6"
                   value={userForm.password}
                   onChange={handleUserFormChange}
+                  disabled={viewOnly}
                   className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   placeholder="Enter password"
                 />
@@ -787,6 +916,7 @@ export default function Users() {
                 id="phone"
                 value={userForm.phone}
                 onChange={handleUserFormChange}
+                disabled={viewOnly}
                 className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 placeholder="Enter phone number"
               />
@@ -796,9 +926,10 @@ export default function Users() {
               <Label htmlFor="role" className="text-sm font-medium text-gray-700">
                 Role *
               </Label>
-              <Select 
-                value={userForm.role} 
+              <Select
+                value={userForm.role}
                 onValueChange={(value) => setUserForm(prev => ({ ...prev, role: value }))}
+                disabled={viewOnly}
               >
                 <SelectTrigger className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
                   <SelectValue placeholder="Select a role" />
@@ -827,34 +958,94 @@ export default function Users() {
               </Select>
             </div>
 
-            <div className="sm:col-span-2 lg:col-span-3 pt-4 flex gap-3 justify-end border-t">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={closeUserDialog}
-                className="border-gray-300 text-gray-700 hover:bg-gray-50 font-medium py-2.5 px-6 rounded-lg transition-colors"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={loading}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-6 rounded-lg transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed shadow-sm"
-              >
-                {loading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    {editingUser ? 'Updating User...' : 'Creating User...'}
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    {editingUser ? <Edit className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-                    {editingUser ? 'Update User' : 'Create User'}
-                  </div>
+              <div className="sm:col-span-2 lg:col-span-3 pt-4 flex gap-3 justify-end border-t">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={closeUserDialog}
+                  className="border-gray-300 text-gray-700 hover:bg-gray-50 font-medium py-2.5 px-6 rounded-lg transition-colors"
+                >
+                  {viewOnly ? 'Close' : 'Cancel'}
+                </Button>
+                {!viewOnly && (
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-6 rounded-lg transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed shadow-sm"
+                  >
+                    {loading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        {editingUser ? 'Updating User...' : 'Creating User...'}
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        {editingUser ? <Edit className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                        {editingUser ? 'Update User' : 'Create User'}
+                      </div>
+                    )}
+                  </Button>
                 )}
-              </Button>
-            </div>
+              </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Change User Role Dialog */}
+      <Dialog open={roleChangeOpen} onOpenChange={setRoleChangeOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Change Role</DialogTitle>
+            <DialogDescription>Assign a different role to this user</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 mt-4">
+            <div>
+              <div className="flex items-center justify-between">
+                <Label className="text-sm">Select Role</Label>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" variant="outline" onClick={() => loadRoles()} className="px-2 py-1">Refresh</Button>
+                  <Button size="sm" className="px-2 py-1" onClick={() => { setRoleDialogOpen(true); setEditingRole(null); setRoleChangeOpen(false); }}>
+                    Create Role
+                  </Button>
+                </div>
+              </div>
+              <Select value={roleChangeValue} onValueChange={(v) => setRoleChangeValue(v)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Available Roles</SelectLabel>
+                    {roles.map((r) => (
+                      <SelectItem key={r._id} value={r._id} disabled={!r.isActive}>
+                        {r.name.replace(/_/g, ' ')}{!r.isActive ? ' (Inactive)' : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setRoleChangeOpen(false)}>Cancel</Button>
+              <Button onClick={async () => {
+                if (!roleChangeUser) return;
+                try {
+                  const data = await userService.updateRole(roleChangeUser._id, roleChangeValue);
+                  if (data.success) {
+                    showMessage('success', 'Role updated');
+                    setRoleChangeOpen(false);
+                    loadUsers();
+                  } else {
+                    showMessage('error', data.error || 'Failed to update role');
+                  }
+                } catch (err) {
+                  showMessage('error', 'Failed to update role');
+                }
+              }}>Save</Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -864,13 +1055,13 @@ export default function Users() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
               <Shield className="h-5 w-5" />
-              Create New Role
+              {editingRole ? 'Edit Role' : 'Create New Role'}
             </DialogTitle>
             <DialogDescription>
-              Define a new role with specific permissions and access levels
+              {editingRole ? 'Update role permissions and settings' : 'Define a new role with specific permissions and access levels'}
             </DialogDescription>
           </DialogHeader>
-          
+
           <form onSubmit={handleRoleSubmit} className="space-y-6 mt-4">
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <div className="space-y-2">
@@ -974,23 +1165,48 @@ export default function Users() {
                     </CardHeader>
                     <CardContent className="pt-3">
                       <div className="grid grid-cols-1 gap-2">
-                        {module.permissions.map((action) => (
-                          <label
-                            key={action}
-                            className="flex items-center space-x-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors"
-                          >
-                            <input
-                              type="checkbox"
-                              name={`permissions.${module.name}.${action}`}
-                              checked={roleForm.permissions[module.name][action]}
-                              onChange={handleRoleFormChange}
-                              className="rounded border-gray-300 text-purple-600 focus:ring-purple-500 focus:ring-2"
-                            />
-                            <span className="text-sm font-medium capitalize text-gray-700">
-                              {action.replace(/_/g, ' ')}
-                            </span>
-                          </label>
-                        ))}
+                        {module.permissions.map((action) => {
+                          const permValue = roleForm.permissions[module.name]?.[action];
+                          // If permValue is an object, render its sub-actions
+                          if (permValue && typeof permValue === 'object') {
+                            return (
+                              <div key={action} className="p-2 rounded-lg hover:bg-slate-50 transition-colors">
+                                <div className="text-sm font-medium text-gray-800 mb-2 capitalize">{action.replace(/_/g, ' ')}</div>
+                                <div className="grid grid-cols-2 gap-2">
+                                  {Object.keys(permValue).map((sub) => (
+                                    <label key={sub} className="flex items-center space-x-2 p-2 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors">
+                                      <input
+                                        type="checkbox"
+                                        name={`permissions.${module.name}.${action}.${sub}`}
+                                        checked={!!roleForm.permissions[module.name]?.[action]?.[sub]}
+                                        onChange={handleRoleFormChange}
+                                        className="rounded border-gray-300 text-purple-600 focus:ring-purple-500 focus:ring-2"
+                                      />
+                                      <span className="text-sm font-medium capitalize text-gray-700">{sub.replace(/_/g, ' ')}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          }
+
+                          // fallback: render simple checkbox
+                          return (
+                            <label
+                              key={action}
+                              className="flex items-center space-x-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors"
+                            >
+                              <input
+                                type="checkbox"
+                                name={`permissions.${module.name}.${action}`}
+                                checked={!!roleForm.permissions[module.name]?.[action]}
+                                onChange={handleRoleFormChange}
+                                className="rounded border-gray-300 text-purple-600 focus:ring-purple-500 focus:ring-2"
+                              />
+                              <span className="text-sm font-medium capitalize text-gray-700">{action.replace(/_/g, ' ')}</span>
+                            </label>
+                          );
+                        })}
                       </div>
                     </CardContent>
                   </Card>
@@ -1015,12 +1231,12 @@ export default function Users() {
                 {loading ? (
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Creating Role...
+                    {editingRole ? 'Updating Role...' : 'Creating Role...'}
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
                     <Shield className="h-4 w-4" />
-                    Create Role
+                    {editingRole ? 'Update Role' : 'Create Role'}
                   </div>
                 )}
               </Button>
@@ -1031,10 +1247,4 @@ export default function Users() {
     </div>
   );
 }
-
-
-
-
-
-
 

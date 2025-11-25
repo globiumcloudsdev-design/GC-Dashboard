@@ -4,6 +4,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { notificationService } from "@/services/notificationService";
+import { agentService } from "@/services/agentService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,6 +22,8 @@ export default function NotificationsAdminPage() {
 
   // States
   const [notifications, setNotifications] = useState([]);
+  const [agents, setAgents] = useState([]);
+  const [viewAgent, setViewAgent] = useState('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -42,14 +45,21 @@ export default function NotificationsAdminPage() {
   // Fetch notifications on component mount
   useEffect(() => {
     fetchNotifications();
+    fetchAgents();
   }, []);
 
   // Fetch all notifications
-  const fetchNotifications = async () => {
+  const fetchNotifications = async (agentId = null) => {
     setLoading(true);
     setError("");
 
-    const result = await notificationService.getAllNotifications();
+    let result;
+    if (agentId && agentId !== 'all') {
+      // Use helper which reuses existing /notifications route and filters client-side
+      result = await notificationService.getNotificationsForAgent(agentId);
+    } else {
+      result = await notificationService.getAllNotifications();
+    }
 
     if (result.success) {
       setNotifications(result.data);
@@ -58,6 +68,18 @@ export default function NotificationsAdminPage() {
     }
 
     setLoading(false);
+  };
+
+  const fetchAgents = async () => {
+    try {
+      const res = await agentService.getAllAgents();
+      // agentService returns raw data (response.data), ensure array
+      console.log('Agent Response', res);
+      
+      setAgents(res.agents);
+    } catch (err) {
+      console.error('Failed to fetch agents', err);
+    }
   };
 
   // Handle form input changes
@@ -89,7 +111,8 @@ export default function NotificationsAdminPage() {
         title: notification.title,
         message: notification.message,
         targetType: notification.targetType,
-        targetUsers: notification.targetUsers?.join(", ") || "",
+        // set single selected agent id if exists
+        targetUsers: (notification.targetUsers && notification.targetUsers.length > 0) ? String(notification.targetUsers[0]) : "",
         type: notification.type
       });
     } else {
@@ -108,10 +131,11 @@ export default function NotificationsAdminPage() {
 
     try {
       // Prepare data
+      // Prepare data - ensure targetUsers is an array when specific
       const submitData = {
         ...formData,
         targetUsers: formData.targetType === "specific"
-          ? formData.targetUsers.split(',').map(id => id.trim()).filter(id => id)
+          ? (Array.isArray(formData.targetUsers) ? formData.targetUsers : (formData.targetUsers ? [formData.targetUsers] : []))
           : []
       };
 
@@ -132,7 +156,8 @@ export default function NotificationsAdminPage() {
         setSuccess(result.message);
         resetForm();
         setIsModalOpen(false);
-        fetchNotifications(); // Refresh list
+        // Refresh list - respect current viewAgent filter
+        fetchNotifications(viewAgent === 'all' ? null : viewAgent);
 
         // Auto clear success message
         setTimeout(() => setSuccess(""), 3000);
@@ -157,7 +182,7 @@ export default function NotificationsAdminPage() {
 
     if (result.success) {
       setSuccess("Notification deleted successfully");
-      fetchNotifications(); // Refresh list
+      fetchNotifications(viewAgent === 'all' ? null : viewAgent); // Refresh list
       setTimeout(() => setSuccess(""), 3000);
     } else {
       setError(result.message);
@@ -187,123 +212,62 @@ export default function NotificationsAdminPage() {
             Create and manage system notifications
           </p>
         </div>
-        <Button onClick={() => openModal()} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Create Notification
-        </Button>
-      </div>
 
-      {/* Alerts */}
-      {error && (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      {success && (
-        <Alert variant="default" className="bg-green-50 border-green-200">
-          <AlertDescription className="text-green-800">{success}</AlertDescription>
-        </Alert>
-      )}
-
-      {/* Notifications Table */}
-      {/* <Card>
-        <CardHeader>
-          <CardTitle>All Notifications</CardTitle>
-          <CardDescription>
-            History of all sent notifications in the system
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex justify-center items-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : notifications.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Bell className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No notifications found</p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Message</TableHead>
-                  <TableHead>Target</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {notifications.map((notification) => (
-                  <TableRow key={notification._id}>
-                    <TableCell className="font-medium">{notification.title}</TableCell>
-                    <TableCell className="max-w-md truncate">
-                      {notification.message}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={notification.targetType === "all" ? "default" : "secondary"}>
-                        {notification.targetType}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">
-                        {notification.type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {new Date(notification.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openModal(notification)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDelete(notification._id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+        <div className="flex items-center gap-4">
+          {/* Agent filter for viewing notifications */}
+          <div className="w-56">
+            <Label htmlFor="viewAgent" className="sr-only">Filter by agent</Label>
+            <Select
+              value={viewAgent}
+              onValueChange={(val) => {
+                setViewAgent(val);
+                fetchNotifications(val === 'all' ? null : val);
+              }}
+            >
+              <SelectTrigger id="viewAgent">
+                <SelectValue placeholder="View: All" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Notifications</SelectItem>
+                {agents.map((a) => (
+                  <SelectItem key={a._id || a.id} value={a._id || a.id}>
+                    {a.agentName || a.name || a.agentId || a.email || a._id}
+                  </SelectItem>
                 ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card> */}
+              </SelectContent>
+            </Select>
+          </div>
 
-<Card>
-  <CardHeader>
-    <CardTitle>All Notifications</CardTitle>
-    <CardDescription>
-      History of all sent notifications in the system
-    </CardDescription>
-  </CardHeader>
-  <CardContent>
-    {loading ? (
-      <div className="flex justify-center items-center py-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <Button onClick={() => openModal()} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Create Notification
+          </Button>
+        </div>
       </div>
-    ) : notifications.length === 0 ? (
-      <div className="text-center py-8 text-muted-foreground">
-        <Bell className="h-12 w-12 mx-auto mb-4 opacity-50" />
-        <p>No notifications found</p>
-      </div>
-    ) : (
-      <div className="relative">
-        {/* Horizontal scroll container */}
+
+  {/* Alerts */}
+  {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
+  {success && <Alert variant="default" className="bg-green-50 border-green-200"><AlertDescription className="text-green-800">{success}</AlertDescription></Alert>}
+
+  {/* Notifications Table */}
+  <Card className="rounded-lg shadow-md">
+    <CardHeader>
+      <CardTitle>All Notifications</CardTitle>
+      <CardDescription>History of all sent notifications in the system</CardDescription>
+    </CardHeader>
+    <CardContent>
+      {loading ? (
+        <div className="flex justify-center items-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : notifications.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">
+          <Bell className="h-12 w-12 mx-auto mb-4 opacity-50" />
+          <p>No notifications found</p>
+        </div>
+      ) : (
         <div className="overflow-x-auto">
-          <Table>
+          <Table className="min-w-[600px]">
             <TableHeader>
               <TableRow>
                 <TableHead className="whitespace-nowrap">Title</TableHead>
@@ -315,45 +279,21 @@ export default function NotificationsAdminPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {notifications.map((notification) => (
-                <TableRow key={notification._id}>
-                  <TableCell className="font-medium whitespace-nowrap">
-                    {notification.title}
-                  </TableCell>
-                  <TableCell className="max-w-xs">
-                    <div className="truncate" title={notification.message}>
-                      {notification.message}
-                    </div>
+              {notifications.map((n) => (
+                <TableRow key={n._id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                  <TableCell className="font-medium whitespace-nowrap">{n.title}</TableCell>
+                  <TableCell className="max-w-xs truncate" title={n.message}>{n.message}</TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    <Badge variant={n.targetType === "all" ? "default" : "secondary"}>{n.targetType}</Badge>
                   </TableCell>
                   <TableCell className="whitespace-nowrap">
-                    <Badge variant={notification.targetType === "all" ? "default" : "secondary"}>
-                      {notification.targetType}
-                    </Badge>
+                    <Badge variant="outline">{n.type}</Badge>
                   </TableCell>
+                  <TableCell className="whitespace-nowrap">{new Date(n.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell className="whitespace-nowrap">
-                    <Badge variant="outline">
-                      {notification.type}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap">
-                    {new Date(notification.createdAt).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap">
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openModal(notification)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(notification._id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                    <div className="flex gap-2 flex-wrap">
+                      <Button variant="outline" size="sm" onClick={() => openModal(n)}><Edit className="h-4 w-4" /></Button>
+                      <Button variant="outline" size="sm" onClick={() => handleDelete(n._id)}><Trash2 className="h-4 w-4" /></Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -361,49 +301,28 @@ export default function NotificationsAdminPage() {
             </TableBody>
           </Table>
         </div>
-      </div>
-    )}
-  </CardContent>
-</Card>
+      )}
+    </CardContent>
+  </Card>
 
-      {/* Create/Edit Modal */}
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>
-              {editingNotification ? "Edit Notification" : "Create New Notification"}
-            </DialogTitle>
-            <DialogDescription>
-              {editingNotification
-                ? "Update the notification details below."
-                : "Fill in the details to create a new notification."
-              }
-            </DialogDescription>
-          </DialogHeader>
+  {/* Create/Edit Modal */}
+  <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+    <DialogContent className="sm:max-w-md w-full">
+      <DialogHeader>
+        <DialogTitle>{editingNotification ? "Edit Notification" : "Create New Notification"}</DialogTitle>
+        <DialogDescription>{editingNotification ? "Update the notification details below." : "Fill in the details to create a new notification."}</DialogDescription>
+      </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => handleInputChange("title", e.target.value)}
-                placeholder="Enter notification title"
-                required
-              />
-            </div>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="title">Title</Label>
+          <Input id="title" value={formData.title} onChange={(e)=>handleInputChange("title", e.target.value)} placeholder="Enter notification title" required />
+        </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="message">Message</Label>
-              <Textarea
-                id="message"
-                value={formData.message}
-                onChange={(e) => handleInputChange("message", e.target.value)}
-                placeholder="Enter notification message"
-                required
-                rows={4}
-              />
-            </div>
+        <div className="space-y-2">
+          <Label htmlFor="message">Message</Label>
+          <Textarea id="message" value={formData.message} onChange={(e)=>handleInputChange("message", e.target.value)} placeholder="Enter notification message" required rows={4} />
+        </div>
 
             <div className="space-y-2">
               <Label htmlFor="type">Type</Label>
@@ -424,7 +343,7 @@ export default function NotificationsAdminPage() {
               </Select>
             </div>
 
-            {/* <div className="space-y-2">
+            <div className="space-y-2">
               <Label htmlFor="targetType">Target Audience</Label>
               <Select
                 value={formData.targetType}
@@ -435,50 +354,48 @@ export default function NotificationsAdminPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Users</SelectItem>
-                  <SelectItem value="specific">Specific Users</SelectItem>
+                  <SelectItem value="specific">Specific Agent</SelectItem>
                 </SelectContent>
               </Select>
-            </div> */}
+            </div>
 
             {formData.targetType === "specific" && (
               <div className="space-y-2">
-                <Label htmlFor="targetUsers">User IDs</Label>
-                <Input
-                  id="targetUsers"
+                <Label htmlFor="targetUsers">Select Agent</Label>
+                <Select
                   value={formData.targetUsers}
-                  onChange={(e) => handleInputChange("targetUsers", e.target.value)}
-                  placeholder="Enter user IDs separated by commas (e.g., 123, 456, 789)"
-                  required
-                />
+                  onValueChange={(val) => handleInputChange('targetUsers', val)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose agent" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {agents.map((a) => (
+                      <SelectItem key={a._id || a.id} value={a._id || a.id}>
+                        {a.agentName}-({a.agentId})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <p className="text-sm text-muted-foreground">
-                  Enter specific user IDs separated by commas
+                  Choose which agent should receive this notification
                 </p>
               </div>
             )}
 
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsModalOpen(false)}
-                disabled={submitting}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={submitting}>
-                {submitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                {editingNotification ? "Update Notification" : "Create Notification"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-    </div>
+        <DialogFooter className="flex flex-col sm:flex-row gap-2">
+          <Button type="button" variant="outline" onClick={()=>setIsModalOpen(false)} disabled={submitting}>Cancel</Button>
+          <Button type="submit" disabled={submitting} className="flex items-center justify-center gap-2">
+            {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+            {editingNotification ? "Update Notification" : "Create Notification"}
+          </Button>
+        </DialogFooter>
+      </form>
+    </DialogContent>
+  </Dialog>
+</div>
+
   );
 }
-
-
-
-
 
 

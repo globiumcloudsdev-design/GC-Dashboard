@@ -6,7 +6,12 @@ export const agentService = {
     const response = await api.post('/agents/login', { agentId, password });
     
     if (response.data.token && typeof window !== 'undefined') {
+      // Store token under both agent-specific and generic keys for compatibility
       localStorage.setItem('agentToken', response.data.token);
+      try {
+        // Mirror to generic 'token' so existing code expecting 'token' still works
+        localStorage.setItem('token', response.data.token);
+      } catch (e) {}
       localStorage.setItem('agentData', JSON.stringify(response.data.agent));
     }
     
@@ -59,9 +64,16 @@ export const agentService = {
   },
 
   // Reset password
-  resetPassword: async (token, newPassword) => {
+  resetPassword: async (tokenOrId, newPassword) => {
+    // If first arg looks like a Mongo ObjectId, treat this as admin reset by id
+    if (/^[a-fA-F0-9]{24}$/.test(String(tokenOrId))) {
+      const response = await api.post(`/agents/${tokenOrId}/reset-password`, { newPassword });
+      return response.data;
+    }
+
+    // Otherwise treat as token-based reset
     const response = await api.post('/agents/reset-password', {
-      token,
+      token: tokenOrId,
       newPassword
     });
     return response.data;
