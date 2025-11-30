@@ -18,8 +18,11 @@ import { Loader2, Calendar, Users, CheckCircle, XCircle, Clock, Plus, Trash2, Pl
 import { toast } from "sonner";
 import GlobalData from "@/components/common/GlobalData";
 import CustomModal from "@/components/ui/customModal";
+import { useAuth } from "@/context/AuthContext";
 
 export default function AdminAttendancePage() {
+  // Auth context for permissions
+  const { hasPermission } = useAuth();
   // State variables
   const [attendance, setAttendance] = useState([]);
   const [leaveRequests, setLeaveRequests] = useState([]);
@@ -46,7 +49,42 @@ export default function AdminAttendancePage() {
     date: "",
     search: ""
   });
-  const [activeTab, setActiveTab] = useState("attendance");
+  const [activeTab, setActiveTab] = useState("");
+  
+  // Permission checks for different modules
+  const canViewAttendance = hasPermission('attendance', 'view');
+  const canCreateAttendance = hasPermission('attendance', 'create');
+  const canEditAttendance = hasPermission('attendance', 'edit');
+  const canDeleteAttendance = hasPermission('attendance', 'delete');
+  
+  const canViewLeave = hasPermission('leaveRequest', 'view');
+  const canCreateLeave = hasPermission('leaveRequest', 'create');
+  const canApproveLeave = hasPermission('leaveRequest', 'approve');
+  
+  const canViewHolidays = hasPermission('holiday', 'view');
+  const canCreateHolidays = hasPermission('holiday', 'create');
+  const canEditHolidays = hasPermission('holiday', 'edit');
+  const canDeleteHolidays = hasPermission('holiday', 'delete');
+  
+  const canViewWeeklyOff = hasPermission('weeklyOff', 'view');
+  const canCreateWeeklyOff = hasPermission('weeklyOff', 'create');
+  const canEditWeeklyOff = hasPermission('weeklyOff', 'edit');
+  const canDeleteWeeklyOff = hasPermission('weeklyOff', 'delete');
+  
+  // Determine available tabs based on permissions
+  const availableTabs = [
+    canViewAttendance && 'attendance',
+    canViewLeave && 'leave',
+    canViewHolidays && 'holidays',
+    canViewWeeklyOff && 'weekly-off'
+  ].filter(Boolean);
+  
+  // Set default active tab to first available tab
+  useEffect(() => {
+    if (!activeTab && availableTabs.length > 0) {
+      setActiveTab(availableTabs[0]);
+    }
+  }, [availableTabs, activeTab]);
   const [showManualModal, setShowManualModal] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showHolidayModal, setShowHolidayModal] = useState(false);
@@ -92,7 +130,7 @@ export default function AdminAttendancePage() {
   });
   const [shiftAutoForm, setShiftAutoForm] = useState({
     date: new Date().toISOString().split('T')[0],
-    userType: "all"
+    userType: "agent"
   });
 
   const LIMIT = 10;
@@ -362,7 +400,7 @@ export default function AdminAttendancePage() {
     e.preventDefault();
     try {
       setLoading(prev => ({ ...prev, auto: true }));
-      const response = await attendanceService.processAutoAttendanceForDate(autoForm.date);
+      const response = await attendanceService.processAutoAttendance({ date: autoForm.date, userType: 'agent' });
       if (response.success) {
         toast.success(response.message || "Auto attendance processed successfully");
         setShowAutoModal(false);
@@ -484,7 +522,7 @@ export default function AdminAttendancePage() {
     e.preventDefault();
     try {
       setLoading(prev => ({ ...prev, shiftAuto: true }));
-      const response = await attendanceService.processShiftAutoAttendance(shiftAutoForm);
+  const response = await attendanceService.processShiftAutoAttendance(shiftAutoForm.date, "agent");
       if (response.success) {
         toast.success(response.message || "Shift-based auto attendance processed successfully");
         setShowShiftAutoModal(false);
@@ -505,7 +543,7 @@ export default function AdminAttendancePage() {
   };
 
   // ✅ Check if attendance can be edited
-  const canEditAttendance = (attendance) => {
+  const canEditAttendanceRecord = (attendance) => {
     return !["holiday", "weekly_off"].includes(attendance.status);
   };
 
@@ -550,7 +588,7 @@ export default function AdminAttendancePage() {
   // ✅ Stats Cards Component
   const StatsCards = () => (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-      <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+      <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 shadow-sm overflow-hidden">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
           <CardTitle className="text-sm font-medium text-blue-800">Total Records</CardTitle>
           <Calendar className="h-4 w-4 text-blue-600" />
@@ -560,7 +598,7 @@ export default function AdminAttendancePage() {
         </CardContent>
       </Card>
 
-      <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+      <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200 shadow-sm overflow-hidden">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
           <CardTitle className="text-sm font-medium text-green-800">Present Today</CardTitle>
           <CheckCircle className="h-4 w-4 text-green-600" />
@@ -572,7 +610,7 @@ export default function AdminAttendancePage() {
         </CardContent>
       </Card>
 
-      <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
+      <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200 shadow-sm overflow-hidden">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
           <CardTitle className="text-sm font-medium text-red-800">Absent Today</CardTitle>
           <XCircle className="h-4 w-4 text-red-600" />
@@ -584,7 +622,7 @@ export default function AdminAttendancePage() {
         </CardContent>
       </Card>
 
-      <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200">
+      <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200 shadow-sm overflow-hidden">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
           <CardTitle className="text-sm font-medium text-yellow-800">On Leave/Off</CardTitle>
           <Clock className="h-4 w-4 text-yellow-600" />
@@ -604,11 +642,11 @@ export default function AdminAttendancePage() {
 
   // ✅ Filters Component
   const FiltersSection = () => (
-    <Card className="mb-6">
+    <Card className="mb-6 shadow-sm overflow-hidden">
       <CardContent className="p-4">
-        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-end">
+        <div className="flex flex-col lg:flex-row gap-3 items-start lg:items-end">
           {/* Search */}
-          <div className="flex-1 min-w-[200px]">
+          <div className="flex-1 min-w-[200px] w-full">
             <Label htmlFor="search" className="text-sm font-medium mb-2 block">Search</Label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -617,7 +655,7 @@ export default function AdminAttendancePage() {
                 placeholder="Search by name or ID..."
                 value={filters.search}
                 onChange={(e) => handleFilterChange('search', e.target.value)}
-                className="pl-10"
+                className="pl-10 w-full"
               />
             </div>
           </div>
@@ -629,7 +667,7 @@ export default function AdminAttendancePage() {
               value={filters.status}
               onValueChange={(value) => handleFilterChange('status', value)}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="All Status" />
               </SelectTrigger>
               <SelectContent>
@@ -651,6 +689,7 @@ export default function AdminAttendancePage() {
               type="date"
               value={filters.date}
               onChange={(e) => handleFilterChange('date', e.target.value)}
+              className="w-full"
             />
           </div>
 
@@ -660,7 +699,7 @@ export default function AdminAttendancePage() {
               variant="outline"
               size="sm"
               onClick={() => setFilters({ userType: "all", status: "all", date: "", search: "" })}
-              className="h-10"
+              className="h-10 w-full lg:w-auto"
             >
               <X className="h-4 w-4 mr-1" />
               Clear
@@ -720,7 +759,7 @@ export default function AdminAttendancePage() {
       ),
     },
     { label: "Date", render: (a) => new Date(a.createdAt).toLocaleDateString() },
-    {
+    ...(canEditAttendance ? [{
       label: "Actions",
       align: "right",
       render: (a) => (
@@ -728,9 +767,9 @@ export default function AdminAttendancePage() {
           variant="outline"
           size="sm"
           onClick={() => handleEditAttendance(a)}
-          disabled={!canEditAttendance(a)}
+          disabled={!canEditAttendanceRecord(a)}
           title={
-            !canEditAttendance(a)
+            !canEditAttendanceRecord(a)
               ? a.status === "holiday" || a.status === "weekly_off"
                 ? "Cannot edit holiday/weekly off records"
                 : "Cannot edit this record"
@@ -740,7 +779,7 @@ export default function AdminAttendancePage() {
           <Edit className="h-4 w-4" />
         </Button>
       ),
-    },
+    }] : []),
   ];
 
   // Columns for Holidays
@@ -749,13 +788,13 @@ export default function AdminAttendancePage() {
     { label: "Date", render: (h) => new Date(h.date).toLocaleDateString() },
     { label: "Description", render: (h) => <div className="max-w-xs truncate" title={h.description}>{h.description || '—'}</div> },
     { label: "Recurring", render: (h) => (<Badge variant={h.isRecurring ? 'default' : 'secondary'}>{h.isRecurring ? 'Yes' : 'No'}</Badge>) },
-    {
+    ...(canDeleteHolidays ? [{
       label: "Actions", align: "right", render: (h) => (
         <Button variant="destructive" size="sm" onClick={() => handleDeleteHoliday(h._id)}>
           <Trash2 className="h-4 w-4" />
         </Button>
       )
-    },
+    }] : []),
   ];
 
   // Columns for Weekly Offs
@@ -764,23 +803,27 @@ export default function AdminAttendancePage() {
     { label: "Name", render: (w) => w.name },
     { label: "Description", render: (w) => <div className="max-w-xs truncate" title={w.description}>{w.description || '—'}</div> },
     { label: "Status", render: (w) => (<Badge variant={w.isActive ? 'default' : 'secondary'}>{w.isActive ? 'Active' : 'Inactive'}</Badge>) },
-    {
+    ...((canEditWeeklyOff || canDeleteWeeklyOff) ? [{
       label: "Actions", align: "right", render: (w) => (
         <div className="flex gap-2">
-          <Button
-            variant={w.isActive ? "outline" : "default"}
-            size="sm"
-            onClick={() => handleToggleWeeklyOff(w._id, !w.isActive)}
-          >
-            {w.isActive ? <ToggleLeft className="h-4 w-4 mr-1" /> : <ToggleRight className="h-4 w-4 mr-1" />}
-            {w.isActive ? "Deactivate" : "Activate"}
-          </Button>
-          <Button variant="destructive" size="sm" onClick={() => handleDeleteWeeklyOff(w._id)}>
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          {canEditWeeklyOff && (
+            <Button
+              variant={w.isActive ? "outline" : "default"}
+              size="sm"
+              onClick={() => handleToggleWeeklyOff(w._id, !w.isActive)}
+            >
+              {w.isActive ? <ToggleLeft className="h-4 w-4 mr-1" /> : <ToggleRight className="h-4 w-4 mr-1" />}
+              {w.isActive ? "Deactivate" : "Activate"}
+            </Button>
+          )}
+          {canDeleteWeeklyOff && (
+            <Button variant="destructive" size="sm" onClick={() => handleDeleteWeeklyOff(w._id)}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       )
-    },
+    }] : []),
   ];
 
   // Columns for Leave Requests
@@ -798,7 +841,7 @@ export default function AdminAttendancePage() {
     { label: "Period", render: (r) => `${new Date(r.startDate).toLocaleDateString()} - ${new Date(r.endDate).toLocaleDateString()}` },
     { label: "Reason", render: (r) => <div className="max-w-xs truncate" title={r.reason}>{r.reason}</div> },
     { label: "Status", render: (r) => getLeaveStatusBadge(r.status) },
-    {
+    ...(canApproveLeave ? [{
       label: "Actions", align: "right", render: (r) => (
         <div className="flex gap-2">
           {r.status === 'pending' ? (
@@ -818,7 +861,15 @@ export default function AdminAttendancePage() {
           )}
         </div>
       )
-    },
+    }] : [{
+      label: "Status Info", align: "right", render: (r) => (
+        <span className="text-sm text-muted-foreground">
+          {r.status === 'pending' ? 'Awaiting approval' :
+            r.status === 'approved' ? 'Approved' :
+            r.status === 'rejected' ? 'Rejected' : r.status}
+        </span>
+      )
+    }]),
   ];
 
   // ✅ MODALS COMPONENTS
@@ -841,7 +892,7 @@ export default function AdminAttendancePage() {
               value={manualForm.userType}
               onValueChange={(value) => setManualForm({ ...manualForm, userType: value, userId: "", agentId: "" })}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Agent" />
               </SelectTrigger>
               <SelectContent>
@@ -857,7 +908,7 @@ export default function AdminAttendancePage() {
               onValueChange={(value) => setManualForm({ ...manualForm, agentId: value })}
               disabled={!agents || agents.length === 0}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder={agents && agents.length ? 'Select Agent' : 'No agents available'} />
               </SelectTrigger>
               <SelectContent>
@@ -878,6 +929,7 @@ export default function AdminAttendancePage() {
             value={manualForm.date}
             onChange={(e) => setManualForm({ ...manualForm, date: e.target.value })}
             required
+            className="w-full"
           />
         </div>
 
@@ -887,7 +939,7 @@ export default function AdminAttendancePage() {
             value={manualForm.status}
             onValueChange={(value) => setManualForm({ ...manualForm, status: value })}
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Select Status" />
             </SelectTrigger>
             <SelectContent>
@@ -908,6 +960,7 @@ export default function AdminAttendancePage() {
               type="time"
               value={manualForm.checkInTime}
               onChange={(e) => setManualForm({ ...manualForm, checkInTime: e.target.value })}
+              className="w-full"
             />
           </div>
           <div className="space-y-2">
@@ -916,6 +969,7 @@ export default function AdminAttendancePage() {
               type="time"
               value={manualForm.checkOutTime}
               onChange={(e) => setManualForm({ ...manualForm, checkOutTime: e.target.value })}
+              className="w-full"
             />
           </div>
         </div>
@@ -927,13 +981,14 @@ export default function AdminAttendancePage() {
             onChange={(e) => setManualForm({ ...manualForm, notes: e.target.value })}
             placeholder="Additional notes..."
             rows={3}
+            className="w-full"
           />
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2 pt-4">
           <Button
             type="submit"
-            className="flex-1"
+            className="flex-1 w-full"
             disabled={loading.manual || !manualForm.agentId || !manualForm.date || !manualForm.status}
           >
             {loading.manual && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -943,7 +998,7 @@ export default function AdminAttendancePage() {
             type="button"
             variant="outline"
             onClick={() => setShowManualModal(false)}
-            className="flex-1"
+            className="flex-1 w-full"
             disabled={loading.manual}
           >
             Cancel
@@ -971,7 +1026,7 @@ export default function AdminAttendancePage() {
               value={leaveForm.userType}
               onValueChange={(value) => setLeaveForm({ ...leaveForm, userType: value, userId: "", agentId: "" })}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Agent" />
               </SelectTrigger>
               <SelectContent>
@@ -987,7 +1042,7 @@ export default function AdminAttendancePage() {
               onValueChange={(value) => setLeaveForm({ ...leaveForm, agentId: value })}
               disabled={!agents || agents.length === 0}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder={agents && agents.length ? 'Select Agent' : 'No agents available'} />
               </SelectTrigger>
               <SelectContent>
@@ -1009,6 +1064,7 @@ export default function AdminAttendancePage() {
               value={leaveForm.startDate}
               onChange={(e) => setLeaveForm({ ...leaveForm, startDate: e.target.value })}
               required
+              className="w-full"
             />
           </div>
           <div className="space-y-2">
@@ -1018,6 +1074,7 @@ export default function AdminAttendancePage() {
               value={leaveForm.endDate}
               onChange={(e) => setLeaveForm({ ...leaveForm, endDate: e.target.value })}
               required
+              className="w-full"
             />
           </div>
         </div>
@@ -1028,7 +1085,7 @@ export default function AdminAttendancePage() {
             value={leaveForm.leaveType}
             onValueChange={(value) => setLeaveForm({ ...leaveForm, leaveType: value })}
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Select Leave Type" />
             </SelectTrigger>
             <SelectContent>
@@ -1048,13 +1105,14 @@ export default function AdminAttendancePage() {
             placeholder="Reason for leave..."
             rows={3}
             required
+            className="w-full"
           />
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2 pt-4">
           <Button
             type="submit"
-            className="flex-1"
+            className="flex-1 w-full"
             disabled={loading.assign || !leaveForm.agentId || !leaveForm.startDate || !leaveForm.endDate || !leaveForm.leaveType || !leaveForm.reason}
           >
             {loading.assign && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -1064,7 +1122,7 @@ export default function AdminAttendancePage() {
             type="button"
             variant="outline"
             onClick={() => setShowLeaveModal(false)}
-            className="flex-1"
+            className="flex-1 w-full"
             disabled={loading.assign}
           >
             Cancel
@@ -1093,6 +1151,7 @@ export default function AdminAttendancePage() {
             onChange={(e) => setHolidayForm({ ...holidayForm, name: e.target.value })}
             placeholder="Enter holiday name"
             required
+            className="w-full"
           />
         </div>
 
@@ -1103,6 +1162,7 @@ export default function AdminAttendancePage() {
             value={holidayForm.date}
             onChange={(e) => setHolidayForm({ ...holidayForm, date: e.target.value })}
             required
+            className="w-full"
           />
         </div>
 
@@ -1113,6 +1173,7 @@ export default function AdminAttendancePage() {
             onChange={(e) => setHolidayForm({ ...holidayForm, description: e.target.value })}
             placeholder="Holiday description..."
             rows={3}
+            className="w-full"
           />
         </div>
 
@@ -1132,7 +1193,7 @@ export default function AdminAttendancePage() {
         <div className="flex flex-col sm:flex-row gap-2 pt-4">
           <Button
             type="submit"
-            className="flex-1"
+            className="flex-1 w-full"
             disabled={loading.holidays || !holidayForm.name || !holidayForm.date}
           >
             {loading.holidays && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -1142,7 +1203,7 @@ export default function AdminAttendancePage() {
             type="button"
             variant="outline"
             onClick={() => setShowHolidayModal(false)}
-            className="flex-1"
+            className="flex-1 w-full"
             disabled={loading.holidays}
           >
             Cancel
@@ -1173,7 +1234,7 @@ export default function AdminAttendancePage() {
               name: value.charAt(0).toUpperCase() + value.slice(1) + " - Weekly Off"
             })}
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Select day" />
             </SelectTrigger>
             <SelectContent>
@@ -1196,6 +1257,7 @@ export default function AdminAttendancePage() {
             onChange={(e) => setWeeklyOffForm({ ...weeklyOffForm, name: e.target.value })}
             placeholder="e.g., Sunday, Weekly Off"
             required
+            className="w-full"
           />
         </div>
 
@@ -1206,13 +1268,14 @@ export default function AdminAttendancePage() {
             onChange={(e) => setWeeklyOffForm({ ...weeklyOffForm, description: e.target.value })}
             placeholder="Description for this weekly off..."
             rows={2}
+            className="w-full"
           />
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2 pt-4">
           <Button
             type="submit"
-            className="flex-1"
+            className="flex-1 w-full"
             disabled={loading.weeklyOff || !weeklyOffForm.day || !weeklyOffForm.name}
           >
             {loading.weeklyOff && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -1222,7 +1285,7 @@ export default function AdminAttendancePage() {
             type="button"
             variant="outline"
             onClick={() => setShowWeeklyOffModal(false)}
-            className="flex-1"
+            className="flex-1 w-full"
             disabled={loading.weeklyOff}
           >
             Cancel
@@ -1237,8 +1300,8 @@ export default function AdminAttendancePage() {
     <CustomModal
       isOpen={showAutoModal}
       onClose={() => setShowAutoModal(false)}
-      title="Process Auto Attendance"
-      description="Automatically mark absent for users/agents without attendance on the selected date."
+  title="Process Auto Attendance (Agents)"
+  description="Automatically mark absent for agents without attendance on the selected date. Holidays and weekly offs are respected."
       size="md"
       preventClose={loading.auto}
     >
@@ -1250,15 +1313,16 @@ export default function AdminAttendancePage() {
             value={autoForm.date}
             onChange={(e) => setAutoForm({ ...autoForm, date: e.target.value })}
             required
+            className="w-full"
           />
         </div>
 
         <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-          <h4 className="font-medium text-blue-800 mb-2">How Auto Attendance Works:</h4>
+          <h4 className="font-medium text-blue-800 mb-2">How Auto Attendance (Agents) Works:</h4>
           <ul className="text-sm text-blue-700 space-y-1">
-            <li>• Users/Agents without attendance will be marked as <strong>Absent</strong></li>
-            <li>• If date is a holiday, they will be marked as <strong>Holiday</strong></li>
-            <li>• If date is weekly off, they will be marked as <strong>Weekly Off</strong></li>
+            <li>• Agents without attendance will be marked as <strong>Absent</strong></li>
+            <li>• If date is a holiday, agents will be marked as <strong>Holiday</strong></li>
+            <li>• If date is weekly off, agents will be marked as <strong>Weekly Off</strong></li>
             <li>• Existing attendance records will not be modified</li>
           </ul>
         </div>
@@ -1266,7 +1330,7 @@ export default function AdminAttendancePage() {
         <div className="flex flex-col sm:flex-row gap-2 pt-4">
           <Button
             type="submit"
-            className="flex-1"
+            className="flex-1 w-full"
             disabled={loading.auto || !autoForm.date}
           >
             {loading.auto && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -1276,7 +1340,7 @@ export default function AdminAttendancePage() {
             type="button"
             variant="outline"
             onClick={() => setShowAutoModal(false)}
-            className="flex-1"
+            className="flex-1 w-full"
             disabled={loading.auto}
           >
             Cancel
@@ -1292,52 +1356,35 @@ export default function AdminAttendancePage() {
       isOpen={showShiftAutoModal}
       onClose={() => setShowShiftAutoModal(false)}
       title="Process Shift-based Auto Attendance"
-      description="Mark absent for users/agents whose shifts have ended and no check-in recorded."
+      description="Mark absent for agents whose shifts have ended and no check-in recorded."
       size="md"
       preventClose={loading.shiftAuto}
     >
       <form onSubmit={handleShiftAutoAttendance} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="date">Date</Label>
-            <Input
-              type="date"
-              value={shiftAutoForm.date}
-              onChange={(e) => setShiftAutoForm({ ...shiftAutoForm, date: e.target.value })}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="userType">Select</Label>
-            <Select
-              value={shiftAutoForm.userType}
-              onValueChange={(value) => setShiftAutoForm({ ...shiftAutoForm, userType: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="All Agents" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="agent">Agents Only</SelectItem>
-                <SelectItem value="all">All Agents</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="date">Date</Label>
+          <Input
+            type="date"
+            value={shiftAutoForm.date}
+            onChange={(e) => setShiftAutoForm({ ...shiftAutoForm, date: e.target.value })}
+            required
+            className="w-full"
+          />
         </div>
 
         <div className="bg-green-50 p-4 rounded-lg border border-green-200">
           <h4 className="font-medium text-green-800 mb-2">How Shift-based Auto Attendance Works:</h4>
           <ul className="text-sm text-green-700 space-y-1">
-            <li>• Checks if user/agent has a shift assigned</li>
+            <li>• Checks if agent has a shift assigned</li>
             <li>• Verifies if shift end time has passed</li>
             <li>• Marks as <strong>Absent</strong> only if shift ended and no check-in</li>
             <li>• Respects holidays and weekly offs automatically</li>
-            <li>• Only processes selected user type</li>
+            <li>• Only processes agents</li>
           </ul>
         </div>
 
-        <div className="flex gap-2 pt-4">
-          <Button type="submit" className="flex-1" disabled={loading.shiftAuto}>
+        <div className="flex flex-col sm:flex-row gap-2 pt-4">
+          <Button type="submit" className="flex-1 w-full" disabled={loading.shiftAuto}>
             {loading.shiftAuto && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Process Shift Auto Attendance
           </Button>
@@ -1345,7 +1392,7 @@ export default function AdminAttendancePage() {
             type="button"
             variant="outline"
             onClick={() => setShowShiftAutoModal(false)}
-            className="flex-1"
+            className="flex-1 w-full"
             disabled={loading.shiftAuto}
           >
             Cancel
@@ -1368,14 +1415,14 @@ export default function AdminAttendancePage() {
       preventClose={loading.edit}
     >
       <form onSubmit={handleUpdateAttendance} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="status">Status</Label>
             <Select
               value={manualForm.status}
               onValueChange={(value) => setManualForm({ ...manualForm, status: value })}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select Status" />
               </SelectTrigger>
               <SelectContent>
@@ -1396,7 +1443,7 @@ export default function AdminAttendancePage() {
               value={manualForm.shiftId}
               onValueChange={(value) => setManualForm({ ...manualForm, shiftId: value })}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select Shift" />
               </SelectTrigger>
               <SelectContent>
@@ -1410,13 +1457,14 @@ export default function AdminAttendancePage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="checkInTime">Check In Time</Label>
             <Input
               type="time"
               value={manualForm.checkInTime}
               onChange={(e) => setManualForm({ ...manualForm, checkInTime: e.target.value })}
+              className="w-full"
             />
           </div>
           <div className="space-y-2">
@@ -1425,6 +1473,7 @@ export default function AdminAttendancePage() {
               type="time"
               value={manualForm.checkOutTime}
               onChange={(e) => setManualForm({ ...manualForm, checkOutTime: e.target.value })}
+              className="w-full"
             />
           </div>
         </div>
@@ -1436,11 +1485,12 @@ export default function AdminAttendancePage() {
             onChange={(e) => setManualForm({ ...manualForm, notes: e.target.value })}
             placeholder="Additional notes..."
             rows={3}
+            className="w-full"
           />
         </div>
 
-        <div className="flex gap-2 pt-4">
-          <Button type="submit" className="flex-1" disabled={loading.edit}>
+        <div className="flex flex-col sm:flex-row gap-2 pt-4">
+          <Button type="submit" className="flex-1 w-full" disabled={loading.edit}>
             {loading.edit && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Update Attendance
           </Button>
@@ -1448,7 +1498,7 @@ export default function AdminAttendancePage() {
             type="button"
             variant="outline"
             onClick={() => setShowEditModal(false)}
-            className="flex-1"
+            className="flex-1 w-full"
           >
             Cancel
           </Button>
@@ -1459,7 +1509,7 @@ export default function AdminAttendancePage() {
 
   // ✅ Holidays Management Section
   const HolidaysSection = () => (
-    <Card>
+    <Card className="shadow-sm overflow-hidden">
       <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <CardTitle>Holidays Management</CardTitle>
@@ -1467,10 +1517,12 @@ export default function AdminAttendancePage() {
             Manage system holidays. Recurring holidays automatically repeat every year.
           </CardDescription>
         </div>
-        <Button onClick={() => setShowHolidayModal(true)} className="w-full sm:w-auto">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Holiday
-        </Button>
+        {canCreateHolidays && (
+          <Button onClick={() => setShowHolidayModal(true)} className="w-full sm:w-auto">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Holiday
+          </Button>
+        )}
       </CardHeader>
       <CardContent>
         {loading.holidays ? (
@@ -1485,47 +1537,51 @@ export default function AdminAttendancePage() {
             <p className="text-gray-500">Add your first holiday to get started</p>
           </div>
         ) : (
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead className="hidden sm:table-cell">Description</TableHead>
-                  <TableHead>Recurring</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {holidays.map((holiday) => (
-                  <TableRow key={holiday._id}>
-                    <TableCell className="font-medium">{holiday.name}</TableCell>
-                    <TableCell>
-                      {new Date(holiday.date).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      <div className="max-w-xs truncate" title={holiday.description}>
-                        {holiday.description || "—"}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={holiday.isRecurring ? "default" : "secondary"}>
-                        {holiday.isRecurring ? "Yes" : "No"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleDeleteHoliday(holiday._id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
+          <div className="rounded-md border overflow-hidden">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead className="hidden sm:table-cell">Description</TableHead>
+                    <TableHead>Recurring</TableHead>
+                    {canDeleteHolidays && <TableHead className="text-right">Actions</TableHead>}
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {holidays.map((holiday) => (
+                    <TableRow key={holiday._id}>
+                      <TableCell className="font-medium">{holiday.name}</TableCell>
+                      <TableCell>
+                        {new Date(holiday.date).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        <div className="max-w-xs truncate" title={holiday.description}>
+                          {holiday.description || "—"}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={holiday.isRecurring ? "default" : "secondary"}>
+                          {holiday.isRecurring ? "Yes" : "No"}
+                        </Badge>
+                      </TableCell>
+                      {canDeleteHolidays && (
+                        <TableCell className="text-right">
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDeleteHoliday(holiday._id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         )}
       </CardContent>
@@ -1534,7 +1590,7 @@ export default function AdminAttendancePage() {
 
   // ✅ Weekly Off Management Section
   const WeeklyOffSection = () => (
-    <Card>
+    <Card className="shadow-sm overflow-hidden">
       <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <CardTitle>Weekly Off Days</CardTitle>
@@ -1542,10 +1598,12 @@ export default function AdminAttendancePage() {
             Manage weekly off days that automatically mark as off every week
           </CardDescription>
         </div>
-        <Button onClick={() => setShowWeeklyOffModal(true)} className="w-full sm:w-auto">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Weekly Off
-        </Button>
+        {canCreateWeeklyOff && (
+          <Button onClick={() => setShowWeeklyOffModal(true)} className="w-full sm:w-auto">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Weekly Off
+          </Button>
+        )}
       </CardHeader>
       <CardContent>
         {loading.weeklyOff ? (
@@ -1560,55 +1618,63 @@ export default function AdminAttendancePage() {
             <p className="text-gray-500">Add Sunday, Friday, or other weekly off days</p>
           </div>
         ) : (
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Day</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead className="hidden sm:table-cell">Description</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {weeklyOffs.map((weeklyOff) => (
-                  <TableRow key={weeklyOff._id}>
-                    <TableCell className="font-medium capitalize">{weeklyOff.day}</TableCell>
-                    <TableCell>{weeklyOff.name}</TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      <div className="max-w-xs truncate" title={weeklyOff.description}>
-                        {weeklyOff.description || "—"}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={weeklyOff.isActive ? "default" : "secondary"}>
-                        {weeklyOff.isActive ? "Active" : "Inactive"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex gap-2 justify-end">
-                        <Button
-                          variant={weeklyOff.isActive ? "outline" : "default"}
-                          size="sm"
-                          onClick={() => handleToggleWeeklyOff(weeklyOff._id, !weeklyOff.isActive)}
-                        >
-                          {weeklyOff.isActive ? <ToggleLeft className="h-4 w-4 mr-1" /> : <ToggleRight className="h-4 w-4 mr-1" />}
-                          {weeklyOff.isActive ? "Deactivate" : "Activate"}
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDeleteWeeklyOff(weeklyOff._id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+          <div className="rounded-md border overflow-hidden">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Day</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead className="hidden sm:table-cell">Description</TableHead>
+                    <TableHead>Status</TableHead>
+                    {(canEditWeeklyOff || canDeleteWeeklyOff) && <TableHead className="text-right">Actions</TableHead>}
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {weeklyOffs.map((weeklyOff) => (
+                    <TableRow key={weeklyOff._id}>
+                      <TableCell className="font-medium capitalize">{weeklyOff.day}</TableCell>
+                      <TableCell>{weeklyOff.name}</TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        <div className="max-w-xs truncate" title={weeklyOff.description}>
+                          {weeklyOff.description || "—"}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={weeklyOff.isActive ? "default" : "secondary"}>
+                          {weeklyOff.isActive ? "Active" : "Inactive"}
+                        </Badge>
+                      </TableCell>
+                      {(canEditWeeklyOff || canDeleteWeeklyOff) && (
+                        <TableCell className="text-right">
+                          <div className="flex gap-2 justify-end">
+                            {canEditWeeklyOff && (
+                              <Button
+                                variant={weeklyOff.isActive ? "outline" : "default"}
+                                size="sm"
+                                onClick={() => handleToggleWeeklyOff(weeklyOff._id, !weeklyOff.isActive)}
+                              >
+                                {weeklyOff.isActive ? <ToggleLeft className="h-4 w-4 mr-1" /> : <ToggleRight className="h-4 w-4 mr-1" />}
+                                {weeklyOff.isActive ? "Deactivate" : "Activate"}
+                              </Button>
+                            )}
+                            {canDeleteWeeklyOff && (
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleDeleteWeeklyOff(weeklyOff._id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         )}
       </CardContent>
@@ -1617,7 +1683,7 @@ export default function AdminAttendancePage() {
 
   return (
     <div className="min-h-screen bg-gray-50/30">
-      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-6">
         {/* All Modals */}
         <ManualAttendanceModal />
         <LeaveModal />
@@ -1631,7 +1697,7 @@ export default function AdminAttendancePage() {
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6">
           <div className="text-center lg:text-left">
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 tracking-tight">
-              Admin Attendance Management
+           Admin Attendance Management
             </h1>
             <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">
               Manage attendance records, leave requests, holidays, and weekly off days
@@ -1639,39 +1705,57 @@ export default function AdminAttendancePage() {
           </div>
 
           <div className="flex flex-wrap items-center justify-center lg:justify-end gap-2 sm:gap-3">
-            <Button
-              onClick={() => setShowLeaveModal(true)}
-              className="bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm"
-              size="sm"
-            >
-              <UserPlus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              Assign Leave
-            </Button>
+            {canCreateLeave && (
+              <Button
+                onClick={() => setShowLeaveModal(true)}
+                className="bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm w-full sm:w-auto"
+                size="sm"
+              >
+                <UserPlus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                Assign Leave
+              </Button>
+            )}
 
-            <Button
-              onClick={() => setShowManualModal(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm"
-              size="sm"
-            >
-              <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              Manual Entry
-            </Button>
+            {canCreateAttendance && (
+              <Button
+                onClick={() => setShowManualModal(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm w-full sm:w-auto"
+                size="sm"
+              >
+                <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                Manual Entry
+              </Button>
+            )}
 
-            <Button
-              onClick={() => setShowAutoModal(true)}
-              variant="outline"
-              className="border-blue-600 text-blue-600 hover:bg-blue-50 text-xs sm:text-sm"
-              size="sm"
-            >
-              <PlayCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              Auto Attendance
-            </Button>
+            {canCreateAttendance && (
+              <Button
+                onClick={() => setShowAutoModal(true)}
+                variant="outline"
+                className="border-blue-600 text-blue-600 hover:bg-blue-50 text-xs sm:text-sm w-full sm:w-auto"
+                size="sm"
+              >
+                <PlayCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                Auto Attendance
+              </Button>
+            )}
+
+            {canCreateAttendance && (
+              <Button
+                onClick={() => setShowShiftAutoModal(true)}
+                variant="outline"
+                className="border-purple-600 text-purple-600 hover:bg-purple-50 text-xs sm:text-sm w-full sm:w-auto"
+                size="sm"
+              >
+                <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                Shift Wise
+              </Button>
+            )}
 
             <Button
               onClick={() => fetchAttendance(page)}
               variant="outline"
               size="sm"
-              className="text-xs sm:text-sm"
+              className="text-xs sm:text-sm w-full sm:w-auto"
             >
               <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
               Refresh
@@ -1682,83 +1766,69 @@ export default function AdminAttendancePage() {
         {/* Stats Cards */}
         <StatsCards />
 
-        {/* Filters Section */}
-        <FiltersSection />
-
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-          <div className="relative w-full">
-            {/* Scrollable Wrapper (Mobile Only) */}
-            <div className="overflow-x-auto sm:overflow-visible pb-2 -mx-3 sm:mx-0 sm:px-0">
-              <div className="w-max sm:w-full min-w-full">
-                <TabsList className="flex sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-1 p-1 bg-muted/50 w-max sm:w-full rounded-md">
-                  {/* Attendance */}
-                  <TabsTrigger
-                    value="attendance"
-                    className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-3 py-2 text-xs sm:text-sm whitespace-nowrap min-w-[100px] sm:min-w-0"
-                  >
-                    <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
-                    <span className="text-center">
-                      Attendance <span className="hidden sm:inline">Records</span>
-                    </span>
-                  </TabsTrigger>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <div className="w-full">
+            <TabsList className={`grid gap-1 p-1 bg-muted/50 rounded-md w-full`} 
+              style={{ gridTemplateColumns: `repeat(${availableTabs.length}, minmax(0, 1fr))` }}>
+              {canViewAttendance && (
+                <TabsTrigger
+                  value="attendance"
+                  className="flex items-center justify-center gap-2 px-3 py-2 text-sm"
+                >
+                  <Calendar className="h-4 w-4" />
+                  <span className="hidden sm:inline">Attendance Records</span>
+                  <span className="sm:hidden">Attendance</span>
+                </TabsTrigger>
+              )}
 
-                  {/* Leave Requests */}
-                  <TabsTrigger
-                    value="leave"
-                    className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-3 py-2 text-xs sm:text-sm relative whitespace-nowrap min-w-[100px] sm:min-w-0"
-                  >
-                    <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
-                    <span className="text-center">
-                      Leave Requests
-                    </span>
-                    {leaveRequests.filter(r => r.status === "pending").length > 0 && (
-                      <Badge
-                        variant="destructive"
-                        className="absolute -top-1 -right-1 h-4 w-4 p-0 text-[10px] flex items-center justify-center"
-                      >
-                        {leaveRequests.filter(r => r.status === "pending").length}
-                      </Badge>
-                    )}
-                  </TabsTrigger>
+              {canViewLeave && (
+                <TabsTrigger
+                  value="leave"
+                  className="flex items-center justify-center gap-2 px-3 py-2 text-sm relative"
+                >
+                  <FileText className="h-4 w-4" />
+                  <span className="hidden sm:inline">Leave Requests</span>
+                  <span className="sm:hidden">Leave</span>
+                  {leaveRequests.filter(r => r.status === "pending").length > 0 && (
+                    <Badge
+                      variant="destructive"
+                      className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs flex items-center justify-center"
+                    >
+                      {leaveRequests.filter(r => r.status === "pending").length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+              )}
 
-                  {/* Holidays */}
-                  <TabsTrigger
-                    value="holidays"
-                    className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-3 py-2 text-xs sm:text-sm whitespace-nowrap min-w-[100px] sm:min-w-0"
-                  >
-                    <PartyPopper className="h-3 w-3 sm:h-4 sm:w-4" />
-                    <span className="text-center">
-                      Holidays <span className="hidden sm:inline">({holidays.length})</span>
-                    </span>
-                  </TabsTrigger>
+              {canViewHolidays && (
+                <TabsTrigger
+                  value="holidays"
+                  className="flex items-center justify-center gap-2 px-3 py-2 text-sm"
+                >
+                  <PartyPopper className="h-4 w-4" />
+                  <span className="hidden sm:inline">Holidays ({holidays.length})</span>
+                  <span className="sm:hidden">Holidays</span>
+                </TabsTrigger>
+              )}
 
-                  {/* Weekly Off */}
-                  <TabsTrigger
-                    value="weekly-off"
-                    className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-3 py-2 text-xs sm:text-sm whitespace-nowrap min-w-[100px] sm:min-w-0"
-                  >
-                    <CalendarDays className="h-3 w-3 sm:h-4 sm:w-4" />
-                    <span className="text-center">
-                      Weekly Off <span className="hidden sm:inline">({weeklyOffs.length})</span>
-                    </span>
-                  </TabsTrigger>
-                </TabsList>
-              </div>
-            </div>
-
-            {/* Scroll Hint Only for Mobile */}
-            <div className="sm:hidden text-center mt-1">
-              <div className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                <ChevronLeft className="h-3 w-3" />
-                <span>Scroll for more</span>
-                <ChevronRight className="h-3 w-3" />
-              </div>
-            </div>
+              {canViewWeeklyOff && (
+                <TabsTrigger
+                  value="weekly-off"
+                  className="flex items-center justify-center gap-2 px-3 py-2 text-sm"
+                >
+                  <CalendarDays className="h-4 w-4" />
+                  <span className="hidden sm:inline">Weekly Off ({weeklyOffs.length})</span>
+                  <span className="sm:hidden">Weekly Off</span>
+                </TabsTrigger>
+              )}
+            </TabsList>
           </div>
 
-          <TabsContent value="attendance" className="space-y-4">
-            <Card>
+          {canViewAttendance && (
+            <TabsContent value="attendance" className="space-y-4">
+            <FiltersSection />
+            <Card className="shadow-sm overflow-hidden">
               <CardHeader className="p-4 sm:p-6">
                 <CardTitle className="text-lg sm:text-xl">Attendance Records</CardTitle>
                 <CardDescription className="text-sm sm:text-base">
@@ -1824,7 +1894,7 @@ export default function AdminAttendancePage() {
                           type="month"
                           value={filters.month || ''}
                           onChange={(e) => onFilterChange('month', e.target.value)}
-                          className="border rounded px-3 py-2 text-sm w-40"
+                          className="border rounded px-3 py-2 text-sm w-full md:w-40"
                         />
                       </div>
 
@@ -1833,7 +1903,7 @@ export default function AdminAttendancePage() {
                           variant="outline"
                           size="sm"
                           onClick={() => onFilterChange('month', '')}
-                          className="h-10"
+                          className="h-10 w-full md:w-auto"
                         >
                           <X className="h-4 w-4 mr-1" />
                           Clear Month
@@ -1845,9 +1915,11 @@ export default function AdminAttendancePage() {
               </CardContent>
             </Card>
           </TabsContent>
+          )}
 
-          <TabsContent value="leave">
-            <Card>
+          {canViewLeave && (
+            <TabsContent value="leave">
+            <Card className="shadow-sm overflow-hidden">
               <CardHeader className="p-4 sm:p-6">
                 <CardTitle className="text-lg sm:text-xl">Leave Requests Management</CardTitle>
                 <CardDescription className="text-sm sm:text-base">
@@ -1874,14 +1946,19 @@ export default function AdminAttendancePage() {
               </CardContent>
             </Card>
           </TabsContent>
+          )}
 
-          <TabsContent value="holidays">
+          {canViewHolidays && (
+            <TabsContent value="holidays">
             <HolidaysSection />
           </TabsContent>
+          )}
 
-          <TabsContent value="weekly-off">
+          {canViewWeeklyOff && (
+            <TabsContent value="weekly-off">
             <WeeklyOffSection />
           </TabsContent>
+          )}
         </Tabs>
       </div>
     </div>
