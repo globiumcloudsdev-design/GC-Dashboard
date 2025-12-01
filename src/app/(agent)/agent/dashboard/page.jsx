@@ -555,93 +555,96 @@ const HomeScreen = () => {
           {/* Shift Schedule Component */}
           <ShiftSchedule />
 
-          {/* Quick Actions */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="p-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
+          {/* Quick Actions and Monthly Sales Target Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Quick Actions */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="p-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
+              </div>
+              <div className="p-4 space-y-3">
+                <button
+                  onClick={goToSales}
+                  className="w-full text-left bg-blue-50 hover:bg-blue-100 text-blue-700 p-3 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Add New Lead
+                </button>
+                <button
+                  onClick={goToAttendance}
+                  className="w-full text-left bg-green-50 hover:bg-green-100 text-green-700 p-3 rounded-lg text-sm font-medium transition-colors"
+                >
+                  View Attendance
+                </button>
+                <button className="w-full text-left bg-purple-50 hover:bg-purple-100 text-purple-700 p-3 rounded-lg text-sm font-medium transition-colors">
+                  Generate Report
+                </button>
+              </div>
             </div>
-            <div className="p-4 space-y-3">
-              <button 
-                onClick={goToSales}
-                className="w-full text-left bg-blue-50 hover:bg-blue-100 text-blue-700 p-3 rounded-lg text-sm font-medium transition-colors"
-              >
-                Add New Lead
-              </button>
-              <button 
-                onClick={goToAttendance}
-                className="w-full text-left bg-green-50 hover:bg-green-100 text-green-700 p-3 rounded-lg text-sm font-medium transition-colors"
-              >
-                View Attendance
-              </button>
-              <button className="w-full text-left bg-purple-50 hover:bg-purple-100 text-purple-700 p-3 rounded-lg text-sm font-medium transition-colors">
-                Generate Report
-              </button>
-            </div>
-          </div>
 
-          {/* Monthly Goal */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="p-4 border-b border-gray-200 flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg">
-                <Target className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Monthly Sales Target</h3>
-                <p className="text-xs text-gray-500">Track your sales count progress</p>
-              </div>
-            </div>
-            <div className="p-4">
-              <div className="mb-4">
-                <div className="flex justify-between items-center text-sm mb-2">
-                  <span className="text-gray-600 font-medium">Sales Progress</span>
-                  <span className="text-lg font-bold text-purple-600">{progressPercentage}%</span>
+            {/* Monthly Goal */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="p-4 border-b border-gray-200 flex items-center gap-3">
+                <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg">
+                  <Target className="h-5 w-5 text-white" />
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                  <div 
-                    className="bg-gradient-to-r from-purple-500 to-pink-500 h-3 rounded-full transition-all duration-500 relative"
-                    style={{ width: `${progressPercentage}%` }}
-                  >
-                    {progressPercentage > 10 && (
-                      <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
-                    )}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Monthly Sales Target</h3>
+                  <p className="text-xs text-gray-500">Track your sales count progress</p>
+                </div>
+              </div>
+              <div className="p-4">
+                <div className="mb-4">
+                  <div className="flex justify-between items-center text-sm mb-2">
+                    <span className="text-gray-600 font-medium">Sales Progress</span>
+                    <span className="text-lg font-bold text-purple-600">{progressPercentage}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-purple-500 to-pink-500 h-3 rounded-full transition-all duration-500 relative"
+                      style={{ width: `${progressPercentage}%` }}
+                    >
+                      {progressPercentage > 10 && (
+                        <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-3 mb-3">
-                <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-3 rounded-lg border border-purple-100">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Target className="h-4 w-4 text-purple-600" />
-                    <p className="text-xs text-gray-600 font-medium">Target</p>
-                  </div>
-                  <p className="font-bold text-gray-900 text-lg">{stats.monthlyTarget}</p>
-                  <p className="text-xs text-gray-500">Completed Sales</p>
-                </div>
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-3 rounded-lg border border-green-100">
-                  <div className="flex items-center gap-2 mb-1">
-                    <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    <p className="text-xs text-gray-600 font-medium">Completed</p>
-                  </div>
-                  <p className="font-bold text-gray-900 text-lg">{stats.achievedSales}</p>
-                  <p className="text-xs text-gray-500">Sales this month</p>
-                </div>
-              </div>
 
-              <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-3 rounded-lg border border-orange-100">
-                <div className="flex items-center gap-2 mb-1">
-                  <TrendingUp className="h-4 w-4 text-orange-600" />
-                  <p className="text-xs text-gray-600 font-medium">Remaining</p>
-                </div>
-                <p className="font-bold text-gray-900 text-lg">
-                  {Math.max(0, stats.monthlyTarget - stats.achievedSales)}
-                </p>
-                <p className="text-xs text-gray-500">Completed sales needed</p>
-                {stats.achievedSales >= stats.monthlyTarget && stats.monthlyTarget > 0 && (
-                  <div className="mt-2 flex items-center gap-1 text-green-600">
-                    <Award className="h-4 w-4" />
-                    <span className="text-xs font-semibold">🎉 Monthly Target Achieved!</span>
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-3 rounded-lg border border-purple-100">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Target className="h-4 w-4 text-purple-600" />
+                      <p className="text-xs text-gray-600 font-medium">Target</p>
+                    </div>
+                    <p className="font-bold text-gray-900 text-lg">{stats.monthlyTarget}</p>
+                    <p className="text-xs text-gray-500">Completed Sales</p>
                   </div>
-                )}
+                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-3 rounded-lg border border-green-100">
+                    <div className="flex items-center gap-2 mb-1">
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <p className="text-xs text-gray-600 font-medium">Completed</p>
+                    </div>
+                    <p className="font-bold text-gray-900 text-lg">{stats.achievedSales}</p>
+                    <p className="text-xs text-gray-500">Sales this month</p>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-3 rounded-lg border border-orange-100">
+                  <div className="flex items-center gap-2 mb-1">
+                    <TrendingUp className="h-4 w-4 text-orange-600" />
+                    <p className="text-xs text-gray-600 font-medium">Remaining</p>
+                  </div>
+                  <p className="font-bold text-gray-900 text-lg">
+                    {Math.max(0, stats.monthlyTarget - stats.achievedSales)}
+                  </p>
+                  <p className="text-xs text-gray-500">Completed sales needed</p>
+                  {stats.achievedSales >= stats.monthlyTarget && stats.monthlyTarget > 0 && (
+                    <div className="mt-2 flex items-center gap-1 text-green-600">
+                      <Award className="h-4 w-4" />
+                      <span className="text-xs font-semibold">🎉 Monthly Target Achieved!</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
