@@ -32,6 +32,21 @@ export default function AgentTopbar({ collapsed, toggleSidebar, isOpen }) {
   const { agent, logout } = useAgent();
   const [showNoti, setShowNoti] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const notificationRef = useRef(null);
+
+  // Close notifications when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+        setShowNoti(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -64,13 +79,13 @@ export default function AgentTopbar({ collapsed, toggleSidebar, isOpen }) {
   };
 
   // Hide topbar on mobile when sidebar is open
-  if (isOpen && window.innerWidth < 768) {
+  if (isOpen && typeof window !== "undefined" && window.innerWidth < 768) {
     return null;
   }
 
   return (
     <header
-      className={`flex items-center justify-between fixed top-0 left-0 right-0 z-70 bg-white dark:bg-gray-900 shadow-md rounded-b-xl py-3 transition-all duration-300 overflow-visible ${
+      className={`flex items-center justify-between fixed top-0 left-0 right-0 z-40 bg-white dark:bg-gray-900 shadow-md rounded-b-xl py-3 transition-all duration-300 overflow-visible ${
         collapsed ? "lg:left-[80px] lg:right-0 lg:px-4 lg:sm:px-6" : "lg:left-[300px] lg:right-0 lg:px-4 lg:sm:px-6"
       }`}
     >
@@ -105,7 +120,7 @@ export default function AgentTopbar({ collapsed, toggleSidebar, isOpen }) {
       {/* Right Section */}
       <div className="flex items-center gap-3 sm:gap-4 relative">
         {/* 🔔 Notifications */}
-        <div className="relative">
+        <div className="relative" ref={notificationRef}>
           <Button
             variant="ghost"
             size="icon"
@@ -125,6 +140,7 @@ export default function AgentTopbar({ collapsed, toggleSidebar, isOpen }) {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.25 }}
                 className="absolute right-0 mt-3 w-80 sm:w-96 rounded-xl border border-gray-200 bg-white shadow-xl overflow-hidden dark:border-gray-700 dark:bg-gray-800 z-50"
+                style={{ zIndex: 1000 }} // Explicit z-index for notification
               >
                 <div className="border-b p-3 font-semibold text-gray-700 dark:text-gray-300">
                   Notifications
@@ -182,7 +198,11 @@ export default function AgentTopbar({ collapsed, toggleSidebar, isOpen }) {
               </span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 sm:w-56 rounded-lg">
+          <DropdownMenuContent 
+            align="end" 
+            className="w-48 sm:w-56 rounded-lg"
+            style={{ zIndex: 1000 }} // Explicit z-index for dropdown
+          >
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => router.push("/agent/profile")}>
