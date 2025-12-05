@@ -90,7 +90,10 @@ export async function POST(request) {
     if (agent.isActive === false) {
       console.log('❌ Agent account is inactive');
       return NextResponse.json(
-        { error: 'Account is deactivated' },
+        {
+          error: 'Account is deactivated',
+          accountStatus: 'deactivated'  // ✅ Ye field add karo
+        },
         { status: 401 }
       );
     }
@@ -166,6 +169,9 @@ export async function POST(request) {
         email: agent.email,
         phone: agent.phone,
         monthlyTarget: agent.monthlyTarget,
+        employeeType: agent.employeeType,
+        designation: agent.designation,
+        profileImage: agent.profileImage,
         isActive: agent.isActive,
         shift: agent.shift
       }
@@ -209,3 +215,7 @@ export async function POST(request) {
     );
   }
 }
+
+
+
+
