@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { shiftService } from "@/services/shiftService";
+import ''
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -464,7 +465,8 @@ export default function AdminCreateShift() {
                 {hasPermission('shift', 'create') && (
                   <Button
                     onClick={openCreate}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 md:px-6 rounded-lg transition-colors shadow-sm flex items-center gap-2 w-full sm:w-auto justify-center"
+                    style={{ backgroundColor: 'var(--primary-blue)' }}
+                    className="hover:bg-blue-700 text-white font-medium py-2.5 px-4 md:px-6 rounded-lg transition-colors shadow-sm flex items-center gap-2 w-full sm:w-auto justify-center"
                   >
                     <Plus className="h-4 w-4" />
                     Add Shift
