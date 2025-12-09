@@ -1,7 +1,4 @@
-
-
-
-
+//src/app/(dashboard)/dashboard/view-attendance/page.jsx
 "use client";
 import React, { useCallback, useEffect, useState } from "react";
 import { adminService } from "@/services/adminService";
@@ -21,10 +18,11 @@ import {
   Loader2, Calendar, Users, CheckCircle, XCircle, Clock, Plus, Trash2,
   PlayCircle, ToggleLeft, ToggleRight, Edit, ChevronLeft, ChevronRight,
   Download, X, RefreshCw, ChevronDown, UserPlus, FileText, PartyPopper,
-  CalendarDays, Search, Menu, Filter, MoreVertical
+  CalendarDays, Search, Menu, Filter, MoreVertical, Eye
 } from "lucide-react";
 import { toast } from "sonner";
 import CustomModal from "@/components/ui/customModal";
+import ViewAttendanceModal from "@/components/ViewAttendanceModal";
 import { useAuth } from "@/context/AuthContext";
 import {
   Pagination,
@@ -40,10 +38,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { formatToPakistaniDate, formatToPakistaniTime } from "@/utils/TimeFuntions";
 
 export default function AdminAttendancePage() {
   const { hasPermission } = useAuth();
-  
+
   // State variables
   const [attendance, setAttendance] = useState([]);
   const [leaveRequests, setLeaveRequests] = useState([]);
@@ -100,7 +99,9 @@ export default function AdminAttendancePage() {
   const [showAutoModal, setShowAutoModal] = useState(false);
   const [showShiftAutoModal, setShowShiftAutoModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
   const [editingAttendance, setEditingAttendance] = useState(null);
+  const [viewingAttendance, setViewingAttendance] = useState(null);
 
   const [manualForm, setManualForm] = useState({
     userType: "agent",
@@ -435,11 +436,18 @@ export default function AdminAttendancePage() {
     }
   };
 
+  const handleViewAttendance = (attendance) => {
+    setViewingAttendance(attendance);
+    setShowViewModal(true);
+  };
+
   const handleEditAttendance = (attendance) => {
     const formatDateOnly = (val) => {
       if (!val) return '';
       try {
-        return new Date(val).toISOString().split('T')[0];
+        // Convert to Pakistani date
+        const date = new Date(val);
+        return date.toLocaleDateString('en-CA', { timeZone: 'Asia/Karachi' }); // YYYY-MM-DD format
       } catch {
         return '';
       }
@@ -448,19 +456,44 @@ export default function AdminAttendancePage() {
     const formatTimeOnly = (val) => {
       if (!val) return '';
       try {
-        return new Date(val).toISOString().split('T')[1]?.substring(0, 5) || '';
-      } catch {
+        const date = new Date(val);
+        // Get time in Pakistani timezone
+        const options = {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false,
+          timeZone: 'Asia/Karachi'
+        };
+
+        // Convert to Pakistani time and format as HH:mm
+        const timeString = date.toLocaleTimeString('en-GB', options);
+        return timeString;
+      } catch (error) {
+        console.error("Error formatting time:", error, val);
         return '';
       }
     };
 
     setEditingAttendance(attendance);
+
+    // Get date - prioritize attendance.date, then checkInTime
+    let attendanceDate = '';
+    if (attendance.date) {
+      attendanceDate = formatDateOnly(attendance.date);
+    } else if (attendance.checkInTime) {
+      attendanceDate = formatDateOnly(attendance.checkInTime);
+    } else {
+      // Fallback to current date in Pakistani timezone
+      const now = new Date();
+      attendanceDate = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Karachi' });
+    }
+
     setManualForm({
       userType: attendance.user ? "user" : "agent",
       userId: attendance.user?._id || "",
       agentId: attendance.agent?._id || "",
       shiftId: attendance.shift?._id || "",
-      date: formatDateOnly(attendance.date) || formatDateOnly(attendance.checkInTime) || new Date().toISOString().split('T')[0],
+      date: attendanceDate,
       status: attendance.status,
       checkInTime: formatTimeOnly(attendance.checkInTime),
       checkOutTime: formatTimeOnly(attendance.checkOutTime),
@@ -473,10 +506,27 @@ export default function AdminAttendancePage() {
     e.preventDefault();
     try {
       setLoading(prev => ({ ...prev, edit: true }));
+
+      // Detect if admin is manually setting status
+      const originalStatus = editingAttendance?.status;
+      const isManuallySettingStatus = manualForm.status !== originalStatus;
+
+      // Prepare update data
       const updateData = {
-        ...manualForm,
-        attendanceId: editingAttendance._id
+        attendanceId: editingAttendance._id,
+        // Only send status if admin manually changed it
+        status: isManuallySettingStatus ? manualForm.status : null,
+        checkInTime: manualForm.checkInTime || null,
+        checkOutTime: manualForm.checkOutTime || null,
+        shiftId: manualForm.shiftId || null,
+        notes: manualForm.notes || ""
       };
+
+      console.log("Sending update data:", updateData);
+      console.log("Original status:", originalStatus);
+      console.log("Manual status:", manualForm.status);
+      console.log("Is manually setting status:", isManuallySettingStatus);
+
       const response = await adminService.updateAttendance(updateData);
       if (response.success) {
         toast.success("Attendance updated successfully");
@@ -526,11 +576,12 @@ export default function AdminAttendancePage() {
       holiday: "bg-purple-100 text-purple-700 border-purple-200",
       weekly_off: "bg-indigo-100 text-indigo-700 border-indigo-200",
       approved_leave: "bg-blue-100 text-blue-700 border-blue-200",
+      early_checkout: "bg-pink-100 text-pink-700 border-pink-200",
       pending_leave: "bg-gray-100 text-gray-700 border-gray-200"
     };
     return (
       <Badge variant="outline" className={`${statusConfig[status] || "bg-gray-100 text-gray-700 border-gray-200"} text-xs px-2 py-1`}>
-        {status.replace('_', ' ')}
+        {status?.replace('_', ' ')}
       </Badge>
     );
   };
@@ -562,10 +613,10 @@ export default function AdminAttendancePage() {
       const checkMobile = () => {
         setIsMobile(window.innerWidth < 768);
       };
-      
+
       checkMobile();
       window.addEventListener('resize', checkMobile);
-      
+
       return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
@@ -599,7 +650,7 @@ export default function AdminAttendancePage() {
                       </div>
                       {getStatusBadge(item.status)}
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div>
                         <span className="text-muted-foreground">Check In:</span>
@@ -701,10 +752,10 @@ export default function AdminAttendancePage() {
       const checkMobile = () => {
         setIsMobile(window.innerWidth < 640);
       };
-      
+
       checkMobile();
       window.addEventListener('resize', checkMobile);
-      
+
       return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
@@ -723,7 +774,7 @@ export default function AdminAttendancePage() {
                 <div className="text-lg font-bold text-blue-700">{total}</div>
               </CardContent>
             </Card>
-            
+
             <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
               <CardHeader className="p-3">
                 <div className="flex items-center justify-between">
@@ -738,7 +789,7 @@ export default function AdminAttendancePage() {
               </CardContent>
             </Card>
           </div>
-          
+
           <div className="grid grid-cols-2 gap-3">
             <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
               <CardHeader className="p-3">
@@ -753,7 +804,7 @@ export default function AdminAttendancePage() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200">
               <CardHeader className="p-3">
                 <div className="flex items-center justify-between">
@@ -787,7 +838,7 @@ export default function AdminAttendancePage() {
             <div className="text-2xl font-bold text-blue-700">{total}</div>
           </CardContent>
         </Card>
-        
+
         <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200 shadow-sm overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
             <CardTitle className="text-sm font-medium text-green-800">Present Today</CardTitle>
@@ -799,7 +850,7 @@ export default function AdminAttendancePage() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200 shadow-sm overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
             <CardTitle className="text-sm font-medium text-red-800">Absent Today</CardTitle>
@@ -811,7 +862,7 @@ export default function AdminAttendancePage() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200 shadow-sm overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
             <CardTitle className="text-sm font-medium text-yellow-800">On Leave/Off</CardTitle>
@@ -882,25 +933,48 @@ export default function AdminAttendancePage() {
       minWidth: "120px",
       render: (a) => new Date(a.createdAt).toLocaleDateString()
     },
-    ...(canEditAttendance ? [{
+  ...(canEditAttendance ? [{
+      label: "Actions",
+      minWidth: "150px",
+      render: (a) => (
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleViewAttendance(a)}
+            title="View attendance details"
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleEditAttendance(a)}
+            disabled={!canEditAttendanceRecord(a)}
+            title={
+              !canEditAttendanceRecord(a)
+                ? "Cannot edit holiday/weekly off records"
+                : "Edit attendance"
+            }
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+        </div>
+      ),
+    }] : [{
       label: "Actions",
       minWidth: "100px",
       render: (a) => (
         <Button
           variant="outline"
           size="sm"
-          onClick={() => handleEditAttendance(a)}
-          disabled={!canEditAttendanceRecord(a)}
-          title={
-            !canEditAttendanceRecord(a)
-              ? "Cannot edit holiday/weekly off records"
-              : "Edit attendance"
-          }
+          onClick={() => handleViewAttendance(a)}
+          title="View attendance details"
         >
-          <Edit className="h-4 w-4" />
+          <Eye className="h-4 w-4" />
         </Button>
       ),
-    }] : []),
+    }]),
   ];
 
   // ✅ Leave Requests Table Columns
@@ -1079,7 +1153,7 @@ export default function AdminAttendancePage() {
   // ✅ Pagination Component
   const CustomPagination = () => {
     const totalPages = Math.ceil(total / limit);
-    
+
     if (totalPages <= 1) return null;
 
     return (
@@ -1091,7 +1165,7 @@ export default function AdminAttendancePage() {
               className={page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
             />
           </PaginationItem>
-          
+
           {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
             let pageNum;
             if (totalPages <= 5) {
@@ -1115,14 +1189,14 @@ export default function AdminAttendancePage() {
               </PaginationItem>
             );
           })}
-          
+
           <PaginationItem>
             <PaginationNext
               onClick={() => page < totalPages && setPage(page + 1)}
               className={page === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
             />
           </PaginationItem>
-          
+
           <PaginationItem className="ml-2 sm:ml-4">
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground hidden sm:inline">Rows:</span>
@@ -1139,7 +1213,7 @@ export default function AdminAttendancePage() {
               </Select>
             </div>
           </PaginationItem>
-          
+
           <PaginationItem className="ml-2 sm:ml-4">
             <div className="text-sm text-muted-foreground hidden md:inline">
               Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, total)} of {total}
@@ -1195,7 +1269,7 @@ export default function AdminAttendancePage() {
     </DropdownMenu>
   );
 
-    // Manual Attendance Modal
+  // Manual Attendance Modal
   const ManualAttendanceModal = () => (
     <CustomModal
       isOpen={showManualModal}
@@ -1685,6 +1759,8 @@ export default function AdminAttendancePage() {
       </form>
     </CustomModal>
   );
+
+
   // Edit Attendance Modal
   const EditAttendanceModal = () => (
     <CustomModal
@@ -1713,6 +1789,7 @@ export default function AdminAttendancePage() {
                 <SelectItem value="absent">Absent</SelectItem>
                 <SelectItem value="leave">Leave</SelectItem>
                 <SelectItem value="late">Late</SelectItem>
+                <SelectItem value="early_checkout">Early Checkout</SelectItem>
                 <SelectItem value="holiday">Holiday</SelectItem>
                 <SelectItem value="half_day">Half Day</SelectItem>
                 <SelectItem value="weekly_off">Weekly Off</SelectItem>
@@ -1759,6 +1836,15 @@ export default function AdminAttendancePage() {
             />
           </div>
         </div>
+        <div className="bg-yellow-50 p-3 rounded-md border border-yellow-200 mb-4">
+          <h4 className="font-medium text-yellow-800 text-sm">Note:</h4>
+          <ul className="text-xs text-yellow-700 mt-1 space-y-1">
+            <li>• If you don't select a status, it will be auto-calculated based on check-in time</li>
+            <li>• 15 minutes grace period after shift start time</li>
+            <li>• Check-in after half shift → Half Day</li>
+            <li>• Check-in after shift end → Absent</li>
+          </ul>
+        </div>
         <div className="flex flex-col sm:flex-row gap-2 pt-4">
           <Button type="submit" className="flex-1 w-full" disabled={loading.edit}>
             {loading.edit && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -1789,7 +1875,13 @@ export default function AdminAttendancePage() {
         <AutoAttendanceModal />
         <ShiftAutoAttendanceModal />
         <EditAttendanceModal />
-        
+        <ViewAttendanceModal
+          isOpen={showViewModal}
+          onClose={() => setShowViewModal(false)}
+          attendance={viewingAttendance}
+          getStatusBadge={getStatusBadge}
+        />
+
         {/* Header - Fully Responsive */}
         <div className="flex flex-col gap-4 sm:gap-6">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
@@ -1801,12 +1893,12 @@ export default function AdminAttendancePage() {
                 Manage attendance records, leave requests, and holidays
               </p>
             </div>
-            
+
             {/* Mobile Actions Dropdown */}
             <div className="block md:hidden self-center">
               <MobileHeaderActions />
             </div>
-            
+
             {/* Desktop Actions Buttons */}
             <div className="hidden md:flex flex-wrap items-center justify-end gap-2 sm:gap-3">
               {canCreateLeave && (
@@ -1829,7 +1921,7 @@ export default function AdminAttendancePage() {
                   Manual Entry
                 </Button>
               )}
-              {canCreateAttendance && (
+              {/* {canCreateAttendance && (
                 <Button
                   onClick={() => setShowAutoModal(true)}
                   variant="outline"
@@ -1839,7 +1931,7 @@ export default function AdminAttendancePage() {
                   <PlayCircle className="h-4 w-4 mr-2" />
                   Auto
                 </Button>
-              )}
+              )} */}
               {canCreateAttendance && (
                 <Button
                   onClick={() => setShowShiftAutoModal(true)}
@@ -1862,7 +1954,7 @@ export default function AdminAttendancePage() {
               </Button>
             </div>
           </div>
-          
+
           {/* Stats Cards */}
           <StatsCards />
         </div>
@@ -1929,7 +2021,7 @@ export default function AdminAttendancePage() {
                           View and manage all attendance records
                         </CardDescription>
                       </div>
-                      
+
                       {/* Mobile Filter Toggle */}
                       <div className="block sm:hidden">
                         <Button
@@ -1976,7 +2068,7 @@ export default function AdminAttendancePage() {
                               <SelectItem value="weekly_off">Weekly Off</SelectItem>
                             </SelectContent>
                           </Select>
-                          
+
                           <div className="grid grid-cols-1 gap-2 sm:flex sm:gap-2">
                             <Input
                               type="date"
@@ -1992,7 +2084,7 @@ export default function AdminAttendancePage() {
                             />
                           </div>
                         </div>
-                        
+
                         {(filters.status !== 'all' || filters.date || filters.month || searchQuery) && (
                           <Button
                             variant="outline"
@@ -2012,7 +2104,7 @@ export default function AdminAttendancePage() {
                     </div>
                   </div>
                 </CardHeader>
-                
+
                 <CardContent className="p-4 sm:p-6 pt-0">
                   <div className="rounded-md overflow-hidden">
                     <ResponsiveTable
