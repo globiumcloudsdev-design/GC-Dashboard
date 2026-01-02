@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,8 @@ import { Button } from "@/components/ui/button";
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -19,7 +22,7 @@ export default function Header() {
   }, []);
 
   const navLinks = [
-    { href: "#home", label: "Home" },
+    { href: "/", label: "Home" },
     { href: "#about", label: "About" },
     { href: "#services", label: "Services" },
     { href: "#portfolio", label: "Portfolio" },
@@ -27,19 +30,47 @@ export default function Header() {
     { href: "#contact", label: "Contact" },
   ];
 
-  const handleSmoothScroll = (href) => {
-    const element = document.querySelector(href);
-    if (element) {
-      const offset = 80;
-      const bodyRect = document.body.getBoundingClientRect().top;
-      const elementRect = element.getBoundingClientRect().top;
-      const elementPosition = elementRect - bodyRect;
-      const offsetPosition = elementPosition - offset;
+  const handleNavigation = (href) => {
+    if (href === "/") {
+      // Home link: always navigate to home
+      router.push("/");
+    } else if (pathname === "/" && href.startsWith("#")) {
+      // On home page, smooth scroll to section
+      const element = document.querySelector(href);
+      if (element) {
+        const offset = 80;
+        const bodyRect = document.body.getBoundingClientRect().top;
+        const elementRect = element.getBoundingClientRect().top;
+        const elementPosition = elementRect - bodyRect;
+        const offsetPosition = elementPosition - offset;
 
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: "smooth"
-      });
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: "smooth"
+        });
+      }
+    } else if (href.startsWith("#")) {
+      // Not on home page, navigate to home first, then scroll to section
+      router.push("/");
+      // Use a timeout to wait for navigation and page load
+      setTimeout(() => {
+        const element = document.querySelector(href);
+        if (element) {
+          const offset = 80;
+          const bodyRect = document.body.getBoundingClientRect().top;
+          const elementRect = element.getBoundingClientRect().top;
+          const elementPosition = elementRect - bodyRect;
+          const offsetPosition = elementPosition - offset;
+
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: "smooth"
+          });
+        }
+      }, 200); // Increased delay to ensure page is loaded
+    } else {
+      // Direct route navigation
+      router.push(href);
     }
     setMobileMenuOpen(false);
   };
@@ -57,8 +88,8 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         
         {/* Logo Section */}
-        <motion.div 
-          onClick={() => handleSmoothScroll("#home")}
+        <motion.div
+          onClick={() => router.push("/")}
           className="flex items-center gap-4 cursor-pointer group"
           whileHover={{ scale: 1.02 }}
         >
@@ -86,7 +117,7 @@ export default function Header() {
           {navLinks.map((link) => (
             <button
               key={link.href}
-              onClick={() => handleSmoothScroll(link.href)}
+              onClick={() => handleNavigation(link.href)}
               className="relative text-[13px] font-bold text-gray-500 hover:text-[#10B5DB] transition-colors uppercase tracking-[0.15em] group"
             >
               {link.label}
@@ -99,7 +130,7 @@ export default function Header() {
         <div className="flex items-center gap-4">
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button
-              onClick={() => handleSmoothScroll("#contact")}
+              onClick={() => handleNavigation("#contact")}
               className="hidden md:flex bg-[#10B5DB] hover:bg-[#0aa0c2] text-white font-black text-xs uppercase tracking-widest px-8 py-6 rounded-2xl shadow-lg shadow-blue-400/20 transition-all"
             >
               Get a Quote
@@ -129,14 +160,14 @@ export default function Header() {
               {navLinks.map((link) => (
                 <button
                   key={link.href}
-                  onClick={() => handleSmoothScroll(link.href)}
+                  onClick={() => handleNavigation(link.href)}
                   className="text-left text-2xl font-black text-gray-900 lowercase tracking-tighter hover:text-[#10B5DB]"
                 >
                   {link.label}
                 </button>
               ))}
               <Button
-                onClick={() => handleSmoothScroll("#contact")}
+                onClick={() => handleNavigation("#contact")}
                 className="w-full bg-[#10B5DB] py-8 text-white font-black uppercase tracking-widest rounded-2xl text-lg shadow-xl shadow-blue-200"
               >
                 Get a Quote

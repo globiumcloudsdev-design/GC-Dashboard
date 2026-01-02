@@ -112,7 +112,7 @@ export default function Footer() {
             © {currentYear} <span className="text-gray-900">Globium Clouds</span>. All rights reserved.
           </div>
           <div className="flex items-center gap-6 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
-            <a href="#" className="hover:text-[#10B5DB]">Privacy</a>
+            <a href="/privacy-policy" className="hover:text-[#10B5DB]">Privacy Policy</a>
             <a href="#" className="hover:text-[#10B5DB]">Terms</a>
             <a href="#" className="hover:text-[#10B5DB]">Sitemap</a>
           </div>

@@ -314,5 +314,98 @@ export const emailTemplates = {
 
       This is an automated response from ${websiteName}.
     `
+  }),
+
+  newsletterConfirmation: (email) => ({
+    subject: '🎉 Welcome to Globium Clouds Newsletter!',
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+          .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
+          .header { background: linear-gradient(135deg, #10B5DB 0%, #0070f3 100%); color: white; padding: 40px 30px; text-align: center; border-radius: 8px 8px 0 0; }
+          .content { padding: 40px 30px; background: #f8f9fa; }
+          .welcome-box { background: white; padding: 30px; border-radius: 8px; border-left: 4px solid #10B5DB; margin: 20px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+          .button { background: #10B5DB; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0; font-weight: bold; }
+          .footer { background: #333; color: white; padding: 20px 30px; text-align: center; font-size: 12px; border-radius: 0 0 8px 8px; }
+          .social-links { margin: 20px 0; }
+          .social-links a { margin: 0 10px; color: #10B5DB; text-decoration: none; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1 style="margin: 0; font-size: 28px;">Welcome to Globium Clouds!</h1>
+            <p style="margin: 10px 0 0 0; opacity: 0.9;">Your newsletter subscription is confirmed</p>
+          </div>
+
+          <div class="content">
+            <div class="welcome-box">
+              <h2 style="color: #10B5DB; margin-top: 0;">Thank You for Subscribing! 🎉</h2>
+              <p>Hello,</p>
+              <p>Welcome to the <strong>Globium Clouds</strong> newsletter! We're thrilled to have you join our community of cloud technology enthusiasts.</p>
+
+              <p>What you can expect from our newsletter:</p>
+              <ul>
+                <li>📊 Latest cloud computing trends and insights</li>
+                <li>🛠️ Technical tutorials and best practices</li>
+                <li>🚀 Product updates and new features</li>
+                <li>💡 Industry news and analysis</li>
+                <li>🎯 Exclusive tips for developers and businesses</li>
+              </ul>
+
+              <p>Stay connected with us:</p>
+              <div class="social-links">
+                <a href="https://www.linkedin.com/company/globiumclouds/" style="color: #0077b5;">LinkedIn</a> |
+                <a href="https://www.facebook.com/globiumclouds/" style="color: #1877f2;">Facebook</a> |
+                <a href="https://www.instagram.com/explore/locations/202412828462806/globium-clouds/" style="color: #e4405f;">Instagram</a>
+              </div>
+            </div>
+
+            <p style="text-align: center; color: #666; font-size: 14px;">
+              You subscribed with: <strong>${email}</strong>
+            </p>
+
+            <p style="text-align: center; color: #666; font-size: 12px;">
+              If you didn't subscribe to this newsletter, you can safely ignore this email.
+            </p>
+          </div>
+
+          <div class="footer">
+            <p style="margin: 0;">
+              © ${new Date().getFullYear()} Globium Clouds. All rights reserved.<br/>
+              <a href="https://globiumclouds.com" style="color: #10B5DB;">www.globiumclouds.com</a>
+            </p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+    text: `
+      Welcome to Globium Clouds Newsletter!
+
+      Thank you for subscribing to our newsletter!
+
+      What you can expect:
+      - Latest cloud computing trends and insights
+      - Technical tutorials and best practices
+      - Product updates and new features
+      - Industry news and analysis
+      - Exclusive tips for developers and businesses
+
+      Stay connected with us on:
+      LinkedIn: https://www.linkedin.com/company/globiumclouds/
+      Facebook: https://www.facebook.com/globiumclouds/
+      Instagram: https://www.instagram.com/explore/locations/202412828462806/globium-clouds/
+
+      You subscribed with: ${email}
+
+      If you didn't subscribe, you can safely ignore this email.
+
+      © ${new Date().getFullYear()} Globium Clouds. All rights reserved.
+      www.globiumclouds.com
+    `
   })
 };
