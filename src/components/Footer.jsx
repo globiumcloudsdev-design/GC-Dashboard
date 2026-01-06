@@ -3,9 +3,9 @@
 import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { 
-  Linkedin, Facebook, Instagram, Home, Briefcase, 
-  FolderOpen, Users, Phone, User, Mail, Send 
+import {
+  Linkedin, Facebook, Instagram, Home, Briefcase,
+  FolderOpen, Users, Phone, User, Mail, Send, LogIn
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -56,7 +56,8 @@ export default function Footer() {
                 { name: "Services", icon: Briefcase, href: "#services" },
                 { name: "Portfolio", icon: FolderOpen, href: "#portfolio" },
                 { name: "Our Team", icon: Users, href: "#team" },
-                { name: "Agent Portal", icon: User, href: "/agent/login" }
+                { name: "Agent Portal", icon: User, href: "/agent/login" },
+                { name: "Login", icon: LogIn, href: "/login" }
               ].map((link) => (
                 <li key={link.name}>
                   <a href={link.href} className="group flex items-center gap-2 text-gray-600 hover:text-[#10B5DB] transition-colors">
@@ -81,7 +82,7 @@ export default function Footer() {
               </div>
               <div>
                 <p className="text-[10px] uppercase font-bold text-gray-400 mb-1 tracking-widest">Office</p>
-                <p className="text-gray-600 font-medium leading-snug">Buffer Zone, Sector 15-A/4, Karachi</p>
+                <a href="https://www.google.com/maps/search/?api=1&query=Buffer+Zone,+Sector+15-A/4,+Karachi" target="_blank" className="text-gray-600 font-medium leading-snug hover:text-[#10B5DB] transition-colors">Buffer Zone, Sector 15-A/4, Karachi</a>
               </div>
             </div>
           </div>

@@ -15,7 +15,7 @@ export default function TechnologyStack() {
   ];
 
   return (
-    <section className="relative py-24 overflow-hidden bg-[#0A0F14]">
+<section id="technology-stack" className="relative py-24 overflow-hidden bg-[#0A0F14]">
       {/* Dynamic Background Grid for Tech Feel */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#10B5DB10_1px,transparent_1px),linear-gradient(to_bottom,#10B5DB10_1px,transparent_1px)] bg-[size:40px_40px]"></div>
       

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles, Shield, Clock, Award } from "lucide-react";
 import { motion } from "framer-motion";
 import { magneticHover } from "@/lib/animations";
+import { join } from "path";
 
 export default function HeroSection() {
   const containerVariants = {
@@ -94,7 +95,7 @@ export default function HeroSection() {
                 size="lg"
                 className="h-12 px-8 text-base md:h-14 md:px-10 md:text-lg font-bold rounded-xl shadow-[0_10px_20px_-10px_rgba(16,181,219,0.5)] transition-all duration-300 bg-[#10B5DB] hover:bg-[#0a7a9a] text-white"
               >
-                <Link href="#services" className="flex items-center gap-2">
+                <Link href="#contact" className="flex items-center gap-2">
                   Get Started <ArrowRight className="h-5 w-5" />
                 </Link>
               </Button>
@@ -107,7 +108,7 @@ export default function HeroSection() {
                 size="lg"
                 className="h-12 px-8 text-base md:h-14 md:px-10 md:text-lg font-bold rounded-xl border-2 border-white/20 bg-transparent hover:bg-white/5 text-white transition-all duration-300"
               >
-                <Link href="#about">View Services</Link>
+                <Link href="#technology-stack">View Services</Link>
               </Button>
             </motion.div>
           </motion.div>
@@ -143,4 +144,9 @@ export default function HeroSection() {
     </section>
   );
 }
+
+
+
+
+
 

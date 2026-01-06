@@ -94,7 +94,7 @@ export default function Header() {
           whileHover={{ scale: 1.02 }}
         >
           {/* Increased Logo Size */}
-          <div className="relative w-12 h-12 md:w-16 md:h-16 transition-transform duration-700 group-hover:rotate-[360deg]">
+          <div className="relative w-20 h-20 md:w-20 md:h-20 ml-4 transition-transform duration-700 group-hover:rotate-[360deg]">
              <Image
               src="/images/GCLogo.png"
               alt="globium clouds logo"
@@ -103,13 +103,13 @@ export default function Header() {
               priority
             />
           </div>
-          <div className="flex flex-col leading-tight">
-            {/* Lowercase & Blue Color Branding */}
-            <span className="text-xl md:text-2xl font-black tracking-tighter text-[#10B5DB] ">
+        
+       
+            {/* <span className="text-xl md:text-2xl font-black tracking-tighter text-[#10B5DB] ">
               Globium Clouds
             </span>
-          
-          </div>
+           */}
+      
         </motion.div>
 
         {/* Desktop Nav */}
