@@ -27,6 +27,7 @@ export async function GET(request) {
     const fromDateParam = searchParams.get("fromDate") || searchParams.get("startDate") || "";
     const toDateParam = searchParams.get("toDate") || searchParams.get("endDate") || "";
     const monthParam = searchParams.get("month") || "";
+    const search = searchParams.get("search") || "";
 
     const skip = (page - 1) * limit;
 
@@ -106,39 +107,137 @@ export async function GET(request) {
 
     console.log("🔍 Final Filter:", JSON.stringify(filter, null, 2));
 
-    // DEBUG: Pehle count check karo
-    const totalCount = await Attendance.countDocuments(filter);
-    console.log(`🔢 Total documents matching filter: ${totalCount}`);
+    // If search is provided, use aggregation pipeline for searching in populated fields
+    let records, total;
+    if (search) {
+      const aggregationPipeline = [
+        { $match: filter },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'user',
+            foreignField: '_id',
+            as: 'user'
+          }
+        },
+        {
+          $lookup: {
+            from: 'agents',
+            localField: 'agent',
+            foreignField: '_id',
+            as: 'agent'
+          }
+        },
+        {
+          $lookup: {
+            from: 'shifts',
+            localField: 'shift',
+            foreignField: '_id',
+            as: 'shift'
+          }
+        },
+        {
+          $addFields: {
+            user: { $arrayElemAt: ['$user', 0] },
+            agent: { $arrayElemAt: ['$agent', 0] },
+            shift: { $arrayElemAt: ['$shift', 0] }
+          }
+        },
+        {
+          $match: {
+            $or: [
+              { 'user.firstName': { $regex: search, $options: 'i' } },
+              { 'user.lastName': { $regex: search, $options: 'i' } },
+              { 'agent.agentName': { $regex: search, $options: 'i' } },
+              { 'agent.agentId': { $regex: search, $options: 'i' } }
+            ]
+          }
+        },
+        { $sort: { date: -1, createdAt: -1 } },
+        { $skip: skip },
+        { $limit: limit }
+      ];
 
-    // DEBUG: Kuch sample documents bhi dekho
-    if (totalCount > 0) {
-      const sampleDocs = await Attendance.find(filter)
-        .select('date user agent status checkInTime checkOutTime')
-        .populate("user", "firstName lastName")
-        .populate("agent", "agentName agentId")
-        // .limit(3)
-        .lean();
-      
-      console.log("📄 Sample documents:", sampleDocs.map(doc => ({
-        date: doc.date,
-        user: doc.user ? `${doc.user.firstName} ${doc.user.lastName}` : null,
-        agent: doc.agent ? doc.agent.agentName : null,
-        status: doc.status,
-        checkInTime: doc.checkInTime,
-        checkOutTime: doc.checkOutTime
-      })));
+      // Get total count with search
+      const countPipeline = [
+        { $match: filter },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'user',
+            foreignField: '_id',
+            as: 'user'
+          }
+        },
+        {
+          $lookup: {
+            from: 'agents',
+            localField: 'agent',
+            foreignField: '_id',
+            as: 'agent'
+          }
+        },
+        {
+          $addFields: {
+            user: { $arrayElemAt: ['$user', 0] },
+            agent: { $arrayElemAt: ['$agent', 0] }
+          }
+        },
+        {
+          $match: {
+            $or: [
+              { 'user.firstName': { $regex: search, $options: 'i' } },
+              { 'user.lastName': { $regex: search, $options: 'i' } },
+              { 'agent.agentName': { $regex: search, $options: 'i' } },
+              { 'agent.agentId': { $regex: search, $options: 'i' } }
+            ]
+          }
+        },
+        { $count: 'total' }
+      ];
+
+      const [recordsResult, countResult] = await Promise.all([
+        Attendance.aggregate(aggregationPipeline),
+        Attendance.aggregate(countPipeline)
+      ]);
+
+      records = recordsResult;
+      total = countResult[0]?.total || 0;
+    } else {
+      // DEBUG: Pehle count check karo
+      const totalCount = await Attendance.countDocuments(filter);
+      console.log(`🔢 Total documents matching filter: ${totalCount}`);
+
+      // DEBUG: Kuch sample documents bhi dekho
+      if (totalCount > 0) {
+        const sampleDocs = await Attendance.find(filter)
+          .select('date user agent status checkInTime checkOutTime')
+          .populate("user", "firstName lastName")
+          .populate("agent", "agentName agentId")
+          // .limit(3)
+          .lean();
+
+        console.log("📄 Sample documents:", sampleDocs.map(doc => ({
+          date: doc.date,
+          user: doc.user ? `${doc.user.firstName} ${doc.user.lastName}` : null,
+          agent: doc.agent ? doc.agent.agentName : null,
+          status: doc.status,
+          checkInTime: doc.checkInTime,
+          checkOutTime: doc.checkOutTime
+        })));
+      }
+
+      // Get records with proper population
+      records = await Attendance.find(filter)
+        .populate("user", "firstName lastName email")
+        .populate("agent", "agentName agentId email")
+        .populate("shift", "name startTime endTime")
+        .sort({ date: -1, createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
+
+      total = await Attendance.countDocuments(filter);
     }
-
-    // Get records with proper population
-    const records = await Attendance.find(filter)
-      .populate("user", "firstName lastName email")
-      .populate("agent", "agentName agentId email")
-      .populate("shift", "name startTime endTime")
-      .sort({ date: -1, createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-
-    const total = await Attendance.countDocuments(filter);
     const totalPages = Math.ceil(total / limit);
 
     // Final debug info
