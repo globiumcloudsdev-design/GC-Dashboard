@@ -189,8 +189,10 @@ export default function AdminAttendancePage() {
       };
       if (filters.month) {
         const [year, month] = filters.month.split('-');
-        params.month = month;
-        params.year = year;
+        const startDate = new Date(parseInt(year), parseInt(month) - 1, 1);
+        const endDate = new Date(parseInt(year), parseInt(month), 0);
+        params.startDate = startDate.toISOString().split('T')[0];
+        params.endDate = endDate.toISOString().split('T')[0];
         params.date = "";
       } else if (filters.date) {
         params.date = filters.date;
@@ -560,6 +562,30 @@ export default function AdminAttendancePage() {
       toast.error("Error processing shift auto attendance");
     } finally {
       setLoading(prev => ({ ...prev, shiftAuto: false }));
+    }
+  };
+
+  const handleDownloadAttendance = () => {
+    const csvHeaders = ['Agent', 'Shift', 'Check In', 'Check Out', 'Status', 'Date'];
+    const csvData = attendance.map(a => [
+      a.user ? `${a.user.firstName} ${a.user.lastName}` : a.agent?.agentName || '—',
+      a.shift?.name || '—',
+      a.checkInTime ? new Date(a.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—',
+      a.checkOutTime ? new Date(a.checkOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—',
+      a.status,
+      new Date(a.createdAt).toLocaleDateString()
+    ]);
+    const csvContent = [csvHeaders, ...csvData].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `attendance_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   };
 
@@ -1943,6 +1969,15 @@ export default function AdminAttendancePage() {
                   Shift Wise
                 </Button>
               )}
+              <Button
+                onClick={() => handleDownloadAttendance()}
+                variant="outline"
+                size="sm"
+                className="text-sm"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Download CSV
+              </Button>
               <Button
                 onClick={() => fetchAttendance()}
                 variant="outline"
