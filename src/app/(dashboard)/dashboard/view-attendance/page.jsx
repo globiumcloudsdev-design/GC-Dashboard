@@ -69,7 +69,9 @@ export default function AdminAttendancePage() {
     userType: "all",
     status: "all",
     date: "",
-    month: ""
+    month: "",
+    fromDate: "",
+    toDate: ""
   });
   const [activeTab, setActiveTab] = useState("attendance");
   const [showFilters, setShowFilters] = useState(false);
@@ -152,6 +154,23 @@ export default function AdminAttendancePage() {
     fetchInitialData();
   }, []);
 
+  // Auto-set fromDate and toDate when month is selected
+  useEffect(() => {
+    if (filters.month) {
+      const [year, month] = filters.month.split('-');
+      const yearNum = parseInt(year);
+      const monthNum = parseInt(month);
+      const startDateStr = `${yearNum}-${monthNum.toString().padStart(2, '0')}-01`;
+      const lastDay = new Date(yearNum, monthNum, 0).getDate();
+      const endDateStr = `${yearNum}-${monthNum.toString().padStart(2, '0')}-${lastDay.toString().padStart(2, '0')}`;
+      setFilters(prev => ({
+        ...prev,
+        fromDate: startDateStr,
+        toDate: endDateStr
+      }));
+    }
+  }, [filters.month]);
+
   useEffect(() => {
     if (activeTab === "attendance") {
       fetchAttendance();
@@ -187,7 +206,12 @@ export default function AdminAttendancePage() {
         ...filters,
         search: searchQuery
       };
-      if (filters.month) {
+      if (filters.fromDate && filters.toDate) {
+        params.startDate = filters.fromDate;
+        params.endDate = filters.toDate;
+        params.date = "";
+        params.month = "";
+      } else if (filters.month) {
         const [year, month] = filters.month.split('-');
         const startDate = new Date(parseInt(year), parseInt(month) - 1, 1);
         const endDate = new Date(parseInt(year), parseInt(month), 0);
@@ -2087,6 +2111,20 @@ export default function AdminAttendancePage() {
                       <div className="flex flex-col sm:flex-row gap-3">
                         <div className="grid grid-cols-2 sm:flex gap-2 w-full">
                           <Select
+                            value={filters.userType}
+                            onValueChange={(value) => setFilters(prev => ({ ...prev, userType: value }))}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="User Type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Users</SelectItem>
+                              <SelectItem value="agent">Agents</SelectItem>
+                              <SelectItem value="user">Users</SelectItem>
+                            </SelectContent>
+                          </Select>
+
+                          <Select
                             value={filters.status}
                             onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
                           >
@@ -2104,28 +2142,52 @@ export default function AdminAttendancePage() {
                             </SelectContent>
                           </Select>
 
+                          <Select
+                            value={filters.month}
+                            onValueChange={(value) => setFilters(prev => ({ ...prev, month: value }))}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Month" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Array.from({ length: 12 }, (_, i) => {
+                                const date = new Date();
+                                date.setMonth(date.getMonth() - i);
+                                const value = date.toISOString().slice(0, 7); // YYYY-MM
+                                const label = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+                                return <SelectItem key={value} value={value}>{label}</SelectItem>;
+                              })}
+                            </SelectContent>
+                          </Select>
+
                           <div className="grid grid-cols-1 gap-2 sm:flex sm:gap-2">
-                            <Input
-                              type="date"
-                              value={filters.date || ''}
-                              onChange={(e) => setFilters(prev => ({ ...prev, date: e.target.value, month: "" }))}
-                              className="border rounded px-3 py-2 text-sm w-full"
-                            />
-                            <input
-                              type="month"
-                              value={filters.month || ''}
-                              onChange={(e) => setFilters(prev => ({ ...prev, month: e.target.value, date: "" }))}
-                              className="border rounded px-3 py-2 text-sm w-full"
-                            />
+                            <div className="flex flex-col gap-1">
+                              <label className="text-xs text-muted-foreground">From Date</label>
+                              <Input
+                                type="date"
+                                value={filters.fromDate || ''}
+                                onChange={(e) => setFilters(prev => ({ ...prev, fromDate: e.target.value }))}
+                                className="border rounded px-3 py-2 text-sm w-full"
+                              />
+                            </div>
+                            <div className="flex flex-col gap-1">
+                              <label className="text-xs text-muted-foreground">To Date</label>
+                              <Input
+                                type="date"
+                                value={filters.toDate || ''}
+                                onChange={(e) => setFilters(prev => ({ ...prev, toDate: e.target.value }))}
+                                className="border rounded px-3 py-2 text-sm w-full"
+                              />
+                            </div>
                           </div>
                         </div>
 
-                        {(filters.status !== 'all' || filters.date || filters.month || searchQuery) && (
+                        {(filters.status !== 'all' || filters.date || filters.month || filters.fromDate || filters.toDate || searchQuery) && (
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => {
-                              setFilters({ userType: "all", status: "all", date: "", month: "" });
+                              setFilters({ userType: "all", status: "all", date: "", month: "", fromDate: "", toDate: "" });
                               setSearchQuery("");
                               setShowFilters(false);
                             }}
