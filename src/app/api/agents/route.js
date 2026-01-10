@@ -257,7 +257,10 @@ export async function POST(request) {
       monthlyAmountTarget = 0,
       targetCurrency = 'PKR',
       employeeType = 'Permanent',
-      designation = 'Sales Agent' 
+      designation = 'Sales Agent',
+      basicSalary = 0,
+      attendanceAllowance = 0,
+      perSaleIncentive = 0
     } = body;
 
     // Validation
@@ -318,7 +321,10 @@ export async function POST(request) {
       monthlyAmountTarget: monthlyAmountTarget ? parseFloat(monthlyAmountTarget) : 0,
       targetCurrency,
       employeeType,
-      designation
+      designation,
+      basicSalary: basicSalary ? parseFloat(basicSalary) : 0,
+      attendanceAllowance: attendanceAllowance ? parseFloat(attendanceAllowance) : 0,
+      perSaleIncentive: perSaleIncentive ? parseFloat(perSaleIncentive) : 0
     });
 
     // Send welcome email

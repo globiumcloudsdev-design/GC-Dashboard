@@ -141,7 +141,10 @@ export default function AgentsPage() {
     monthlyAmountTarget: '',
     targetCurrency: 'PKR',
     employeeType: 'Permanent',
-    designation: 'Sales Agent'
+    designation: 'Sales Agent',
+    basicSalary: '',
+    attendanceAllowance: '',
+    perSaleIncentive: ''
   });
 
   const [editFormData, setEditFormData] = useState({
@@ -157,7 +160,10 @@ export default function AgentsPage() {
     targetCurrency: 'PKR',
     employeeType: 'Permanent',
     designation: 'Sales Agent',
-    isActive: true
+    isActive: true,
+    basicSalary: '',
+    attendanceAllowance: '',
+    perSaleIncentive: ''
   });
 
   const [shifts, setShifts] = useState([]);
@@ -317,7 +323,10 @@ export default function AgentsPage() {
         monthlyAmountTarget: '',
         targetCurrency: 'PKR',
         employeeType: 'Permanent',
-        designation: 'Sales Agent'
+        designation: 'Sales Agent',
+        basicSalary: '',
+        attendanceAllowance: '',
+        perSaleIncentive: ''
       });
       fetchAgents();
     } catch (error) {
@@ -354,7 +363,10 @@ export default function AgentsPage() {
         targetCurrency: editFormData.targetCurrency,
         employeeType: editFormData.employeeType,
         designation: editFormData.designation,
-        isActive: editFormData.isActive
+        isActive: editFormData.isActive,
+        basicSalary: editFormData.basicSalary ? parseFloat(editFormData.basicSalary) : 0,
+        attendanceAllowance: editFormData.attendanceAllowance ? parseFloat(editFormData.attendanceAllowance) : 0,
+        perSaleIncentive: editFormData.perSaleIncentive ? parseFloat(editFormData.perSaleIncentive) : 0
       });
       toast.success('Agent updated successfully!');
       setShowEditForm(false);
@@ -371,7 +383,10 @@ export default function AgentsPage() {
         targetCurrency: 'PKR',
         employeeType: 'Permanent',
         designation: 'Sales Agent',
-        isActive: true
+        isActive: true,
+        basicSalary: '',
+        attendanceAllowance: '',
+        perSaleIncentive: ''
       });
       fetchAgents();
     } catch (error) {
@@ -396,7 +411,10 @@ export default function AgentsPage() {
       targetCurrency: agent.targetCurrency || 'PKR',
       employeeType: agent.employeeType || 'Permanent',
       designation: agent.designation || 'Sales Agent',
-      isActive: agent.isActive
+      isActive: agent.isActive,
+      basicSalary: agent.basicSalary?.toString() || '',
+      attendanceAllowance: agent.attendanceAllowance?.toString() || '',
+      perSaleIncentive: agent.perSaleIncentive?.toString() || ''
     });
     setShowEditForm(true);
   };
@@ -655,6 +673,49 @@ export default function AgentsPage() {
                             <p className="text-xs text-muted-foreground">Revenue or sales amount</p>
                           </div>
                         )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Salary Structure */}
+                  <div className="border-t pt-4 mt-2">
+                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                      <DollarSign className="h-5 w-5" />
+                      Salary Structure
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="basicSalary">Basic Salary</Label>
+                        <Input
+                          id="basicSalary"
+                          name="basicSalary"
+                          type="number"
+                          value={formData.basicSalary}
+                          onChange={handleInputChange}
+                          placeholder="e.g. 7000"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="attendanceAllowance">Attendance Allowance</Label>
+                        <Input
+                          id="attendanceAllowance"
+                          name="attendanceAllowance"
+                          type="number"
+                          value={formData.attendanceAllowance}
+                          onChange={handleInputChange}
+                          placeholder="e.g. 3000"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="perSaleIncentive">Per Sale Incentive</Label>
+                        <Input
+                          id="perSaleIncentive"
+                          name="perSaleIncentive"
+                          type="number"
+                          value={formData.perSaleIncentive}
+                          onChange={handleInputChange}
+                          placeholder="e.g. 1000"
+                        />
                       </div>
                     </div>
                   </div>
@@ -929,6 +990,49 @@ export default function AgentsPage() {
               </div>
             </div>
 
+            {/* Salary Structure */}
+            <div className="border-t pt-4 mt-2">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <DollarSign className="h-5 w-5" />
+                Salary Structure
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-basicSalary">Basic Salary</Label>
+                  <Input
+                    id="edit-basicSalary"
+                    name="basicSalary"
+                    type="number"
+                    value={editFormData.basicSalary}
+                    onChange={handleEditInputChange}
+                    placeholder="e.g. 7000"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-attendanceAllowance">Attendance Allowance</Label>
+                  <Input
+                    id="edit-attendanceAllowance"
+                    name="attendanceAllowance"
+                    type="number"
+                    value={editFormData.attendanceAllowance}
+                    onChange={handleEditInputChange}
+                    placeholder="e.g. 3000"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-perSaleIncentive">Per Sale Incentive</Label>
+                  <Input
+                    id="edit-perSaleIncentive"
+                    name="perSaleIncentive"
+                    type="number"
+                    value={editFormData.perSaleIncentive}
+                    onChange={handleEditInputChange}
+                    placeholder="e.g. 1000"
+                  />
+                </div>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="edit-shift" className="flex items-center gap-2">
@@ -1147,6 +1251,28 @@ export default function AgentsPage() {
                       )}
                     </div>
                   )}
+                </div>
+
+                {/* Salary Information */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <DollarSign className="h-4 w-4" />
+                    <span className="font-medium">Salary Structure:</span>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+                     <div className="flex items-center justify-between">
+                        <span className="text-gray-600">Basic Salary:</span>
+                        <span className="font-bold">{selectedAgent.basicSalary ? selectedAgent.basicSalary.toLocaleString() : '0'}</span>
+                     </div>
+                     <div className="flex items-center justify-between">
+                        <span className="text-gray-600">Attendance Allowance:</span>
+                        <span className="font-bold">{selectedAgent.attendanceAllowance ? selectedAgent.attendanceAllowance.toLocaleString() : '0'}</span>
+                     </div>
+                     <div className="flex items-center justify-between">
+                        <span className="text-gray-600">Per Sale Incentive:</span>
+                        <span className="font-bold">{selectedAgent.perSaleIncentive ? selectedAgent.perSaleIncentive.toLocaleString() : '0'}</span>
+                     </div>
+                  </div>
                 </div>
 
                 {/* Account Information */}

@@ -56,7 +56,10 @@ export async function PUT(request, { params }) {
       targetCurrency,
       employeeType,
       designation,
-      isActive 
+      isActive,
+      basicSalary,
+      attendanceAllowance,
+      perSaleIncentive
     } = body;
     
     // Find agent
@@ -131,7 +134,10 @@ export async function PUT(request, { params }) {
     if (employeeType) updateData.employeeType = employeeType;
     if (designation) updateData.designation = designation;
     if (isActive !== undefined) updateData.isActive = isActive;
-    
+    if (basicSalary !== undefined) updateData.basicSalary = parseFloat(basicSalary) || 0;
+    if (attendanceAllowance !== undefined) updateData.attendanceAllowance = parseFloat(attendanceAllowance) || 0;
+    if (perSaleIncentive !== undefined) updateData.perSaleIncentive = parseFloat(perSaleIncentive) || 0;
+
     // Update agent
     const updatedAgent = await Agent.findByIdAndUpdate(
       id,

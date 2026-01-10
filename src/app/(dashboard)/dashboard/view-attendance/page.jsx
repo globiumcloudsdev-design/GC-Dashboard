@@ -18,7 +18,8 @@ import {
   Loader2, Calendar, Users, CheckCircle, XCircle, Clock, Plus, Trash2,
   PlayCircle, ToggleLeft, ToggleRight, Edit, ChevronLeft, ChevronRight,
   Download, X, RefreshCw, ChevronDown, UserPlus, FileText, PartyPopper,
-  CalendarDays, Search, Menu, Filter, MoreVertical, Eye
+  CalendarDays, Search, Menu, Filter, MoreVertical, Eye,
+  UserCheck
 } from "lucide-react";
 import { toast } from "sonner";
 import CustomModal from "@/components/ui/customModal";
@@ -149,40 +150,7 @@ export default function AdminAttendancePage() {
     userType: "agent"
   });
 
-  // Fetch data
-  useEffect(() => {
-    fetchInitialData();
-  }, []);
-
-  // Auto-set fromDate and toDate when month is selected
-  useEffect(() => {
-    if (filters.month) {
-      const [year, month] = filters.month.split('-');
-      const yearNum = parseInt(year);
-      const monthNum = parseInt(month);
-      const startDateStr = `${yearNum}-${monthNum.toString().padStart(2, '0')}-01`;
-      const lastDay = new Date(yearNum, monthNum, 0).getDate();
-      const endDateStr = `${yearNum}-${monthNum.toString().padStart(2, '0')}-${lastDay.toString().padStart(2, '0')}`;
-      setFilters(prev => ({
-        ...prev,
-        fromDate: startDateStr,
-        toDate: endDateStr
-      }));
-    }
-  }, [filters.month]);
-
-  useEffect(() => {
-    if (activeTab === "attendance") {
-      fetchAttendance();
-    } else if (activeTab === "holidays") {
-      fetchHolidays();
-    } else if (activeTab === "leave") {
-      fetchLeaveRequests();
-    } else if (activeTab === "weekly-off") {
-      fetchWeeklyOffs();
-    }
-  }, [activeTab, page, limit, filters, searchQuery]);
-
+  // Fetch functions
   const fetchInitialData = async () => {
     try {
       const usersResponse = await adminService.getUsersAndAgents("all");
@@ -197,7 +165,7 @@ export default function AdminAttendancePage() {
     }
   };
 
-  const fetchAttendance = async () => {
+  const fetchAttendance = useCallback(async () => {
     try {
       setLoading(prev => ({ ...prev, attendance: true }));
       const params = {
@@ -237,7 +205,7 @@ export default function AdminAttendancePage() {
     } finally {
       setLoading(prev => ({ ...prev, attendance: false }));
     }
-  };
+  }, [page, limit, filters, searchQuery]);
 
   const fetchLeaveRequests = async () => {
     try {
@@ -283,6 +251,45 @@ export default function AdminAttendancePage() {
       setLoading(prev => ({ ...prev, weeklyOff: false }));
     }
   };
+
+  // Effects
+  useEffect(() => {
+    fetchInitialData();
+  }, []);
+
+  // Auto-set fromDate and toDate when month is selected
+  useEffect(() => {
+    if (filters.month) {
+      const [year, month] = filters.month.split('-');
+      const yearNum = parseInt(year);
+      const monthNum = parseInt(month);
+      const startDateStr = `${yearNum}-${monthNum.toString().padStart(2, '0')}-01`;
+      const lastDay = new Date(yearNum, monthNum, 0).getDate();
+      const endDateStr = `${yearNum}-${monthNum.toString().padStart(2, '0')}-${lastDay.toString().padStart(2, '0')}`;
+      setFilters(prev => ({
+        ...prev,
+        fromDate: startDateStr,
+        toDate: endDateStr
+      }));
+    }
+  }, [filters.month]);
+
+  // Reset page to 1 when filters or search changes
+  useEffect(() => {
+    setPage(1);
+  }, [filters.status, filters.userType, filters.date, filters.month, filters.fromDate, filters.toDate, searchQuery]);
+
+  useEffect(() => {
+    if (activeTab === "attendance") {
+      fetchAttendance();
+    } else if (activeTab === "holidays") {
+      fetchHolidays();
+    } else if (activeTab === "leave") {
+      fetchLeaveRequests();
+    } else if (activeTab === "weekly-off") {
+      fetchWeeklyOffs();
+    }
+  }, [activeTab, page, limit, filters, searchQuery, fetchAttendance]);
 
   // Handler functions
   const handleManualAttendance = async (e) => {
@@ -614,24 +621,26 @@ export default function AdminAttendancePage() {
   };
 
   const canEditAttendanceRecord = (attendance) => {
-    return !["holiday", "weekly_off"].includes(attendance.status);
+    return !["holiday", "weekly_off"].includes(attendance.status) && !attendance.generated;
   };
 
   const getStatusBadge = (status) => {
     const statusConfig = {
       present: "bg-green-100 text-green-700 border-green-200",
-      absent: "bg-red-100 text-red-700 border-red-200",
-      leave: "bg-yellow-100 text-yellow-700 border-yellow-200",
       late: "bg-orange-100 text-orange-700 border-orange-200",
-      holiday: "bg-purple-100 text-purple-700 border-purple-200",
-      weekly_off: "bg-indigo-100 text-indigo-700 border-indigo-200",
-      approved_leave: "bg-blue-100 text-blue-700 border-blue-200",
+      half_day: "bg-yellow-100 text-yellow-700 border-yellow-200",
+      absent: "bg-red-100 text-red-700 border-red-200",
       early_checkout: "bg-pink-100 text-pink-700 border-pink-200",
-      pending_leave: "bg-gray-100 text-gray-700 border-gray-200"
+      overtime: "bg-indigo-100 text-indigo-700 border-indigo-200",
+      leave: "bg-amber-100 text-amber-700 border-amber-200",
+      approved_leave: "bg-blue-100 text-blue-700 border-blue-200",
+      pending_leave: "bg-slate-100 text-slate-700 border-slate-200",
+      holiday: "bg-purple-100 text-purple-700 border-purple-200",
+      weekly_off: "bg-gray-100 text-gray-700 border-gray-200"
     };
     return (
       <Badge variant="outline" className={`${statusConfig[status] || "bg-gray-100 text-gray-700 border-gray-200"} text-xs px-2 py-1`}>
-        {status?.replace('_', ' ')}
+        {status?.replace(/_/g, ' ')}
       </Badge>
     );
   };
@@ -928,6 +937,162 @@ export default function AdminAttendancePage() {
             </div>
           </CardContent>
         </Card>
+      </div>
+    );
+  };
+
+  // ✅ Agent Summary Cards (Filtered Search Results)
+  const AgentSummaryCards = () => {
+    // Only show if searching and we have data
+    if (!searchQuery || attendance.length === 0) return null;
+
+    // We assume the first record represents the searched agent if filtered.
+    // Ideally, the backend returns homogeneous data for a specific search.
+    const agentName = attendance[0]?.user 
+      ? `${attendance[0].user.firstName} ${attendance[0].user.lastName}` 
+      : attendance[0]?.agent?.agentName || "Agent";
+      
+    // Calculate stats from the current 'attendance' array (which is already filtered/enriched by backend)
+    const stats = {
+       total: attendance.length,
+       present: attendance.filter(a => a.status === 'present').length,
+       late: attendance.filter(a => a.status === 'late').length,
+       halfDay: attendance.filter(a => a.status === 'half_day').length,
+       absent: attendance.filter(a => a.status === 'absent').length,
+       earlyCheckout: attendance.filter(a => a.status === 'early_checkout').length,
+       overtime: attendance.filter(a => a.status === 'overtime').length,
+       leave: attendance.filter(a => a.status === 'leave').length,
+       approvedLeave: attendance.filter(a => a.status === 'approved_leave').length,
+       pendingLeave: attendance.filter(a => a.status === 'pending_leave').length,
+       holiday: attendance.filter(a => a.status === 'holiday').length,
+       weeklyOff: attendance.filter(a => a.status === 'weekly_off').length,
+    };
+
+    // Calculate derived stats
+    // All Present = present + late + half_day + early_checkout + overtime (excluding absent, leave, approved_leave)
+    const allPresent = stats.present + stats.late + stats.halfDay + stats.earlyCheckout + stats.overtime;
+    
+    // Total Working Days = Total - (holiday + weekly_off)
+    const totalWorkingDays = stats.total - stats.holiday - stats.weeklyOff;
+
+    return (
+      <div className="mb-6 space-y-4">
+        <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-800">
+          <UserCheck className="h-5 w-5 text-blue-600" />
+          Summary for {agentName}
+        </h3>
+        
+        {/* Main Summary Cards - Highlighted */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          {/* All Present */}
+          <Card className="bg-gradient-to-br from-green-500 to-green-600 border-0 shadow-lg">
+            <CardContent className="p-4 text-center">
+              <div className="text-sm font-semibold text-white/90 uppercase tracking-wide mb-2">All Present Days</div>
+              <div className="text-4xl font-bold text-white">{allPresent}</div>
+              <div className="text-xs text-white/80 mt-1">Present, Late, Half Day, Early Out, Overtime</div>
+            </CardContent>
+          </Card>
+
+          {/* Total Working Days */}
+          <Card className="bg-gradient-to-br from-blue-500 to-blue-600 border-0 shadow-lg">
+            <CardContent className="p-4 text-center">
+              <div className="text-sm font-semibold text-white/90 uppercase tracking-wide mb-2">Total Working Days</div>
+              <div className="text-4xl font-bold text-white">{totalWorkingDays}</div>
+              <div className="text-xs text-white/80 mt-1">Excluding Holidays & Weekly Offs</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Detailed Breakdown */}
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+             {/* Present */}
+             <Card className="bg-green-50 border-green-200 shadow-sm">
+                <CardContent className="p-3 text-center">
+                   <div className="text-xs font-medium text-green-800 uppercase tracking-wide mb-1">Present</div>
+                   <div className="text-xl font-bold text-green-700">{stats.present}</div>
+                </CardContent>
+             </Card>
+
+             {/* Late */}
+             <Card className="bg-orange-50 border-orange-200 shadow-sm">
+                <CardContent className="p-3 text-center">
+                   <div className="text-xs font-medium text-orange-800 uppercase tracking-wide mb-1">Late</div>
+                   <div className="text-xl font-bold text-orange-700">{stats.late}</div>
+                </CardContent>
+             </Card>
+             
+             {/* Half Day */}
+             <Card className="bg-yellow-50 border-yellow-200 shadow-sm">
+                <CardContent className="p-3 text-center">
+                   <div className="text-xs font-medium text-yellow-800 uppercase tracking-wide mb-1">Half Day</div>
+                   <div className="text-xl font-bold text-yellow-700">{stats.halfDay}</div>
+                </CardContent>
+             </Card>
+
+             {/* Absent */}
+             <Card className="bg-red-50 border-red-200 shadow-sm">
+                <CardContent className="p-3 text-center">
+                   <div className="text-xs font-medium text-red-800 uppercase tracking-wide mb-1">Absent</div>
+                   <div className="text-xl font-bold text-red-700">{stats.absent}</div>
+                </CardContent>
+             </Card>
+
+             {/* Early Checkout */}
+             <Card className="bg-pink-50 border-pink-200 shadow-sm">
+                <CardContent className="p-3 text-center">
+                   <div className="text-xs font-medium text-pink-800 uppercase tracking-wide mb-1">Early Out</div>
+                   <div className="text-xl font-bold text-pink-700">{stats.earlyCheckout}</div>
+                </CardContent>
+             </Card>
+
+             {/* Overtime */}
+             <Card className="bg-indigo-50 border-indigo-200 shadow-sm">
+                <CardContent className="p-3 text-center">
+                   <div className="text-xs font-medium text-indigo-800 uppercase tracking-wide mb-1">Overtime</div>
+                   <div className="text-xl font-bold text-indigo-700">{stats.overtime}</div>
+                </CardContent>
+             </Card>
+
+             {/* Leave */}
+             <Card className="bg-amber-50 border-amber-200 shadow-sm">
+                <CardContent className="p-3 text-center">
+                   <div className="text-xs font-medium text-amber-800 uppercase tracking-wide mb-1">Leave</div>
+                   <div className="text-xl font-bold text-amber-700">{stats.leave}</div>
+                </CardContent>
+             </Card>
+
+             {/* Approved Leave */}
+             <Card className="bg-blue-50 border-blue-200 shadow-sm">
+                <CardContent className="p-3 text-center">
+                   <div className="text-xs font-medium text-blue-800 uppercase tracking-wide mb-1">Approved</div>
+                   <div className="text-xl font-bold text-blue-700">{stats.approvedLeave}</div>
+                </CardContent>
+             </Card>
+
+             {/* Pending Leave */}
+             <Card className="bg-slate-50 border-slate-200 shadow-sm">
+                <CardContent className="p-3 text-center">
+                   <div className="text-xs font-medium text-slate-800 uppercase tracking-wide mb-1">Pending</div>
+                   <div className="text-xl font-bold text-slate-700">{stats.pendingLeave}</div>
+                </CardContent>
+             </Card>
+
+             {/* Holiday */}
+             <Card className="bg-purple-50 border-purple-200 shadow-sm">
+                <CardContent className="p-3 text-center">
+                   <div className="text-xs font-medium text-purple-800 uppercase tracking-wide mb-1">Holiday</div>
+                   <div className="text-xl font-bold text-purple-700">{stats.holiday}</div>
+                </CardContent>
+             </Card>
+
+             {/* Weekly Off */}
+             <Card className="bg-gray-50 border-gray-200 shadow-sm">
+                <CardContent className="p-3 text-center">
+                   <div className="text-xs font-medium text-gray-800 uppercase tracking-wide mb-1">Weekly Off</div>
+                   <div className="text-xl font-bold text-gray-700">{stats.weeklyOff}</div>
+                </CardContent>
+             </Card>
+        </div>
       </div>
     );
   };
@@ -1386,9 +1551,14 @@ export default function AdminAttendancePage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="present">Present</SelectItem>
-              <SelectItem value="absent">Absent</SelectItem>
-              <SelectItem value="leave">Leave</SelectItem>
               <SelectItem value="late">Late</SelectItem>
+              <SelectItem value="half_day">Half Day</SelectItem>
+              <SelectItem value="absent">Absent</SelectItem>
+              <SelectItem value="early_checkout">Early Checkout</SelectItem>
+              <SelectItem value="overtime">Overtime</SelectItem>
+              <SelectItem value="leave">Leave</SelectItem>
+              <SelectItem value="approved_leave">Approved Leave</SelectItem>
+              <SelectItem value="pending_leave">Pending Leave</SelectItem>
               <SelectItem value="holiday">Holiday</SelectItem>
               <SelectItem value="weekly_off">Weekly Off</SelectItem>
             </SelectContent>
@@ -1836,14 +2006,16 @@ export default function AdminAttendancePage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="present">Present</SelectItem>
-                <SelectItem value="absent">Absent</SelectItem>
-                <SelectItem value="leave">Leave</SelectItem>
                 <SelectItem value="late">Late</SelectItem>
-                <SelectItem value="early_checkout">Early Checkout</SelectItem>
-                <SelectItem value="holiday">Holiday</SelectItem>
                 <SelectItem value="half_day">Half Day</SelectItem>
-                <SelectItem value="weekly_off">Weekly Off</SelectItem>
+                <SelectItem value="absent">Absent</SelectItem>
+                <SelectItem value="early_checkout">Early Checkout</SelectItem>
+                <SelectItem value="overtime">Overtime</SelectItem>
+                <SelectItem value="leave">Leave</SelectItem>
                 <SelectItem value="approved_leave">Approved Leave</SelectItem>
+                <SelectItem value="pending_leave">Pending Leave</SelectItem>
+                <SelectItem value="holiday">Holiday</SelectItem>
+                <SelectItem value="weekly_off">Weekly Off</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -2016,6 +2188,9 @@ export default function AdminAttendancePage() {
 
           {/* Stats Cards */}
           <StatsCards />
+
+          {/* Individual Agent Summary Cards - Only visible when searching */}
+          <AgentSummaryCards />
         </div>
 
         {/* Tabs - Responsive */}
@@ -2134,9 +2309,14 @@ export default function AdminAttendancePage() {
                             <SelectContent>
                               <SelectItem value="all">All Status</SelectItem>
                               <SelectItem value="present">Present</SelectItem>
-                              <SelectItem value="absent">Absent</SelectItem>
-                              <SelectItem value="leave">Leave</SelectItem>
                               <SelectItem value="late">Late</SelectItem>
+                              <SelectItem value="half_day">Half Day</SelectItem>
+                              <SelectItem value="absent">Absent</SelectItem>
+                              <SelectItem value="early_checkout">Early Checkout</SelectItem>
+                              <SelectItem value="overtime">Overtime</SelectItem>
+                              <SelectItem value="leave">Leave</SelectItem>
+                              <SelectItem value="approved_leave">Approved Leave</SelectItem>
+                              <SelectItem value="pending_leave">Pending Leave</SelectItem>
                               <SelectItem value="holiday">Holiday</SelectItem>
                               <SelectItem value="weekly_off">Weekly Off</SelectItem>
                             </SelectContent>

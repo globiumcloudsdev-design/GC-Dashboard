@@ -43,8 +43,8 @@ const agentSchema = new mongoose.Schema({
   // ✅ Monthly Target Types
   monthlyTargetType: {
     type: String,
-    enum: ['digit', 'amount', 'both'],
-    default: 'digit'
+    enum: ['none', 'digit', 'amount', 'both'],
+    default: 'none'
   },
   
   // Digit Target (e.g., 100 calls, 50 settlements)
@@ -68,6 +68,23 @@ const agentSchema = new mongoose.Schema({
     enum: ['PKR', 'USD', 'EUR', 'GBP']
   },
   
+  // Salary Details
+  basicSalary: {
+    type: Number,
+    default: 0,
+    min: [0, 'Basic salary cannot be negative']
+  },
+  attendanceAllowance: {
+    type: Number,
+    default: 0,
+    min: [0, 'Attendance allowance cannot be negative']
+  },
+  perSaleIncentive: {
+    type: Number,
+    default: 0,
+    min: [0, 'Per sale incentive cannot be negative']
+  },
+
   // Naye fields
   employeeType: {
     type: String,
