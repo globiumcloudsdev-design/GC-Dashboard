@@ -1,204 +1,202 @@
 "use client";
-import { useEffect, useState } from "react";
-import { ExternalLink, Github, Eye } from "lucide-react";
+
+import { useState, useEffect } from "react";
+import { ExternalLink, ChevronLeft, ChevronRight, Layout, Zap } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { projectService } from "@/services/projectService";
 
 export default function PortfolioSection() {
-  const [isVisible, setIsVisible] = useState(false);
-  const [showAll, setShowAll] = useState(false);
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
+    const fetchProjects = async () => {
+      try {
+        const response = await projectService.getProjects({ limit: 100 });
+        if (response.success) {
+          setProjects(response.data.filter(p => p.isActive && p.isFeatured));
+        } else {
+          setError("Failed to load projects");
         }
-      },
-      { threshold: 0.1 }
-    );
-
-    const element = document.getElementById("portfolio");
-    if (element) observer.observe(element);
-
-    return () => observer.disconnect();
+      } catch (err) {
+        setError("Failed to load projects");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProjects();
   }, []);
 
-  const projects = [
-    {
-      title: "E-Commerce Platform",
-      description:
-        "A full-stack e-commerce solution with payment integration, inventory management, and analytics dashboard.",
-      liveUrl: "#",
-      githubUrl: "#",
-      technologies: ["React", "Node.js", "MongoDB", "Stripe"]
-    },
-    {
-      title: "Healthcare Management System",
-      description:
-        "Comprehensive healthcare platform for patient management, appointment scheduling, and medical records.",
-      liveUrl: "#",
-      githubUrl: "#",
-      technologies: ["Next.js", "PostgreSQL", "Docker", "AWS"]
-    },
-    {
-      title: "Financial Dashboard",
-      description:
-        "Real-time financial analytics dashboard with data visualization and automated reporting features.",
-      liveUrl: "#",
-      githubUrl: "#",
-      technologies: ["Vue.js", "Python", "Redis", "Chart.js"]
-    },
-    {
-      title: "Social Media Analytics",
-      description:
-        "Advanced social media monitoring and analytics platform with AI-powered insights.",
-      liveUrl: "#",
-      githubUrl: "#",
-      technologies: ["React", "Python", "TensorFlow", "AWS"]
-    },
-    {
-      title: "IoT Monitoring System",
-      description:
-        "Real-time IoT device monitoring and control system with predictive maintenance capabilities.",
-      liveUrl: "#",
-      githubUrl: "#",
-      technologies: ["Angular", "Node.js", "MQTT", "InfluxDB"]
-    },
-    {
-      title: "Learning Management System",
-      description:
-        "Complete LMS with course creation, student progress tracking, and interactive assessments.",
-      liveUrl: "#",
-      githubUrl: "#",
-      technologies: ["React", "Express", "MySQL", "Socket.io"]
-    },
-    {
-      title: "Real Estate Platform",
-      description:
-        "Modern real estate marketplace with virtual tours, property search, and agent management.",
-      liveUrl: "#",
-      githubUrl: "#",
-      technologies: ["Next.js", "Prisma", "PostgreSQL", "Mapbox"]
-    },
-    {
-      title: "Supply Chain Management",
-      description:
-        "End-to-end supply chain management system with inventory tracking and logistics optimization.",
-      liveUrl: "#",
-      githubUrl: "#",
-      technologies: ["React", "Python", "PostgreSQL", "Docker"]
-    },
-    {
-      title: "Fitness Tracking App",
-      description:
-        "Mobile-first fitness application with workout planning, progress tracking, and social features.",
-      liveUrl: "#",
-      githubUrl: "#",
-      technologies: ["React Native", "Firebase", "Node.js", "MongoDB"]
-    },
-    {
-      title: "Event Management Platform",
-      description:
-        "Comprehensive event management system for organizing, promoting, and tracking events.",
-      liveUrl: "#",
-      githubUrl: "#",
-      technologies: ["Vue.js", "Laravel", "MySQL", "Stripe"]
-    },
-  ];
+  useEffect(() => {
+    if (projects.length === 0) return;
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % projects.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [projects.length]);
 
-  const displayedProjects = showAll ? projects : projects.slice(0, 3);
+  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % projects.length);
+  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + projects.length) % projects.length);
+  const goToSlide = (index) => setCurrentSlide(index);
+
+  const getFloatingTags = (project) => ["Admin Dashboard", "Next.js 14", "AI Integrated", "Enterprise"];
+
+  if (loading) return (
+    <section className="py-28 bg-[#0A0F14] flex items-center justify-center">
+      <div className="w-10 h-10 border-2 border-[#10B5DB]/20 border-t-[#10B5DB] rounded-full animate-spin" />
+    </section>
+  );
+
+  if (error || projects.length === 0) return null;
+
+  const currentProject = projects[currentSlide];
 
   return (
-    <section
-      id="portfolio"
-      className="py-20 bg-gradient-to-b from-sky-50 to-white dark:from-slate-900 dark:to-slate-800"
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <div
-            className={`transition-all duration-1000 ${
-              isVisible
-                ? "opacity-100 translate-y-0"
-                : "opacity-0 translate-y-8"
-            }`}
+    <section id="portfolio" className="relative py-28 bg-[#0A0F14] overflow-hidden">
+      {/* Tech Background Detail */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,#10B5DB08_0%,transparent_50%)]" />
+      <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+      <div className="max-w-7xl mx-auto px-4 relative z-10">
+        
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-20">
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
           >
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-              Our{" "}
-              <span className="bg-gradient-to-r from-sky-400 to-sky-700 bg-clip-text text-transparent">
-                Portfolio
-              </span>
+            <div className="flex items-center gap-3 mb-4">
+              <Zap className="w-5 h-5 text-[#10B5DB] animate-pulse" />
+              <span className="text-[#10B5DB] font-bold tracking-[0.4em] text-[10px] uppercase">Selected Works</span>
+            </div>
+            <h2 className="text-5xl md:text-7xl font-black text-white tracking-tighter leading-[0.9]">
+              OUR <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#10B5DB] to-blue-400">IMPACT</span>
             </h2>
-            <p className="text-xl text-gray-600 dark:text-slate-300 max-w-3xl mx-auto">
-              Explore our successful projects and see how we've helped
-              businesses transform their digital presence.
-            </p>
-          </div>
+          </motion.div>
+          <p className="text-gray-400 text-lg max-w-sm border-l border-[#10B5DB]/30 pl-6">
+            Explore how we solve complex problems through code and creativity.
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-          {displayedProjects.map((project, index) => (
-            <div
-              key={index}
-              className={`bg-white/70 dark:bg-slate-700/70 backdrop-blur-sm rounded-xl overflow-hidden shadow-lg border border-sky-100 dark:border-slate-600 hover:shadow-xl transition-all duration-500 hover:transform hover:scale-105 ${
-                isVisible
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-8"
-              }`}
-              style={{ transitionDelay: `${index * 100}ms` }}
+        {/* Portfolio Slider */}
+        <div className="relative">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentSlide}
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -50 }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center"
             >
-              <div className="relative h-48 bg-gradient-to-br from-sky-100 to-blue-100 dark:from-slate-600 dark:to-slate-700">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-16 h-16 bg-sky-200 dark:bg-slate-500 rounded-lg flex items-center justify-center">
-                    <span className="text-2xl font-bold text-sky-600 dark:text-sky-400">
-                      {project.title.charAt(0)}
-                    </span>
-                  </div>
+              {/* Text Content */}
+              <div className="order-2 lg:order-1 space-y-8">
+                <div className="space-y-6">
+                  <span className="text-[#10B5DB] font-black text-7xl md:text-8xl opacity-10 block">0{currentSlide + 1}</span>
+                  <h3 className="text-3xl md:text-5xl font-black text-white tracking-tight leading-tight uppercase group">
+                    {currentProject.title}
+                  </h3>
+                  <p className="text-gray-400 text-xl leading-relaxed">
+                    {currentProject.shortDescription || currentProject.description}
+                  </p>
+                </div>
+
+                <div className="pt-4">
+                  <motion.a
+                    whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(16, 181, 219, 0.4)" }}
+                    whileTap={{ scale: 0.95 }}
+                    href={currentProject.liveUrl}
+                    target="_blank"
+                    className="inline-flex items-center gap-3 bg-[#10B5DB] text-white font-bold px-10 py-5 rounded-2xl shadow-lg transition-all"
+                  >
+                    View Case Study <ExternalLink className="w-5 h-5" />
+                  </motion.a>
                 </div>
               </div>
 
-              <div className="p-6">
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                  {project.title}
-                </h3>
-                <p className="text-gray-600 dark:text-slate-300 mb-4 leading-relaxed">
-                  {project.description}
-                </p>
-
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {project.technologies.map((tech, techIndex) => (
-                    <span
-                      key={techIndex}
-                      className="px-2 py-1 bg-sky-100 dark:bg-slate-600 text-sky-700 dark:text-sky-300 text-xs font-medium rounded-full"
-                    >
-                      {tech}
-                    </span>
-                  ))}
-                </div>
-
-                <div className="flex gap-3">
-                  <a
-                    href={project.liveUrl}
-                    className="flex items-center gap-2 text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 font-medium transition-colors"
+              {/* Mockup Display */}
+              <div className="order-1 lg:order-2 relative">
+                {/* Glowing Aura Behind Image */}
+                <div className="absolute -inset-4 bg-[#10B5DB]/20 rounded-[3rem] blur-3xl opacity-50" />
+                
+                <div className="relative p-2 bg-white/5 backdrop-blur-md rounded-[2.5rem] border border-white/10 shadow-2xl overflow-hidden">
+                  <motion.div 
+                    whileHover={{ scale: 1.03 }}
+                    className="relative aspect-[4/3] rounded-[2rem] overflow-hidden bg-[#0A0F14]"
                   >
-                    <ExternalLink className="w-4 h-4" />
-                    Live Demo
-                  </a>
+                    {currentProject.thumbnail?.url ? (
+                      <img
+                        src={currentProject.thumbnail.url}
+                        alt={currentProject.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-[#10B5DB] text-8xl font-black italic opacity-20">
+                        {currentProject.title?.charAt(0)}
+                      </div>
+                    )}
+                  </motion.div>
                 </div>
+
+                {/* Floating Tags (Tech Stack) */}
+                {getFloatingTags(currentProject).map((tag, index) => (
+                  <motion.div
+                    key={tag}
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1, y: [0, -8, 0] }}
+                    transition={{
+                      opacity: { delay: 0.5 + index * 0.1 },
+                      y: { repeat: Infinity, duration: 4 + index, ease: "easeInOut" }
+                    }}
+                    className="absolute hidden md:block bg-white/10 backdrop-blur-xl border border-white/20 text-white px-4 py-2 rounded-xl text-[10px] font-bold tracking-widest uppercase shadow-2xl"
+                    style={{
+                      top: `${10 + index * 25}%`,
+                      [index % 2 === 0 ? "left" : "right"]: "-1.5rem",
+                    }}
+                  >
+                    {tag}
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Navigation Controls */}
+          <div className="flex items-center justify-between mt-20 border-t border-white/5 pt-10">
+            <div className="flex gap-4">
+              <button
+                onClick={prevSlide}
+                className="p-5 bg-white/5 border border-white/10 rounded-full text-white hover:bg-[#10B5DB] hover:border-[#10B5DB] transition-all duration-300"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+              <button
+                onClick={nextSlide}
+                className="p-5 bg-white/5 border border-white/10 rounded-full text-white hover:bg-[#10B5DB] hover:border-[#10B5DB] transition-all duration-300"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            </div>
+            
+            {/* Custom Progress Bar */}
+            <div className="hidden md:flex flex-col items-end gap-2 w-1/3">
+              <div className="flex justify-between w-full text-[10px] font-black text-[#10B5DB] tracking-widest uppercase">
+                <span>Phase</span>
+                <span>0{currentSlide + 1} / 0{projects.length}</span>
+              </div>
+              <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                <motion.div 
+                  className="h-full bg-[#10B5DB]"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${((currentSlide + 1) / projects.length) * 100}%` }}
+                />
               </div>
             </div>
-          ))}
-        </div>
-
-        {!showAll && (
-          <div className="text-center mt-12">
-            <button
-              onClick={() => setShowAll(true)}
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
-            >
-              <Eye className="w-5 h-5" />
-              See All Projects
-            </button>
           </div>
-        )}
+        </div>
       </div>
     </section>
   );
