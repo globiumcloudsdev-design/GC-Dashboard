@@ -327,6 +327,30 @@ export async function GET(request) {
         fullHistory.push(item);
       }
 
+      // Calculate Summary Stats from fullHistory (before pagination)
+      const stats = {
+          total: fullHistory.length,
+          present: 0, late: 0, half_day: 0, absent: 0,
+          early_checkout: 0, overtime: 0,
+          leave: 0, approved_leave: 0, pending_leave: 0,
+          holiday: 0, weekly_off: 0
+      };
+
+      for (const item of fullHistory) {
+          const s = normalizeStatus(item.status);
+          if (s === 'present') stats.present++;
+          else if (s === 'late') stats.late++;
+          else if (s === 'half_day') stats.half_day++;
+          else if (s === 'absent') stats.absent++;
+          else if (s === 'early_checkout') stats.early_checkout++;
+          else if (s === 'overtime') stats.overtime++;
+          else if (s === 'leave') stats.leave++; // generic leave
+          else if (s === 'approved_leave') stats.approved_leave++;
+          else if (s === 'pending_leave') stats.pending_leave++;
+          else if (s === 'holiday') stats.holiday++;
+          else if (s === 'weekly_off') stats.weekly_off++;
+      }
+
       // Pagination on fullHistory
       // We manually paginate the array
       const paginatedData = fullHistory.slice(skip, skip + limit);
@@ -334,6 +358,7 @@ export async function GET(request) {
       return NextResponse.json({
         success: true,
         data: paginatedData,
+        summary: stats, // Return summarized stats
         meta: {
             total: fullHistory.length,
             page,

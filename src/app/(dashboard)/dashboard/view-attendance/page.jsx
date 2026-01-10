@@ -66,6 +66,7 @@ export default function AdminAttendancePage() {
   const [limit, setLimit] = useState(10);
   const [total, setTotal] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
+  const [agentSummaryStats, setAgentSummaryStats] = useState(null); // Store summary stats from backend
   const [filters, setFilters] = useState({
     userType: "all",
     status: "all",
@@ -196,6 +197,12 @@ export default function AdminAttendancePage() {
       if (response.success) {
         setAttendance(response.data || []);
         setTotal(response.meta?.total || response.data?.length || 0);
+        // Store backend summary if available
+        if (response.summary) {
+          setAgentSummaryStats(response.summary);
+        } else {
+          setAgentSummaryStats(null);
+        }
       } else {
         toast.error("Failed to load attendance");
       }
@@ -943,17 +950,30 @@ export default function AdminAttendancePage() {
 
   // ✅ Agent Summary Cards (Filtered Search Results)
   const AgentSummaryCards = () => {
-    // Only show if searching and we have data
-    if (!searchQuery || attendance.length === 0) return null;
+    // Only show if searching and we have data or backend summary
+    if (!searchQuery || (!attendance.length && !agentSummaryStats)) return null;
 
-    // We assume the first record represents the searched agent if filtered.
-    // Ideally, the backend returns homogeneous data for a specific search.
+    // Use name from first record if available (for header)
     const agentName = attendance[0]?.user 
       ? `${attendance[0].user.firstName} ${attendance[0].user.lastName}` 
       : attendance[0]?.agent?.agentName || "Agent";
       
-    // Calculate stats from the current 'attendance' array (which is already filtered/enriched by backend)
-    const stats = {
+    // Use Backend Stats if available (More accurate for full month/history), otherwise fallback to frontend calc
+    const stats = agentSummaryStats ? {
+       total: agentSummaryStats.total,
+       present: agentSummaryStats.present,
+       late: agentSummaryStats.late,
+       halfDay: agentSummaryStats.half_day,
+       absent: agentSummaryStats.absent,
+       earlyCheckout: agentSummaryStats.early_checkout,
+       overtime: agentSummaryStats.overtime,
+       leave: agentSummaryStats.leave, // generic leave logic might need split
+       approvedLeave: agentSummaryStats.approved_leave,
+       pendingLeave: agentSummaryStats.pending_leave,
+       holiday: agentSummaryStats.holiday,
+       weeklyOff: agentSummaryStats.weekly_off,
+    } : {
+       // Fallback to frontend calculation (only for current page if not paginated fully)
        total: attendance.length,
        present: attendance.filter(a => a.status === 'present').length,
        late: attendance.filter(a => a.status === 'late').length,
