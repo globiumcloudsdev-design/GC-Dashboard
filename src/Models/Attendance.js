@@ -47,6 +47,8 @@ const AttendanceSchema = new mongoose.Schema(
     leaveReason: { type: String, default: "" },
     leaveType: { type: String, enum: ["sick", "casual", "emergency", "other"], default: "casual" },
 
+    isInformed: { type: Boolean, default: false }, // New field for Inform Late/Absent
+
     approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     approvedAt: { type: Date },
 
