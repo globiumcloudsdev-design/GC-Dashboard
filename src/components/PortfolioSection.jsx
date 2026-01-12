@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ExternalLink, ChevronLeft, ChevronRight, Layout, Zap } from "lucide-react";
+import { ExternalLink, ChevronLeft, ChevronRight, Layout, Zap, Eye } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import { projectService } from "@/services/projectService";
 
 export default function PortfolioSection() {
@@ -104,16 +105,29 @@ export default function PortfolioSection() {
                   </p>
                 </div>
 
-                <div className="pt-4">
-                  <motion.a
+                <div className="pt-4 flex gap-4">
+                  <motion.div
                     whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(16, 181, 219, 0.4)" }}
                     whileTap={{ scale: 0.95 }}
-                    href={currentProject.liveUrl}
-                    target="_blank"
-                    className="inline-flex items-center gap-3 bg-[#10B5DB] text-white font-bold px-10 py-5 rounded-2xl shadow-lg transition-all"
                   >
-                    View Case Study <ExternalLink className="w-5 h-5" />
-                  </motion.a>
+                    <Link
+                      href={`/projects/${currentProject.slug}`}
+                      className="inline-flex items-center gap-3 bg-[#10B5DB] text-white font-bold px-10 py-5 rounded-2xl shadow-lg transition-all"
+                    >
+                      View Details <Eye className="w-5 h-5" />
+                    </Link>
+                  </motion.div>
+                  {currentProject.liveUrl && (
+                    <motion.a
+                      whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(16, 181, 219, 0.4)" }}
+                      whileTap={{ scale: 0.95 }}
+                      href={currentProject.liveUrl}
+                      target="_blank"
+                      className="inline-flex items-center gap-3 bg-white/10 border border-white/20 text-white font-bold px-10 py-5 rounded-2xl shadow-lg hover:bg-white/20 transition-all"
+                    >
+                      Live Demo <ExternalLink className="w-5 h-5" />
+                    </motion.a>
+                  )}
                 </div>
               </div>
 

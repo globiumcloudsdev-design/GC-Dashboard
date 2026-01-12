@@ -96,7 +96,7 @@ export default function Header() {
           {/* Increased Logo Size */}
           <div className="relative w-20 h-20 md:w-20 md:h-20 ml-4 transition-transform duration-700 group-hover:rotate-[360deg]">
              <Image
-              src="/images/GCLogo.png"
+              src={isScrolled ? "/images/GCLogo.png" : "/GCLogo-1.png"}
               alt="globium clouds logo"
               fill
               className="object-contain"

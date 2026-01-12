@@ -3,6 +3,8 @@ import connectDB from '@/lib/mongodb';
 import Project from '@/Models/Project';
 import { cloudinaryService } from '@/lib/cloudinary';
 
+
+
 // GET - Fetch single project
 export async function GET(request, { params }) {
   try {
@@ -10,16 +12,10 @@ export async function GET(request, { params }) {
 
     const { id } = await params;
 
-    // Try to find by ID first, then by slug
-    let project = await Project.findById(id)
+    // Find project by slug (since frontend passes slug, not ID)
+    const project = await Project.findOne({ slug: id, isActive: true })
       .populate('createdBy', 'firstName lastName email')
       .populate('updatedBy', 'firstName lastName email');
-
-    if (!project) {
-      project = await Project.findOne({ slug: id })
-        .populate('createdBy', 'firstName lastName email')
-        .populate('updatedBy', 'firstName lastName email');
-    }
 
     if (!project) {
       return NextResponse.json(
