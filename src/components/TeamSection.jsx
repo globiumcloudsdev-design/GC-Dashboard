@@ -47,28 +47,30 @@ const TeamMember = ({ name, role, profileImage, linkedin, github }) => {
           </p>
         </div>
 
-        <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 w-[80%] md:w-[70%] bg-white/20 backdrop-blur-xl border border-white/30 py-2 md:py-3 px-4 md:px-6 rounded-xl md:rounded-2xl flex justify-center gap-4 md:gap-6 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
-          {linkedin && (
-            <a
-              href={linkedin}
-              target="_blank"
-              rel="noreferrer"
-              className="text-white hover:text-[#10B5DB] transition-all scale-110"
-            >
-              <FaLinkedinIn size={20} />
-            </a>
-          )}
-          {github && (
-            <a
-              href={github}
-              target="_blank"
-              rel="noreferrer"
-              className="text-white hover:text-black transition-all scale-110"
-            >
-              <FaGithub size={20} />
-            </a>
-          )}
-        </div>
+        {(linkedin || github) && (
+          <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 w-[80%] md:w-[70%] bg-white/20 backdrop-blur-xl border border-white/30 py-2 md:py-3 px-4 md:px-6 rounded-xl md:rounded-2xl flex justify-center gap-4 md:gap-6 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+            {linkedin && (
+              <a
+                href={linkedin}
+                target="_blank"
+                rel="noreferrer"
+                className="text-white hover:text-[#10B5DB] transition-all scale-110"
+              >
+                <FaLinkedinIn size={20} />
+              </a>
+            )}
+            {github && (
+              <a
+                href={github}
+                target="_blank"
+                rel="noreferrer"
+                className="text-white hover:text-black transition-all scale-110"
+              >
+                <FaGithub size={20} />
+              </a>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

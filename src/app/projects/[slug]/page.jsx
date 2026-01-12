@@ -76,7 +76,7 @@ export default function ProjectDetailPage() {
   
 
 
-  <br /> <br />                 
+  <br /> <br />  <br /> <br />               
       <div className="max-w-7xl mx-auto px-4 py-12">
         {/* Hero Section */}
         <motion.div

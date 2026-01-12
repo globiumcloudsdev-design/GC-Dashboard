@@ -52,7 +52,7 @@ export default function HeroSection() {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="max-w-4xl"
+          className="max-w-4xl pb-32"
         >
           {/* Trust Badge */}
           <motion.div 
@@ -68,12 +68,12 @@ export default function HeroSection() {
           {/* Main Heading */}
           <motion.h1
             variants={itemVariants}
-            className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-white leading-[0.9] tracking-tight mb-8"
+            className="text-4xl sm:text-5xl md:text-7xl font-black text-white leading-[0.9] tracking-tight mb-8"
           >
             LIMITLESS <br />
             <span className="relative inline-block mt-2">
               CLOUD
-              <span className="relative z-10 mx-3 mt-6 px-6 py-1  bg-gradient-to-r from-[#10B5DB] to-[#0a7a9a] rounded-2xl italic">
+              <span className="relative z-10 mx-3 mt-6 px-4 sm:px-6 py-1  bg-gradient-to-r from-[#10B5DB] to-[#0a7a9a] rounded-2xl italic">
                 INNOVATION
               </span>
             </span>
@@ -88,7 +88,7 @@ export default function HeroSection() {
           </motion.p>
 
           {/* CTA Group */}
-          <motion.div variants={itemVariants} className="flex flex-wrap gap-5 mb-16">
+          <motion.div variants={itemVariants} className="flex flex-wrap gap-5 mb-8">
             <motion.div {...magneticHover}>
               <Button
                 asChild
@@ -114,9 +114,9 @@ export default function HeroSection() {
           </motion.div>
 
           {/* Trust Points Grid */}
-          <motion.div 
+          <motion.div
             variants={itemVariants}
-            className="grid grid-cols-1 sm:grid-cols-3 gap-8 border-t border-white/10 pt-10"
+            className="grid grid-cols-1 md:grid-cols-3 gap-8 border-t border-white/10 pt-10"
           >
             {trustPoints.map((point, index) => (
               <div key={index} className="flex items-center gap-3">
@@ -144,9 +144,3 @@ export default function HeroSection() {
     </section>
   );
 }
-
-
-
-
-
-
