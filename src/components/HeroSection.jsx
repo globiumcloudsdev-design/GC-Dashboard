@@ -73,7 +73,7 @@ export default function HeroSection() {
             LIMITLESS <br />
             <span className="relative inline-block mt-2">
               CLOUD
-              <span className="relative z-10 mx-3 mt-6 px-4 sm:px-6 py-1  bg-gradient-to-r from-[#10B5DB] to-[#0a7a9a] rounded-2xl italic">
+              <span className="z-10 mx-3 mt-12 px-4 sm:px-6 py-1  bg-gradient-to-r from-[#10B5DB] to-[#0a7a9a] rounded-2xl italic">
                 INNOVATION
               </span>
             </span>

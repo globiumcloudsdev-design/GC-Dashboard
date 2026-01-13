@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Home, User, Briefcase, FolderOpen, Users, Phone, Mail, Linkedin, Facebook, Instagram } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 
@@ -22,12 +22,12 @@ export default function Header() {
   }, []);
 
   const navLinks = [
-    { href: "/", label: "Home" },
-    { href: "#about", label: "About" },
-    { href: "#services", label: "Services" },
-    { href: "#portfolio", label: "Portfolio" },
-    { href: "#team", label: "Team" },
-    { href: "#contact", label: "Contact" },
+    { href: "/", label: "Home", icon: Home },
+    { href: "#about", label: "About", icon: User },
+    { href: "#services", label: "Services", icon: Briefcase },
+    { href: "#portfolio", label: "Portfolio", icon: FolderOpen },
+    { href: "#team", label: "Team", icon: Users },
+    { href: "#contact", label: "Contact", icon: Phone },
   ];
 
   const handleNavigation = (href) => {
@@ -155,22 +155,78 @@ export default function Header() {
             exit={{ opacity: 0, y: -20 }}
             className="absolute top-full left-0 w-full bg-white shadow-2xl border-t border-blue-50 p-8 md:hidden"
           >
-            <div className="flex flex-col gap-8">
-              {navLinks.map((link) => (
-                <button
-                  key={link.href}
-                  onClick={() => handleNavigation(link.href)}
-                  className="text-left text-2xl font-black text-gray-900 lowercase tracking-tighter hover:text-[#10B5DB]"
-                >
-                  {link.label}
-                </button>
-              ))}
-              <Button
-                onClick={() => handleNavigation("#contact")}
-                className="w-full bg-[#10B5DB] py-8 text-white font-black uppercase tracking-widest rounded-2xl text-lg shadow-xl shadow-blue-200"
+            <div className="flex flex-col gap-6">
+              {navLinks.map((link, index) => {
+                const IconComponent = link.icon;
+                return (
+                  <motion.button
+                    key={link.href}
+                    onClick={() => handleNavigation(link.href)}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1, duration: 0.3 }}
+                    whileHover={{ scale: 1.05, x: 10 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="flex items-center gap-4 text-left text-xl font-semibold text-gray-900 hover:text-[#10B5DB] transition-colors duration-200 p-3 rounded-lg hover:bg-blue-50 group"
+                  >
+                    <IconComponent className="w-6 h-6 text-[#10B5DB] group-hover:scale-110 transition-transform duration-200" />
+                    <span className="tracking-tight">{link.label}</span>
+                  </motion.button>
+                );
+              })}
+
+              {/* Contact Info */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: (navLinks.length + 1) * 0.1, duration: 0.3 }}
+                className="space-y-4 pt-4 border-t border-blue-100"
               >
-                Get a Quote
-              </Button>
+                <div className="flex items-center gap-3">
+                  <Mail className="w-5 h-5 text-[#10B5DB]" />
+                  <a href="mailto:globiumclouds@gmail.com" className="text-gray-900 font-semibold hover:text-[#10B5DB] transition-colors">
+                    globiumclouds@gmail.com
+                  </a>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Phone className="w-5 h-5 text-[#10B5DB]" />
+                  <a href="tel:+923352778488" className="text-gray-900 font-semibold hover:text-[#10B5DB] transition-colors">
+                    +92 335 2778488
+                  </a>
+                </div>
+                <div className="flex items-center gap-3 pt-2">
+                  {[
+                    { icon: Linkedin, href: "https://www.linkedin.com/company/globiumclouds/" },
+                    { icon: Facebook, href: "https://www.facebook.com/globiumclouds/" },
+                    { icon: Instagram, href: "https://www.instagram.com/explore/locations/202412828462806/globium-clouds/" }
+                  ].map((social, i) => (
+                    <motion.a
+                      key={i}
+                      href={social.href}
+                      target="_blank"
+                      whileHover={{ y: -3, backgroundColor: "#10B5DB", color: "#ffffff" }}
+                      className="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-blue-100 text-[#10B5DB] transition-all shadow-sm"
+                    >
+                      <social.icon className="w-5 h-5" />
+                    </motion.a>
+                  ))}
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: (navLinks.length + 2) * 0.1, duration: 0.3 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Button
+                  onClick={() => handleNavigation("#contact")}
+                  className="w-full bg-[#10B5DB] hover:bg-[#0aa0c2] py-8 text-white font-black uppercase tracking-widest rounded-2xl text-lg shadow-xl shadow-blue-200 transition-all duration-200"
+                >
+                  Get a Quote
+                </Button>
+              </motion.div>
             </div>
           </motion.div>
         )}
@@ -178,3 +234,4 @@ export default function Header() {
     </motion.header>
   );
 }
+
