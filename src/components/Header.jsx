@@ -21,6 +21,18 @@ export default function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [mobileMenuOpen]);
+
   const navLinks = [
     { href: "/", label: "Home", icon: Home },
     { href: "#about", label: "About", icon: User },
@@ -146,89 +158,127 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile Drawer */}
+      {/* Mobile Drawer Overlay */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="absolute top-full left-0 w-full bg-white shadow-2xl border-t border-blue-50 p-8 md:hidden"
-          >
-            <div className="flex flex-col gap-6">
-              {navLinks.map((link, index) => {
-                const IconComponent = link.icon;
-                return (
-                  <motion.button
-                    key={link.href}
-                    onClick={() => handleNavigation(link.href)}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1, duration: 0.3 }}
-                    whileHover={{ scale: 1.05, x: 10 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="flex items-center gap-4 text-left text-xl font-semibold text-gray-900 hover:text-[#10B5DB] transition-colors duration-200 p-3 rounded-lg hover:bg-blue-50 group"
-                  >
-                    <IconComponent className="w-6 h-6 text-[#10B5DB] group-hover:scale-110 transition-transform duration-200" />
-                    <span className="tracking-tight">{link.label}</span>
-                  </motion.button>
-                );
-              })}
+          <>
+            {/* Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-[99999] md:hidden"
+              onClick={() => setMobileMenuOpen(false)}
+            />
 
-              {/* Contact Info */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: (navLinks.length + 1) * 0.1, duration: 0.3 }}
-                className="space-y-4 pt-4 border-t border-blue-100"
-              >
-                <div className="flex items-center gap-3">
-                  <Mail className="w-5 h-5 text-[#10B5DB]" />
-                  <a href="mailto:globiumclouds@gmail.com" className="text-gray-900 font-semibold hover:text-[#10B5DB] transition-colors">
-                    globiumclouds@gmail.com
-                  </a>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Phone className="w-5 h-5 text-[#10B5DB]" />
-                  <a href="tel:+923352778488" className="text-gray-900 font-semibold hover:text-[#10B5DB] transition-colors">
-                    +92 335 2778488
-                  </a>
-                </div>
-                <div className="flex items-center gap-3 pt-2">
-                  {[
-                    { icon: Linkedin, href: "https://www.linkedin.com/company/globiumclouds/" },
-                    { icon: Facebook, href: "https://www.facebook.com/globiumclouds/" },
-                    { icon: Instagram, href: "https://www.instagram.com/explore/locations/202412828462806/globium-clouds/" }
-                  ].map((social, i) => (
-                    <motion.a
-                      key={i}
-                      href={social.href}
-                      target="_blank"
-                      whileHover={{ y: -3, backgroundColor: "#10B5DB", color: "#ffffff" }}
-                      className="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-blue-100 text-[#10B5DB] transition-all shadow-sm"
-                    >
-                      <social.icon className="w-5 h-5" />
-                    </motion.a>
-                  ))}
-                </div>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: (navLinks.length + 2) * 0.1, duration: 0.3 }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <Button
-                  onClick={() => handleNavigation("#contact")}
-                  className="w-full bg-[#10B5DB] hover:bg-[#0aa0c2] py-8 text-white font-black uppercase tracking-widest rounded-2xl text-lg shadow-xl shadow-blue-200 transition-all duration-200"
+            {/* Side Drawer */}
+            <motion.div
+              initial={{ left: "-320px" }}
+              animate={{ left: 0 }}
+              exit={{ left: "-320px" }}
+              transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }}
+              className="fixed top-0 h-screen w-80 max-w-[85vw] bg-white shadow-2xl z-[100000] md:hidden overflow-y-auto"
+            >
+              <div className="p-6">
+                {/* Close Button */}
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="absolute top-4 right-4 p-2 text-gray-900 hover:text-[#10B5DB] transition-colors"
                 >
-                  Get a Quote
-                </Button>
-              </motion.div>
-            </div>
-          </motion.div>
+                  <X className="w-6 h-6" />
+                </button>
+
+                {/* Logo */}
+                <div className="mb-8 pt-4">
+                  <div className="relative w-16 h-16">
+                    <Image
+                      src="/images/GCLogo.png"
+                      alt="globium clouds logo"
+                      fill
+                      className="object-contain"
+                      priority
+                    />
+                  </div>
+                </div>
+
+                {/* Navigation Links */}
+                <div className="flex flex-col gap-4 mb-8">
+                  {navLinks.map((link, index) => {
+                    const IconComponent = link.icon;
+                    return (
+                      <motion.button
+                        key={link.href}
+                        onClick={() => handleNavigation(link.href)}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1, duration: 0.3 }}
+                        whileHover={{ scale: 1.05, x: 10 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="flex items-center gap-4 text-left text-lg font-semibold text-gray-900 hover:text-[#10B5DB] transition-colors duration-200 p-3 rounded-lg hover:bg-blue-50 group"
+                      >
+                        <IconComponent className="w-6 h-6 text-[#10B5DB] group-hover:scale-110 transition-transform duration-200" />
+                        <span className="tracking-tight">{link.label}</span>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+
+                {/* Contact Info */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: (navLinks.length + 1) * 0.1, duration: 0.3 }}
+                  className="space-y-4 mb-8 pt-4 border-t border-blue-100"
+                >
+                  <div className="flex items-center gap-3">
+                    <Mail className="w-5 h-5 text-[#10B5DB]" />
+                    <a href="mailto:globiumclouds@gmail.com" className="text-sm text-gray-900 font-semibold hover:text-[#10B5DB] transition-colors break-all">
+                      globiumclouds@gmail.com
+                    </a>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Phone className="w-5 h-5 text-[#10B5DB]" />
+                    <a href="tel:+923352778488" className="text-sm text-gray-900 font-semibold hover:text-[#10B5DB] transition-colors">
+                      +92 335 2778488
+                    </a>
+                  </div>
+                  <div className="flex items-center gap-3 pt-2">
+                    {[
+                      { icon: Linkedin, href: "https://www.linkedin.com/company/globiumclouds/" },
+                      { icon: Facebook, href: "https://www.facebook.com/globiumclouds/" },
+                      { icon: Instagram, href: "https://www.instagram.com/explore/locations/202412828462806/globium-clouds/" }
+                    ].map((social, i) => (
+                      <motion.a
+                        key={i}
+                        href={social.href}
+                        target="_blank"
+                        whileHover={{ y: -3, backgroundColor: "#10B5DB", color: "#ffffff" }}
+                        className="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-blue-100 text-[#10B5DB] transition-all shadow-sm"
+                      >
+                        <social.icon className="w-5 h-5" />
+                      </motion.a>
+                    ))}
+                  </div>
+                </motion.div>
+
+                {/* CTA Button */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: (navLinks.length + 2) * 0.1, duration: 0.3 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Button
+                    onClick={() => handleNavigation("#contact")}
+                    className="w-full bg-[#10B5DB] hover:bg-[#0aa0c2] py-6 text-white font-black uppercase tracking-widest rounded-2xl text-lg shadow-xl shadow-blue-200 transition-all duration-200"
+                  >
+                    Get a Quote
+                  </Button>
+                </motion.div>
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </motion.header>
