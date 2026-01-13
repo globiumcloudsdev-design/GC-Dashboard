@@ -91,10 +91,9 @@ export default function Header() {
         <motion.div
           onClick={() => router.push("/")}
           className="flex items-center gap-4 cursor-pointer group"
-          whileHover={{ scale: 1.02 }}
         >
           {/* Increased Logo Size */}
-          <div className="relative w-20 h-20 md:w-20 md:h-20 ml-4 transition-transform duration-700 group-hover:rotate-[360deg]">
+          <div className="relative w-20 h-20 md:w-20 md:h-20 ml-4">
              <Image
               src={isScrolled ? "/images/GCLogo.png" : "/GCLogowhite.png"}
               alt="globium clouds logo"
