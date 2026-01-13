@@ -116,10 +116,7 @@ export default function Header() {
           </div>
         
        
-            {/* <span className="text-xl md:text-2xl font-black tracking-tighter text-[#10B5DB] ">
-              Globium Clouds
-            </span>
-           */}
+         
       
         </motion.div>
 
