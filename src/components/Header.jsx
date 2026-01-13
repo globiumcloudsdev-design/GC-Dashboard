@@ -107,7 +107,7 @@ export default function Header() {
           {/* Increased Logo Size */}
           <div className="relative w-20 h-20 md:w-20 md:h-20 ml-4">
              <Image
-              src={isScrolled ? "/images/GCLogo.png" : "/GCLogowhite.png"}
+              src={isScrolled ? "/images/GCLogo.png" : "/gclogowhite.png"}
               alt="globium clouds logo"
               fill
               className="object-contain"
