@@ -17,7 +17,7 @@ export const sectionReveal = {
   initial: { opacity: 0, y: 40 },
   animate: { opacity: 1, y: 0 },
   transition: {
-    duration: 0.8,
+    duration: 0.6, // Reduced from 0.8 for better performance
     ease: easeOutExpo,
   },
   viewport: { once: true, margin: "-80px" }

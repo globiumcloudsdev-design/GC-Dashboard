@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { ExternalLink, Github, Eye, EyeOff, Trash2, Edit, Star, StarOff, Play } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -44,10 +45,12 @@ export function ProjectCard({ project, onEdit, onDelete, onToggleStatus, onToggl
       <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group">
         {/* Thumbnail Container */}
         <div className="relative h-48 overflow-hidden bg-gray-100 dark:bg-gray-800">
-          <img
+          <Image
             src={project.thumbnail?.url}
             alt={project.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
 
           {/* Overlay with links */}

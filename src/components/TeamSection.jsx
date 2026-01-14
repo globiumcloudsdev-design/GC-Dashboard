@@ -1,6 +1,7 @@
 "use client";
 import { motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import { teamService } from "../services/teamService";
 import { sectionReveal } from "@/lib/animations";
 import { FaLinkedinIn, FaGithub } from "react-icons/fa";
@@ -23,10 +24,11 @@ const TeamMember = ({ name, role, profileImage, linkedin, github }) => {
 
       <div className="relative z-10 overflow-hidden bg-white border border-gray-100 rounded-[2rem] md:rounded-[3rem] shadow-xl transition-all duration-500 h-[350px] md:h-[450px]">
         {profileImage ? (
-          <img
+          <Image
             src={profileImage}
             alt={name}
-            className="absolute inset-0 w-full h-full object-cover opacity-100 transition-all duration-700 group-hover:scale-110"
+            fill
+            className="object-cover opacity-100 transition-all duration-700 group-hover:scale-110"
           />
         ) : (
           <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-[#10B5DB] to-[#0a8ca5] flex items-center justify-center">

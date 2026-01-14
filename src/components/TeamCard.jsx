@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { Github, Linkedin, Mail, Eye, EyeOff, Trash2, Edit } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,10 +38,12 @@ export function TeamCard({ team, onEdit, onDelete, onToggleStatus, isDeleting, c
         >
           {/* Profile Image - Circular with padding to show background */}
           <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white/30 shadow-lg">
-            <img
+            <Image
               src={team.profileImage}
               alt={team.name}
-              className="w-full h-full object-cover"
+              fill
+              className="object-cover"
+              sizes="96px"
             />
           </div>
 

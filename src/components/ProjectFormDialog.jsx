@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
 import { Upload, X, Plus, GripVertical, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -575,10 +576,12 @@ export function ProjectFormDialog({ open, onOpenChange, onSubmit, isLoading, ini
                   <Label>Thumbnail *</Label>
                   {thumbnail ? (
                     <div className="relative w-full h-48 rounded-lg overflow-hidden border-2 border-blue-500">
-                      <img
+                      <Image
                         src={thumbnail.url}
                         alt="Thumbnail"
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
+                        sizes="100vw"
                       />
                       <div className="absolute top-2 left-2">
                         <Badge className="bg-blue-500">Thumbnail</Badge>
@@ -621,10 +624,12 @@ export function ProjectFormDialog({ open, onOpenChange, onSubmit, isLoading, ini
                     <div className="grid grid-cols-4 gap-3">
                       {images.map((img, i) => (
                         <div key={i} className="relative group rounded-lg overflow-hidden border">
-                          <img
+                          <Image
                             src={img.url}
                             alt={`Image ${i + 1}`}
-                            className="w-full h-24 object-cover"
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 768px) 25vw, 12.5vw"
                           />
                           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                             <Button
@@ -663,10 +668,12 @@ export function ProjectFormDialog({ open, onOpenChange, onSubmit, isLoading, ini
                     <div className="grid grid-cols-4 gap-3">
                       {newFiles.map((file, i) => (
                         <div key={i} className="relative group rounded-lg overflow-hidden border border-green-500">
-                          <img
+                          <Image
                             src={file.preview}
                             alt={`New ${i + 1}`}
-                            className="w-full h-24 object-cover"
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 768px) 25vw, 12.5vw"
                           />
                           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                             <Button
