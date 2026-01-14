@@ -1570,8 +1570,7 @@ export default function AgentsPage() {
 
                      {/* Incentive Details */}
                      <div className="border-t pt-2 mt-2">
-                        <span className="text-sm font-semibold text-gray-700 block mb-2">Incentive Structure</span>
-                        
+                        <span className="text-sm font-semibold text-gray-700 block mb-2">Incentive Structure</span>                        
                         <div className="grid grid-cols-2 gap-4">
                             {/* In Target */}
                             <div className="bg-white p-2 rounded border border-gray-200">
