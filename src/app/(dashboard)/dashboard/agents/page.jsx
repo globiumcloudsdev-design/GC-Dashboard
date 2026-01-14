@@ -141,10 +141,17 @@ export default function AgentsPage() {
     monthlyAmountTarget: '',
     targetCurrency: 'PKR',
     employeeType: 'Permanent',
-    designation: 'Sales Agent',
+    designation: '',
     basicSalary: '',
     attendanceAllowance: '',
-    perSaleIncentive: ''
+    // New Incentive Fields
+    commissionType: 'Basic + Commission',
+    perSaleIncentiveInTarget: '',
+    inTargetIncentiveType: 'fixed',
+    perSaleIncentiveAfterTarget: '',
+    afterTargetIncentiveType: 'fixed',
+    incentivePercentageOn: 'sale_amount',
+    minSaleAmountForIncentive: ''
   });
 
   const [editFormData, setEditFormData] = useState({
@@ -159,11 +166,18 @@ export default function AgentsPage() {
     monthlyAmountTarget: '',
     targetCurrency: 'PKR',
     employeeType: 'Permanent',
-    designation: 'Sales Agent',
+    designation: '',
     isActive: true,
     basicSalary: '',
     attendanceAllowance: '',
-    perSaleIncentive: ''
+    // New Incentive Fields
+    commissionType: 'Basic + Commission',
+    perSaleIncentiveInTarget: '',
+    inTargetIncentiveType: 'fixed',
+    perSaleIncentiveAfterTarget: '',
+    afterTargetIncentiveType: 'fixed',
+    incentivePercentageOn: 'sale_amount',
+    minSaleAmountForIncentive: ''
   });
 
   const [shifts, setShifts] = useState([]);
@@ -271,10 +285,66 @@ export default function AgentsPage() {
   };
 
   const handleSelectChange = (name, value) => {
+    // Logic for Target Type affecting Incentive Types
+    if (name === 'monthlyTargetType') {
+      let newInTargetType = formData.inTargetIncentiveType;
+      let newAfterTargetType = formData.afterTargetIncentiveType;
+
+      if (value === 'digit') {
+        newInTargetType = 'fixed';
+        newAfterTargetType = 'fixed';
+      } else if (value === 'amount') {
+        newInTargetType = 'percentage';
+        newAfterTargetType = 'percentage';
+      }
+
+      setFormData({ 
+        ...formData, 
+        [name]: value,
+        inTargetIncentiveType: newInTargetType,
+        afterTargetIncentiveType: newAfterTargetType
+      });
+      return;
+    }
+
+    // Logic for Commission Type
+    if (name === 'commissionType' && value === 'Only Commission') {
+       setFormData({ ...formData, [name]: value, basicSalary: '0', attendanceAllowance: '0' });
+       return;
+    }
+
     setFormData({ ...formData, [name]: value });
   };
 
   const handleEditSelectChange = (name, value) => {
+    // Logic for Target Type affecting Incentive Types
+    if (name === 'monthlyTargetType') {
+      let newInTargetType = editFormData.inTargetIncentiveType;
+      let newAfterTargetType = editFormData.afterTargetIncentiveType;
+
+      if (value === 'digit') {
+        newInTargetType = 'fixed';
+        newAfterTargetType = 'fixed';
+      } else if (value === 'amount') {
+        newInTargetType = 'percentage';
+        newAfterTargetType = 'percentage';
+      }
+
+      setEditFormData({ 
+        ...editFormData, 
+        [name]: value,
+        inTargetIncentiveType: newInTargetType,
+        afterTargetIncentiveType: newAfterTargetType
+      });
+      return;
+    }
+
+    // Logic for Commission Type
+    if (name === 'commissionType' && value === 'Only Commission') {
+       setEditFormData({ ...editFormData, [name]: value, basicSalary: '0', attendanceAllowance: '0' });
+       return;
+    }
+
     setEditFormData({ ...editFormData, [name]: value });
   };
 
@@ -307,7 +377,16 @@ export default function AgentsPage() {
         ...formData,
         monthlyDigitTarget: formData.monthlyDigitTarget ? parseInt(formData.monthlyDigitTarget) : 0,
         monthlyAmountTarget: formData.monthlyAmountTarget ? parseFloat(formData.monthlyAmountTarget) : 0,
-        agentId: formData.agentId.toUpperCase()
+        agentId: formData.agentId.toUpperCase(),
+        basicSalary: formData.basicSalary ? parseFloat(formData.basicSalary) : 0,
+        attendanceAllowance: formData.attendanceAllowance ? parseFloat(formData.attendanceAllowance) : 0,
+        commissionType: formData.commissionType,
+        perSaleIncentiveInTarget: formData.perSaleIncentiveInTarget ? parseFloat(formData.perSaleIncentiveInTarget) : 0,
+        inTargetIncentiveType: formData.inTargetIncentiveType,
+        perSaleIncentiveAfterTarget: formData.perSaleIncentiveAfterTarget ? parseFloat(formData.perSaleIncentiveAfterTarget) : 0,
+        afterTargetIncentiveType: formData.afterTargetIncentiveType,
+        incentivePercentageOn: formData.incentivePercentageOn,
+        minSaleAmountForIncentive: formData.minSaleAmountForIncentive ? parseFloat(formData.minSaleAmountForIncentive) : 0
       });
       toast.success('Agent created successfully!');
       setShowCreateForm(false);
@@ -323,10 +402,16 @@ export default function AgentsPage() {
         monthlyAmountTarget: '',
         targetCurrency: 'PKR',
         employeeType: 'Permanent',
-        designation: 'Sales Agent',
+        designation: '',
         basicSalary: '',
         attendanceAllowance: '',
-        perSaleIncentive: ''
+        commissionType: 'Basic + Commission',
+        perSaleIncentiveInTarget: '',
+        inTargetIncentiveType: 'fixed',
+        perSaleIncentiveAfterTarget: '',
+        afterTargetIncentiveType: 'fixed',
+        incentivePercentageOn: 'sale_amount',
+        minSaleAmountForIncentive: ''
       });
       fetchAgents();
     } catch (error) {
@@ -366,7 +451,13 @@ export default function AgentsPage() {
         isActive: editFormData.isActive,
         basicSalary: editFormData.basicSalary ? parseFloat(editFormData.basicSalary) : 0,
         attendanceAllowance: editFormData.attendanceAllowance ? parseFloat(editFormData.attendanceAllowance) : 0,
-        perSaleIncentive: editFormData.perSaleIncentive ? parseFloat(editFormData.perSaleIncentive) : 0
+        commissionType: editFormData.commissionType,
+        perSaleIncentiveInTarget: editFormData.perSaleIncentiveInTarget ? parseFloat(editFormData.perSaleIncentiveInTarget) : 0,
+        inTargetIncentiveType: editFormData.inTargetIncentiveType,
+        perSaleIncentiveAfterTarget: editFormData.perSaleIncentiveAfterTarget ? parseFloat(editFormData.perSaleIncentiveAfterTarget) : 0,
+        afterTargetIncentiveType: editFormData.afterTargetIncentiveType,
+        incentivePercentageOn: editFormData.incentivePercentageOn,
+        minSaleAmountForIncentive: editFormData.minSaleAmountForIncentive ? parseFloat(editFormData.minSaleAmountForIncentive) : 0
       });
       toast.success('Agent updated successfully!');
       setShowEditForm(false);
@@ -410,11 +501,17 @@ export default function AgentsPage() {
       monthlyAmountTarget: agent.monthlyAmountTarget?.toString() || '',
       targetCurrency: agent.targetCurrency || 'PKR',
       employeeType: agent.employeeType || 'Permanent',
-      designation: agent.designation || 'Sales Agent',
+      designation: agent.designation || '',
       isActive: agent.isActive,
       basicSalary: agent.basicSalary?.toString() || '',
       attendanceAllowance: agent.attendanceAllowance?.toString() || '',
-      perSaleIncentive: agent.perSaleIncentive?.toString() || ''
+      commissionType: agent.commissionType || 'Basic + Commission',
+      perSaleIncentiveInTarget: agent.perSaleIncentiveInTarget?.toString() || '',
+      inTargetIncentiveType: agent.inTargetIncentiveType || 'fixed',
+      perSaleIncentiveAfterTarget: agent.perSaleIncentiveAfterTarget?.toString() || '',
+      afterTargetIncentiveType: agent.afterTargetIncentiveType || 'fixed',
+      incentivePercentageOn: agent.incentivePercentageOn || 'sale_amount',
+      minSaleAmountForIncentive: agent.minSaleAmountForIncentive?.toString() || ''
     });
     setShowEditForm(true);
   };
@@ -573,21 +670,17 @@ export default function AgentsPage() {
                     
                     <div className="space-y-2">
                       <Label htmlFor="designation">Designation</Label>
-                      <Select 
+                      <Input 
+                        id="designation"
+                        name="designation"
                         value={formData.designation} 
-                        onValueChange={(v) => handleSelectChange('designation', v)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {DESIGNATIONS.map(designation => (
-                            <SelectItem key={designation.value} value={designation.value}>
-                              {designation.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        onChange={handleInputChange}
+                        placeholder="e.g. Sales Executive"
+                        list="designation-suggestions"
+                      />
+                      <datalist id="designation-suggestions">
+                         {DESIGNATIONS.map(d => <option key={d.value} value={d.value} />)}
+                      </datalist>
                     </div>
                   </div>
 
@@ -681,42 +774,134 @@ export default function AgentsPage() {
                   <div className="border-t pt-4 mt-2">
                     <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                       <DollarSign className="h-5 w-5" />
-                      Salary Structure
+                      Salary Structure & Incentives
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="basicSalary">Basic Salary</Label>
-                        <Input
-                          id="basicSalary"
-                          name="basicSalary"
-                          type="number"
-                          value={formData.basicSalary}
-                          onChange={handleInputChange}
-                          placeholder="e.g. 7000"
-                        />
+                    
+                    {/* Commission Type */}
+                    <div className="mb-4">
+                      <Label htmlFor="commissionType" className="mb-2 block">Commission Structure</Label>
+                      <Select 
+                        value={formData.commissionType} 
+                        onValueChange={(v) => handleSelectChange('commissionType', v)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Basic + Commission">Basic + Commission</SelectItem>
+                          <SelectItem value="Only Commission">Only Commission</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Base Salary */}
+                    {formData.commissionType === 'Basic + Commission' && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="basicSalary">Basic Salary</Label>
+                          <Input
+                            id="basicSalary"
+                            name="basicSalary"
+                            type="number"
+                            value={formData.basicSalary}
+                            onChange={handleInputChange}
+                            placeholder="e.g. 7000"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="attendanceAllowance">Attendance Allowance</Label>
+                          <Input
+                            id="attendanceAllowance"
+                            name="attendanceAllowance"
+                            type="number"
+                            value={formData.attendanceAllowance}
+                            onChange={handleInputChange}
+                            placeholder="e.g. 3000"
+                          />
+                        </div>
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="attendanceAllowance">Attendance Allowance</Label>
-                        <Input
-                          id="attendanceAllowance"
-                          name="attendanceAllowance"
-                          type="number"
-                          value={formData.attendanceAllowance}
-                          onChange={handleInputChange}
-                          placeholder="e.g. 3000"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="perSaleIncentive">Per Sale Incentive</Label>
-                        <Input
-                          id="perSaleIncentive"
-                          name="perSaleIncentive"
-                          type="number"
-                          value={formData.perSaleIncentive}
-                          onChange={handleInputChange}
-                          placeholder="e.g. 1000"
-                        />
-                      </div>
+                    )}
+
+                    {/* Incentives */}
+                    <div className="bg-slate-50 p-4 rounded-md border">
+                        <h4 className="text-sm font-semibold mb-3 text-slate-700">Incentive Settings</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* In Target */}
+                            <div className="space-y-2">
+                                <Label htmlFor="perSaleIncentiveInTarget" className="text-xs font-medium">Incentive (In Target)</Label>
+                                <div className="flex gap-2">
+                                    <Input
+                                        id="perSaleIncentiveInTarget"
+                                        name="perSaleIncentiveInTarget"
+                                        type="number"
+                                        value={formData.perSaleIncentiveInTarget}
+                                        onChange={handleInputChange}
+                                        placeholder="0"
+                                        className="flex-1"
+                                    />
+                                    <Select 
+                                        value={formData.inTargetIncentiveType} 
+                                        onValueChange={(v) => handleSelectChange('inTargetIncentiveType', v)}
+                                        disabled={formData.monthlyTargetType !== 'none' && formData.monthlyTargetType !== 'both'}
+                                    >
+                                        <SelectTrigger className="w-[110px]">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="fixed">Fixed</SelectItem>
+                                            <SelectItem value="percentage">%</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
+                            {/* After Target */}
+                            <div className="space-y-2">
+                                <Label htmlFor="perSaleIncentiveAfterTarget" className="text-xs font-medium">Incentive (After Target)</Label>
+                                <div className="flex gap-2">
+                                    <Input
+                                        id="perSaleIncentiveAfterTarget"
+                                        name="perSaleIncentiveAfterTarget"
+                                        type="number"
+                                        value={formData.perSaleIncentiveAfterTarget}
+                                        onChange={handleInputChange}
+                                        placeholder="0"
+                                        className="flex-1"
+                                    />
+                                    <Select 
+                                        value={formData.afterTargetIncentiveType} 
+                                        onValueChange={(v) => handleSelectChange('afterTargetIncentiveType', v)}
+                                        disabled={formData.monthlyTargetType !== 'none' && formData.monthlyTargetType !== 'both'}
+                                    >
+                                        <SelectTrigger className="w-[110px]">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="fixed">Fixed</SelectItem>
+                                            <SelectItem value="percentage">%</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
+                            {/* Percentage On */}
+                            {/* <div className="space-y-2">
+                                <Label htmlFor="incentivePercentageOn" className="text-xs font-medium">Percentage Based On</Label>
+                                <Select 
+                                    value={formData.incentivePercentageOn} 
+                                    onValueChange={(v) => handleSelectChange('incentivePercentageOn', v)}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="sale_amount">Sale Amount</SelectItem>
+                                        <SelectItem value="profit">Profit</SelectItem>
+                                        <SelectItem value="revenue">Revenue</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div> */}
+                        </div>
                     </div>
                   </div>
 
@@ -892,21 +1077,17 @@ export default function AgentsPage() {
               
               <div className="space-y-2">
                 <Label htmlFor="edit-designation">Designation</Label>
-                <Select
+                <Input
+                  id="edit-designation"
+                  name="designation"
                   value={editFormData.designation}
-                  onValueChange={(value) => handleEditSelectChange('designation', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DESIGNATIONS.map(designation => (
-                      <SelectItem key={designation.value} value={designation.value}>
-                        {designation.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  onChange={handleEditInputChange}
+                  placeholder="e.g. Sales Executive"
+                  list="edit-designation-suggestions"
+                />
+                <datalist id="edit-designation-suggestions">
+                    {DESIGNATIONS.map(d => <option key={d.value} value={d.value} />)}
+                </datalist>
               </div>
             </div>
 
@@ -994,42 +1175,146 @@ export default function AgentsPage() {
             <div className="border-t pt-4 mt-2">
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <DollarSign className="h-5 w-5" />
-                Salary Structure
+                Salary Structure & Incentives
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-basicSalary">Basic Salary</Label>
-                  <Input
-                    id="edit-basicSalary"
-                    name="basicSalary"
-                    type="number"
-                    value={editFormData.basicSalary}
-                    onChange={handleEditInputChange}
-                    placeholder="e.g. 7000"
-                  />
+
+              {/* Commission Type */}
+              <div className="mb-4">
+                  <Label htmlFor="edit-commissionType" className="mb-2 block">Commission Structure</Label>
+                  <Select 
+                    value={editFormData.commissionType} 
+                    onValueChange={(v) => handleEditSelectChange('commissionType', v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Basic + Commission">Basic + Commission</SelectItem>
+                      <SelectItem value="Only Commission">Only Commission</SelectItem>
+                    </SelectContent>
+                  </Select>
+              </div>
+              
+              {editFormData.commissionType === 'Basic + Commission' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-basicSalary">Basic Salary</Label>
+                    <Input
+                      id="edit-basicSalary"
+                      name="basicSalary"
+                      type="number"
+                      value={editFormData.basicSalary}
+                      onChange={handleEditInputChange}
+                      placeholder="e.g. 7000"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-attendanceAllowance">Attendance Allowance</Label>
+                    <Input
+                      id="edit-attendanceAllowance"
+                      name="attendanceAllowance"
+                      type="number"
+                      value={editFormData.attendanceAllowance}
+                      onChange={handleEditInputChange}
+                      placeholder="e.g. 3000"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-attendanceAllowance">Attendance Allowance</Label>
-                  <Input
-                    id="edit-attendanceAllowance"
-                    name="attendanceAllowance"
-                    type="number"
-                    value={editFormData.attendanceAllowance}
-                    onChange={handleEditInputChange}
-                    placeholder="e.g. 3000"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-perSaleIncentive">Per Sale Incentive</Label>
-                  <Input
-                    id="edit-perSaleIncentive"
-                    name="perSaleIncentive"
-                    type="number"
-                    value={editFormData.perSaleIncentive}
-                    onChange={handleEditInputChange}
-                    placeholder="e.g. 1000"
-                  />
-                </div>
+              )}
+
+              {/* Incentives */}
+              <div className="bg-slate-50 p-4 rounded-md border">
+                  <h4 className="text-sm font-semibold mb-3 text-slate-700">Incentive Settings</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                       {/* In Target */}
+                       <div className="space-y-2">
+                            <Label htmlFor="edit-perSaleIncentiveInTarget" className="text-xs font-medium">Incentive (In Target)</Label>
+                            <div className="flex gap-2">
+                                <Input
+                                    id="edit-perSaleIncentiveInTarget"
+                                    name="perSaleIncentiveInTarget"
+                                    type="number"
+                                    value={editFormData.perSaleIncentiveInTarget}
+                                    onChange={handleEditInputChange}
+                                    placeholder="0"
+                                    className="flex-1"
+                                />
+                                <Select 
+                                    value={editFormData.inTargetIncentiveType} 
+                                    onValueChange={(v) => handleEditSelectChange('inTargetIncentiveType', v)}
+                                    disabled={editFormData.monthlyTargetType !== 'none' && editFormData.monthlyTargetType !== 'both'}
+                                >
+                                    <SelectTrigger className="w-[110px]">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="fixed">Fixed</SelectItem>
+                                        <SelectItem value="percentage">%</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        {/* After Target */}
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-perSaleIncentiveAfterTarget" className="text-xs font-medium">Incentive (After Target)</Label>
+                            <div className="flex gap-2">
+                                <Input
+                                    id="edit-perSaleIncentiveAfterTarget"
+                                    name="perSaleIncentiveAfterTarget"
+                                    type="number"
+                                    value={editFormData.perSaleIncentiveAfterTarget}
+                                    onChange={handleEditInputChange}
+                                    placeholder="0"
+                                    className="flex-1"
+                                />
+                                <Select 
+                                    value={editFormData.afterTargetIncentiveType} 
+                                    onValueChange={(v) => handleEditSelectChange('afterTargetIncentiveType', v)}
+                                    disabled={editFormData.monthlyTargetType !== 'none' && editFormData.monthlyTargetType !== 'both'}
+                                >
+                                    <SelectTrigger className="w-[110px]">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="fixed">Fixed</SelectItem>
+                                        <SelectItem value="percentage">%</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        {/* Percentage On */}
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-incentivePercentageOn" className="text-xs font-medium">Percentage Based On</Label>
+                            <Select 
+                                value={editFormData.incentivePercentageOn} 
+                                onValueChange={(v) => handleEditSelectChange('incentivePercentageOn', v)}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="sale_amount">Sale Amount</SelectItem>
+                                    <SelectItem value="profit">Profit</SelectItem>
+                                    <SelectItem value="revenue">Revenue</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {/* Min Amount */}
+                        <div className="space-y-2">
+                            <Label htmlFor="edit-minSaleAmountForIncentive" className="text-xs font-medium">Min Sale Amount (Eligibility)</Label>
+                            <Input
+                                id="edit-minSaleAmountForIncentive"
+                                name="minSaleAmountForIncentive"
+                                type="number" 
+                                value={editFormData.minSaleAmountForIncentive}
+                                onChange={handleEditInputChange}
+                                placeholder="e.g. 5000"
+                            />
+                        </div>
+                  </div>
               </div>
             </div>
 
@@ -1253,24 +1538,75 @@ export default function AgentsPage() {
                   )}
                 </div>
 
+
                 {/* Salary Information */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <DollarSign className="h-4 w-4" />
-                    <span className="font-medium">Salary Structure:</span>
+                    <span className="font-medium">Salary & Compensation:</span>
                   </div>
-                  <div className="bg-gray-50 p-4 rounded-lg space-y-3">
-                     <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Basic Salary:</span>
-                        <span className="font-bold">{selectedAgent.basicSalary ? selectedAgent.basicSalary.toLocaleString() : '0'}</span>
+                  <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+                     {/* Commission Structure Type */}
+                     <div className="flex items-center justify-between border-b pb-2">
+                        <span className="text-gray-600">Structure Type:</span>
+                        <Badge variant="outline" className="border-blue-200 text-blue-700">
+                          {selectedAgent.commissionType || 'Basic + Commission'}
+                        </Badge>
                      </div>
-                     <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Attendance Allowance:</span>
-                        <span className="font-bold">{selectedAgent.attendanceAllowance ? selectedAgent.attendanceAllowance.toLocaleString() : '0'}</span>
-                     </div>
-                     <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Per Sale Incentive:</span>
-                        <span className="font-bold">{selectedAgent.perSaleIncentive ? selectedAgent.perSaleIncentive.toLocaleString() : '0'}</span>
+
+                     {/* Base Salary (if applicable) */}
+                     {(!selectedAgent.commissionType || selectedAgent.commissionType === 'Basic + Commission') && (
+                       <>
+                         <div className="flex items-center justify-between">
+                            <span className="text-gray-600">Basic Salary:</span>
+                            <span className="font-bold">{selectedAgent.basicSalary ? selectedAgent.basicSalary.toLocaleString() : '0'}</span>
+                         </div>
+                         <div className="flex items-center justify-between">
+                            <span className="text-gray-600">Attendance Allowance:</span>
+                            <span className="font-bold">{selectedAgent.attendanceAllowance ? selectedAgent.attendanceAllowance.toLocaleString() : '0'}</span>
+                         </div>
+                       </>
+                     )}
+
+                     {/* Incentive Details */}
+                     <div className="border-t pt-2 mt-2">
+                        <span className="text-sm font-semibold text-gray-700 block mb-2">Incentive Structure</span>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                            {/* In Target */}
+                            <div className="bg-white p-2 rounded border border-gray-200">
+                                <div className="text-xs text-gray-500 mb-1">In Target</div>
+                                <div className="font-bold text-gray-900">
+                                    {selectedAgent.perSaleIncentiveInTarget ? selectedAgent.perSaleIncentiveInTarget : '0'}
+                                    <span className="text-xs font-normal text-gray-500 ml-1">
+                                        {selectedAgent.inTargetIncentiveType === 'percentage' ? '%' : 'Fixed'}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            {/* After Target */}
+                            <div className="bg-white p-2 rounded border border-gray-200">
+                                <div className="text-xs text-gray-500 mb-1">After Target</div>
+                                <div className="font-bold text-gray-900">
+                                    {selectedAgent.perSaleIncentiveAfterTarget ? selectedAgent.perSaleIncentiveAfterTarget : '0'}
+                                    <span className="text-xs font-normal text-gray-500 ml-1">
+                                        {selectedAgent.afterTargetIncentiveType === 'percentage' ? '%' : 'Fixed'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Extra Details */}
+                        {(selectedAgent.inTargetIncentiveType === 'percentage' || selectedAgent.afterTargetIncentiveType === 'percentage') && (
+                             <div className="mt-2 text-xs text-gray-500">
+                                Calc on: <span className="font-medium text-gray-700 capitalize">{selectedAgent.incentivePercentageOn?.replace('_', ' ') || 'Sale Amount'}</span>
+                             </div>
+                        )}
+                        {selectedAgent.minSaleAmountForIncentive > 0 && (
+                            <div className="mt-1 text-xs text-gray-500">
+                                Min Sale: <span className="font-medium text-gray-700">{selectedAgent.minSaleAmountForIncentive}</span>
+                            </div>
+                        )}
                      </div>
                   </div>
                 </div>
