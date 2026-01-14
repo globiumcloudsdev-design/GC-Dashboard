@@ -9,8 +9,9 @@ import {
   BarChart3, 
   Clock, 
   DollarSign, 
+  Wallet,
   Settings, 
-  LogOut, 
+  LogOut,  
   Menu, 
   X, 
   User
@@ -57,6 +58,7 @@ export default function AgentSidebar({ isOpen, setIsOpen, collapsed, setCollapse
     { label: "Dashboard", href: "/agent/dashboard", icon: BarChart3 },
     { label: "Attendance", href: "/agent/attendance", icon: Clock },
     { label: "Sales", href: "/agent/sales", icon: DollarSign },
+    { label: "Salary", href: "/agent/salary", icon: Wallet },
     { label: "Settings", href: "/agent/settings", icon: Settings },
   ];
 
