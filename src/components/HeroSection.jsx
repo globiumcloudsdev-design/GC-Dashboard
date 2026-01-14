@@ -54,6 +54,9 @@ export default function HeroSection() {
           animate="visible"
           className="max-w-4xl pb-32"
         >
+
+
+<br /> <br />
           {/* Trust Badge */}
           <motion.div 
             variants={itemVariants}
