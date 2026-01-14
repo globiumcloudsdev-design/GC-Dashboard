@@ -55,7 +55,7 @@ export default function AboutSection() {
           <motion.div {...depthFade} className="space-y-8">
             <div>
               <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
-                About <span className="inline-block px-6 py-2 text-white rounded-2xl shadow-lg" style={{ background: 'linear-gradient(to right, #10B5DB, #0a7a9a)' }}>Globium Cloud</span>
+                About <span className="inline-block px-6 py-2 text-white rounded-2xl shadow-lg" style={{ background: 'linear-gradient(to right, #10B5DB, #0a7a9a)' }}>Globium Clouds </span>
               </h2>
               <p className="text-lg text-gray-600 leading-relaxed">
                 We are a leading cloud solutions provider dedicated to helping businesses harness the power of cloud technology.

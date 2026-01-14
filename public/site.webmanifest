@@ -1,0 +1,23 @@
+{
+  "name": "Globium Clouds",
+  "short_name": "Globium Clouds",
+  "description": "Leading software development company offering custom software solutions, web development, mobile apps, AI solutions, and digital transformation services.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "icons": [
+    {
+      "src": "favicon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "favicon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

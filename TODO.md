@@ -1,11 +1,11 @@
-# Contact Form Submission Task
+# Header.jsx Mobile Menu Improvements
 
-## Steps to Complete
-- [ ] Import addContact from contactActions.js and toast from sonner in ContactSection.jsx
-- [x] Add loading state for form submission
-- [x] Implement form validation (required: name, email, message; valid email)
-- [x] Modify handleSubmit to async function with try/catch
-- [x] Call addContact with payload {webName: "Globium Clouds", name, email, message, subject}
-- [x] Handle success: show success toast, reset form
-- [x] Handle error: show error toast
-- [x] Disable submit button during submission
+- [x] Import necessary icons from lucide-react (Home, User, Briefcase, FolderOpen, Users, Phone)
+- [x] Update mobile menu links to include icons and hover effects
+- [x] Add staggered entrance animations for menu items
+- [x] Improve spacing and typography in mobile menu
+- [x] Make mobile menu responsive with proper breakpoints and overflow handling
+- [x] Convert to side drawer that opens from left with overlay
+- [x] Prevent body scrolling when mobile menu is open
+- [x] Add close button and click-outside-to-close functionality
+- [x] Test mobile menu on various screen sizes
