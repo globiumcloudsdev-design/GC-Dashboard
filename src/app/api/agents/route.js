@@ -239,6 +239,9 @@ export async function GET(request) {
   }
 }
 
+// Helper for parsing numbers
+const strToNum = (val) => val ? parseFloat(val) : 0;
+
 // POST - Create new agent
 export async function POST(request) {
   try {
@@ -260,7 +263,16 @@ export async function POST(request) {
       designation = 'Sales Agent',
       basicSalary = 0,
       attendanceAllowance = 0,
-      perSaleIncentive = 0
+      // New Incentive Params
+      perSaleIncentiveInTarget = 0, // Renamed from BeforeTarget
+      inTargetIncentiveType = 'fixed', // Renamed
+      perSaleIncentiveAfterTarget = 0,
+      afterTargetIncentiveType = 'fixed',
+      incentivePercentageOn = 'sale_amount',
+      minSaleAmountForIncentive = 0,
+      
+      // New Commission Structure Type
+      commissionType = 'Basic + Commission' 
     } = body;
 
     // Validation
@@ -324,7 +336,15 @@ export async function POST(request) {
       designation,
       basicSalary: basicSalary ? parseFloat(basicSalary) : 0,
       attendanceAllowance: attendanceAllowance ? parseFloat(attendanceAllowance) : 0,
-      perSaleIncentive: perSaleIncentive ? parseFloat(perSaleIncentive) : 0
+      
+      // Map new incentive fields
+      commissionType,
+      perSaleIncentiveInTarget: strToNum(perSaleIncentiveInTarget),
+      inTargetIncentiveType,
+      perSaleIncentiveAfterTarget: strToNum(perSaleIncentiveAfterTarget),
+      afterTargetIncentiveType,
+      incentivePercentageOn,
+      minSaleAmountForIncentive: strToNum(minSaleAmountForIncentive)
     });
 
     // Send welcome email

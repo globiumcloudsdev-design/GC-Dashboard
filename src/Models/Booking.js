@@ -122,8 +122,8 @@ const FormDataSchema = new mongoose.Schema({
   email: { type: String, required: true },
   phone: { type: String, required: true },
   address: { type: String, required: true },
-  city: { type: String, required: true },
-  state: { type: String, required: true },
+  city: { type: String },
+  state: { type: String },
   zip: { type: String, required: true },
   date: { type: String, required: true },
   timeSlot: { type: String, required: true },
@@ -138,11 +138,13 @@ const BookingSchema = new mongoose.Schema(
     
     // Vendor information for each booking
     vendorName: { type: String },
+
+    // Agent ID for tracking targets (Manual or System)
+    agentId: { type: String, default: null, index: true },
     
     // Booking type to distinguish between different services
     bookingType: {
-      type: String,
-      enum: Object.values(BookingType),
+      type: String, // Enum removed for flexibility
       default: BookingType.VEHICLE,
       required: true
     },

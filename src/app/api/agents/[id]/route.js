@@ -59,7 +59,14 @@ export async function PUT(request, { params }) {
       isActive,
       basicSalary,
       attendanceAllowance,
-      perSaleIncentive
+      // New Incentive Fields
+      perSaleIncentiveInTarget,
+      inTargetIncentiveType,
+      perSaleIncentiveAfterTarget,
+      afterTargetIncentiveType,
+      incentivePercentageOn,
+      minSaleAmountForIncentive,
+      commissionType
     } = body;
     
     // Find agent
@@ -136,7 +143,18 @@ export async function PUT(request, { params }) {
     if (isActive !== undefined) updateData.isActive = isActive;
     if (basicSalary !== undefined) updateData.basicSalary = parseFloat(basicSalary) || 0;
     if (attendanceAllowance !== undefined) updateData.attendanceAllowance = parseFloat(attendanceAllowance) || 0;
-    if (perSaleIncentive !== undefined) updateData.perSaleIncentive = parseFloat(perSaleIncentive) || 0;
+    
+    // Update Incentive Fields
+    if (commissionType) updateData.commissionType = commissionType;
+    if (perSaleIncentiveInTarget !== undefined) updateData.perSaleIncentiveInTarget = parseFloat(perSaleIncentiveInTarget) || 0;
+    if (inTargetIncentiveType) updateData.inTargetIncentiveType = inTargetIncentiveType;
+    if (perSaleIncentiveAfterTarget !== undefined) updateData.perSaleIncentiveAfterTarget = parseFloat(perSaleIncentiveAfterTarget) || 0;
+    if (afterTargetIncentiveType) updateData.afterTargetIncentiveType = afterTargetIncentiveType;
+    if (incentivePercentageOn) updateData.incentivePercentageOn = incentivePercentageOn;
+    if (minSaleAmountForIncentive !== undefined) updateData.minSaleAmountForIncentive = parseFloat(minSaleAmountForIncentive) || 0;
+
+    // Remove old field if present in body 
+    // if (perSaleIncentive !== undefined) updateData.perSaleIncentive = parseFloat(perSaleIncentive) || 0;
 
     // Update agent
     const updatedAgent = await Agent.findByIdAndUpdate(
