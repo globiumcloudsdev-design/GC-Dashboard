@@ -36,13 +36,15 @@ const CustomModal = ({
 
     if (isOpen) {
       document.addEventListener('keydown', handleKeyDown);
+      // Lock body scroll
       document.body.style.overflow = 'hidden';
-    }
 
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = '';
-    };
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+        // Restore body scroll
+        document.body.style.overflow = '';
+      };
+    }
   }, [isOpen, preventClose, onClose]);
 
   return (

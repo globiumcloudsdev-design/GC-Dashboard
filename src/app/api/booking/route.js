@@ -145,6 +145,7 @@ export async function POST(req) {
       bookingId: data.bookingId,
       webName: data.webName,
       vendorName: data.vendorName,
+      agentId: data.agentId || null, // ✅ Capture Agent ID
       bookingType: data.bookingType,
       formData: {
         vehicleBookings: data.formData.vehicleBookings || [],
