@@ -1,4 +1,4 @@
-//src/app/(dashboard)/dashboard/view-attendance/page.jsx
+// src/app/(dashboard)/dashboard/view-attendance/page.jsx
 "use client";
 import React, { useCallback, useEffect, useState } from "react";
 import { adminService } from "@/services/adminService";
@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -19,13 +18,34 @@ import {
   PlayCircle, ToggleLeft, ToggleRight, Edit, ChevronLeft, ChevronRight,
   Download, X, RefreshCw, ChevronDown, UserPlus, FileText, PartyPopper,
   CalendarDays, Search, Menu, Filter, MoreVertical, Eye,
-  UserCheck, Calculator, Printer,
-  CalculatorIcon
+  UserCheck, Calculator, Printer, CalculatorIcon,
+  ChevronUp
 } from "lucide-react";
 import { toast } from "sonner";
 import CustomModal from "@/components/ui/customModal";
 import ViewAttendanceModal from "@/components/ViewAttendanceModal";
+// Modals
+import ManualAttendanceModal from "@/components/attendance/modals/ManualAttendanceModal";
+import LeaveRequestModal from "@/components/attendance/modals/LeaveModal";
+import ViewLeaveModal from "@/components/attendance/modals/ViewLeaveModal";
+import HolidayModal from "@/components/attendance/modals/HolidayModal";
+import WeeklyOffModal from "@/components/attendance/modals/WeeklyOffModal";
+import AutoAttendanceModal from "@/components/attendance/modals/AutoAttendanceModal";
+import ShiftAutoAttendanceModal from "@/components/attendance/modals/ShiftAutoAttendanceModal";
+import EditAttendanceModal from "@/components/attendance/modals/EditAttendanceModal";
+import PayrollPreviewModal from "@/components/attendance/modals/PayrollPreviewModal";
 import { useAuth } from "@/context/AuthContext";
+import { getAttendanceColumns } from "@/components/attendance/tables/AttendanceTableColumns";
+import { getLeaveColumns } from "@/components/attendance/tables/LeaveTableColumns";
+import { getHolidayColumns } from "@/components/attendance/tables/HolidayTableColumns";
+import { getWeeklyOffColumns } from "@/components/attendance/tables/WeeklyOffTableColumns";
+import ResponsiveTable from "@/components/attendance/ResponsiveTable";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Pagination,
   PaginationContent,
@@ -34,12 +54,6 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { formatToPakistaniDate, formatToPakistaniTime } from "@/utils/TimeFuntions";
 
 export default function AdminAttendancePage() {
@@ -61,13 +75,14 @@ export default function AdminAttendancePage() {
     weeklyOff: false,
     auto: false,
     edit: false,
-    shiftAuto: false
+    shiftAuto: false,
+    payroll: false
   });
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [total, setTotal] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
-  const [agentSummaryStats, setAgentSummaryStats] = useState(null); // Store summary stats from backend
+  const [agentSummaryStats, setAgentSummaryStats] = useState(null);
   const [filters, setFilters] = useState({
     userType: "all",
     status: "all",
@@ -105,8 +120,14 @@ export default function AdminAttendancePage() {
   const [showShiftAutoModal, setShowShiftAutoModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
+  const [showViewLeaveModal, setShowViewLeaveModal] = useState(false);
+  const [payrollModalData, setPayrollModalData] = useState(null);
+  const [showPayrollModal, setShowPayrollModal] = useState(false);
+  const [informedOverrides, setInformedOverrides] = useState({});
+  const [salesCount, setSalesCount] = useState(0);
   const [editingAttendance, setEditingAttendance] = useState(null);
   const [viewingAttendance, setViewingAttendance] = useState(null);
+  const [viewingLeave, setViewingLeave] = useState(null);
 
   const [manualForm, setManualForm] = useState({
     userType: "agent",
@@ -198,7 +219,6 @@ export default function AdminAttendancePage() {
       if (response.success) {
         setAttendance(response.data || []);
         setTotal(response.meta?.total || response.data?.length || 0);
-        // Store backend summary if available
         if (response.summary) {
           setAgentSummaryStats(response.summary);
         } else {
@@ -265,7 +285,6 @@ export default function AdminAttendancePage() {
     fetchInitialData();
   }, []);
 
-  // Auto-set fromDate and toDate when month is selected
   useEffect(() => {
     if (filters.month) {
       const [year, month] = filters.month.split('-');
@@ -282,7 +301,6 @@ export default function AdminAttendancePage() {
     }
   }, [filters.month]);
 
-  // Reset page to 1 when filters or search changes
   useEffect(() => {
     setPage(1);
   }, [filters.status, filters.userType, filters.date, filters.month, filters.fromDate, filters.toDate, searchQuery]);
@@ -486,9 +504,8 @@ export default function AdminAttendancePage() {
     const formatDateOnly = (val) => {
       if (!val) return '';
       try {
-        // Convert to Pakistani date
         const date = new Date(val);
-        return date.toLocaleDateString('en-CA', { timeZone: 'Asia/Karachi' }); // YYYY-MM-DD format
+        return date.toLocaleDateString('en-CA', { timeZone: 'Asia/Karachi' });
       } catch {
         return '';
       }
@@ -498,15 +515,12 @@ export default function AdminAttendancePage() {
       if (!val) return '';
       try {
         const date = new Date(val);
-        // Get time in Pakistani timezone
         const options = {
           hour: '2-digit',
           minute: '2-digit',
           hour12: false,
           timeZone: 'Asia/Karachi'
         };
-
-        // Convert to Pakistani time and format as HH:mm
         const timeString = date.toLocaleTimeString('en-GB', options);
         return timeString;
       } catch (error) {
@@ -517,14 +531,12 @@ export default function AdminAttendancePage() {
 
     setEditingAttendance(attendance);
 
-    // Get date - prioritize attendance.date, then checkInTime
     let attendanceDate = '';
     if (attendance.date) {
       attendanceDate = formatDateOnly(attendance.date);
     } else if (attendance.checkInTime) {
       attendanceDate = formatDateOnly(attendance.checkInTime);
     } else {
-      // Fallback to current date in Pakistani timezone
       const now = new Date();
       attendanceDate = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Karachi' });
     }
@@ -548,25 +560,17 @@ export default function AdminAttendancePage() {
     try {
       setLoading(prev => ({ ...prev, edit: true }));
 
-      // Detect if admin is manually setting status
       const originalStatus = editingAttendance?.status;
       const isManuallySettingStatus = manualForm.status !== originalStatus;
 
-      // Prepare update data
       const updateData = {
         attendanceId: editingAttendance._id,
-        // Only send status if admin manually changed it
         status: isManuallySettingStatus ? manualForm.status : null,
         checkInTime: manualForm.checkInTime || null,
         checkOutTime: manualForm.checkOutTime || null,
         shiftId: manualForm.shiftId || null,
         notes: manualForm.notes || ""
       };
-
-      console.log("Sending update data:", updateData);
-      console.log("Original status:", originalStatus);
-      console.log("Manual status:", manualForm.status);
-      console.log("Is manually setting status:", isManuallySettingStatus);
 
       const response = await adminService.updateAttendance(updateData);
       if (response.success) {
@@ -609,10 +613,10 @@ export default function AdminAttendancePage() {
     const csvData = attendance.map(a => [
       a.user ? `${a.user.firstName} ${a.user.lastName}` : a.agent?.agentName || '—',
       a.shift?.name || '—',
-      a.checkInTime ? new Date(a.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—',
-      a.checkOutTime ? new Date(a.checkOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—',
+      a.checkInTime ? formatToPakistaniTime(a.checkInTime) : '—',
+      a.checkOutTime ? formatToPakistaniTime(a.checkOutTime) : '—',
       a.status,
-      new Date(a.createdAt).toLocaleDateString()
+      formatToPakistaniDate(a.createdAt)
     ]);
     const csvContent = [csvHeaders, ...csvData].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -663,151 +667,6 @@ export default function AdminAttendancePage() {
       <Badge variant="outline" className={`${statusConfig[status] || "bg-gray-100 text-gray-700 border-gray-200"} text-xs px-2 py-1`}>
         {status}
       </Badge>
-    );
-  };
-
-  // ✅ Custom Responsive Table Component
-  const ResponsiveTable = ({
-    data,
-    columns,
-    loading,
-    emptyMessage = "No data found",
-    className = ""
-  }) => {
-    const [isMobile, setIsMobile] = useState(false);
-
-    useEffect(() => {
-      const checkMobile = () => {
-        setIsMobile(window.innerWidth < 768);
-      };
-
-      checkMobile();
-      window.addEventListener('resize', checkMobile);
-
-      return () => window.removeEventListener('resize', checkMobile);
-    }, []);
-
-    if (isMobile && activeTab === "attendance") {
-      return (
-        <div className="space-y-3">
-          {loading ? (
-            <div className="text-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin mx-auto text-blue-600" />
-              <p className="mt-2 text-muted-foreground">Loading data...</p>
-            </div>
-          ) : data.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              {emptyMessage}
-            </div>
-          ) : (
-            data.map((item) => (
-              <Card key={item._id} className="overflow-hidden">
-                <CardContent className="p-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-medium">
-                          {item.user
-                            ? `${item.user?.firstName || ""} ${item.user?.lastName || ""}`
-                            : item.agent?.agentName || "—"}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {item.shift?.name || "No shift"} • {new Date(item.createdAt).toLocaleDateString()}
-                        </div>
-                      </div>
-                      {getStatusBadge(item.status)}
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div>
-                        <span className="text-muted-foreground">Check In:</span>
-                        <div className="font-medium">
-                          {item.checkInTime ? new Date(item.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "—"}
-                        </div>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Check Out:</span>
-                        <div className="font-medium">
-                          {item.checkOutTime ? new Date(item.checkOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "—"}
-                        </div>
-                      </div>
-                    </div>
-
-                    {canEditAttendance && (
-                      <div className="flex justify-end pt-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditAttendance(item)}
-                          disabled={!canEditAttendanceRecord(item)}
-                          className="text-xs"
-                        >
-                          <Edit className="h-3 w-3 mr-1" />
-                          Edit
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </div>
-      );
-    }
-
-    return (
-      <div className={`w-full overflow-x-auto ${className}`}>
-        <div className="min-w-[800px] md:min-w-0 inline-block align-middle">
-          <div className="overflow-hidden border rounded-lg">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {columns.map((column, index) => (
-                    <TableHead
-                      key={index}
-                      style={column.minWidth ? { minWidth: column.minWidth } : {}}
-                      className="whitespace-nowrap px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      {column.label}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className="text-center py-8">
-                      <Loader2 className="h-8 w-8 animate-spin mx-auto text-blue-600" />
-                      <p className="mt-2 text-muted-foreground">Loading data...</p>
-                    </TableCell>
-                  </TableRow>
-                ) : data.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className="text-center py-8">
-                      <div className="text-muted-foreground">{emptyMessage}</div>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  data.map((item, index) => (
-                    <TableRow key={item._id || index} className="hover:bg-gray-50/50">
-                      {columns.map((column, colIndex) => (
-                        <TableCell
-                          key={colIndex}
-                          className={`px-4 py-3 text-sm ${column.cellClassName || ""}`}
-                          style={column.minWidth ? { minWidth: column.minWidth } : {}}
-                        >
-                          {column.render ? column.render(item) : item[column.key]}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-      </div>
     );
   };
 
@@ -951,15 +810,12 @@ export default function AdminAttendancePage() {
 
   // ✅ Agent Summary Cards (Filtered Search Results)
   const AgentSummaryCards = () => {
-    // Only show if searching and we have data or backend summary
     if (!searchQuery || (!attendance.length && !agentSummaryStats)) return null;
 
-    // Use name from first record if available (for header)
     const agentName = attendance[0]?.user 
       ? `${attendance[0].user.firstName} ${attendance[0].user.lastName}` 
       : attendance[0]?.agent?.agentName || "Agent";
       
-    // Use Backend Stats if available (More accurate for full month/history), otherwise fallback to frontend calc
     const stats = agentSummaryStats ? {
        total: agentSummaryStats.total,
        present: agentSummaryStats.present,
@@ -968,13 +824,12 @@ export default function AdminAttendancePage() {
        absent: agentSummaryStats.absent,
        earlyCheckout: agentSummaryStats.early_checkout,
        overtime: agentSummaryStats.overtime,
-       leave: agentSummaryStats.leave, // generic leave logic might need split
+       leave: agentSummaryStats.leave,
        approvedLeave: agentSummaryStats.approved_leave,
        pendingLeave: agentSummaryStats.pending_leave,
        holiday: agentSummaryStats.holiday,
        weeklyOff: agentSummaryStats.weekly_off,
     } : {
-       // Fallback to frontend calculation (only for current page if not paginated fully)
        total: attendance.length,
        present: attendance.filter(a => a.status === 'present').length,
        late: attendance.filter(a => a.status === 'late').length,
@@ -989,11 +844,7 @@ export default function AdminAttendancePage() {
        weeklyOff: attendance.filter(a => a.status === 'weekly_off').length,
     };
 
-    // Calculate derived stats
-    // All Present = present + late + half_day + early_checkout + overtime (excluding absent, leave, approved_leave)
     const allPresent = stats.present + stats.late + stats.halfDay + stats.earlyCheckout + stats.overtime;
-    
-    // Total Working Days = Total - (holiday + weekly_off)
     const totalWorkingDays = stats.total - stats.holiday - stats.weeklyOff;
 
     return (
@@ -1118,273 +969,346 @@ export default function AdminAttendancePage() {
     );
   };
 
-  const handleLeaveReasonChange = (e) => {
-    const value = e.target.value;
-    setLeaveForm(prev => ({
-      ...prev,
-      reason: value
-    }));
+  // ✅ Responsive Filters Component
+  const ResponsiveFilters = () => {
+    const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+    const [isSmallScreen, setIsSmallScreen] = useState(false);
+
+    useEffect(() => {
+      const checkScreen = () => {
+        setIsSmallScreen(window.innerWidth < 640);
+      };
+
+      checkScreen();
+      window.addEventListener('resize', checkScreen);
+
+      return () => window.removeEventListener('resize', checkScreen);
+    }, []);
+
+    // Clear all filters function
+    const handleClearAllFilters = () => {
+      setFilters({
+        userType: "all",
+        status: "all",
+        date: "",
+        month: "",
+        fromDate: "",
+        toDate: ""
+      });
+      setSearchQuery("");
+      setShowAdvancedFilters(false);
+      setShowFilters(false);
+    };
+
+    // Check if any filter is active
+    const hasActiveFilters = filters.status !== 'all' || 
+                            filters.date || 
+                            filters.month || 
+                            filters.fromDate || 
+                            filters.toDate || 
+                            searchQuery;
+
+    return (
+      <div className="space-y-4">
+        {/* Main Search Bar */}
+        <div className="relative w-full">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Search by agent name..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 w-full"
+          />
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSearchQuery("")}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
+
+        {/* Quick Filters - Always Visible */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {/* User Type Filter */}
+          <div className="space-y-1">
+            <Label htmlFor="userType" className="text-xs">User Type</Label>
+            <Select
+              value={filters.userType}
+              onValueChange={(value) => setFilters(prev => ({ ...prev, userType: value }))}
+            >
+              <SelectTrigger id="userType" className="w-full text-sm h-9">
+                <SelectValue placeholder="All Users" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Users</SelectItem>
+                <SelectItem value="agent">Agents</SelectItem>
+                <SelectItem value="user">Users</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Status Filter */}
+          <div className="space-y-1">
+            <Label htmlFor="status" className="text-xs">Status</Label>
+            <Select
+              value={filters.status}
+              onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
+            >
+              <SelectTrigger id="status" className="w-full text-sm h-9">
+                <SelectValue placeholder="All Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="present">Present</SelectItem>
+                <SelectItem value="late">Late</SelectItem>
+                <SelectItem value="half_day">Half Day</SelectItem>
+                <SelectItem value="absent">Absent</SelectItem>
+                <SelectItem value="leave">Leave</SelectItem>
+                <SelectItem value="holiday">Holiday</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Month Filter */}
+          <div className="space-y-1">
+            <Label htmlFor="month" className="text-xs">Month</Label>
+            <Select
+              value={filters.month}
+              onValueChange={(value) => setFilters(prev => ({ ...prev, month: value }))}
+            >
+              <SelectTrigger id="month" className="w-full text-sm h-9">
+                <SelectValue placeholder="Select Month" />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 12 }, (_, i) => {
+                  const date = new Date();
+                  date.setMonth(date.getMonth() - i);
+                  const value = date.toISOString().slice(0, 7);
+                  const label = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+                  return <SelectItem key={value} value={value}>{label}</SelectItem>;
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Date Range - For larger screens */}
+          {!isSmallScreen && (
+            <>
+              <div className="space-y-1">
+                <Label htmlFor="fromDate" className="text-xs">From Date</Label>
+                <Input
+                  id="fromDate"
+                  type="date"
+                  value={filters.fromDate || ''}
+                  onChange={(e) => setFilters(prev => ({ ...prev, fromDate: e.target.value }))}
+                  className="text-sm h-9"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="toDate" className="text-xs">To Date</Label>
+                <Input
+                  id="toDate"
+                  type="date"
+                  value={filters.toDate || ''}
+                  onChange={(e) => setFilters(prev => ({ ...prev, toDate: e.target.value }))}
+                  className="text-sm h-9"
+                />
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Advanced Filters Toggle */}
+        <div className="flex items-center justify-between">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+            className="text-xs"
+          >
+            <Filter className="h-3 w-3 mr-1" />
+            {showAdvancedFilters ? 'Hide Advanced Filters' : 'Show Advanced Filters'}
+          </Button>
+
+          {hasActiveFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClearAllFilters}
+              className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+              <X className="h-3 w-3 mr-1" />
+              Clear All
+            </Button>
+          )}
+        </div>
+
+        {/* Advanced Filters Panel */}
+        {showAdvancedFilters && (
+          <div className="border rounded-lg p-4 space-y-4 bg-gray-50/50">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Date Range (for small screens) */}
+              {isSmallScreen && (
+                <>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Date Range</Label>
+                    <div className="space-y-2">
+                      <Input
+                        type="date"
+                        value={filters.fromDate || ''}
+                        onChange={(e) => setFilters(prev => ({ ...prev, fromDate: e.target.value }))}
+                        className="text-sm"
+                        placeholder="From Date"
+                      />
+                      <Input
+                        type="date"
+                        value={filters.toDate || ''}
+                        onChange={(e) => setFilters(prev => ({ ...prev, toDate: e.target.value }))}
+                        className="text-sm"
+                        placeholder="To Date"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Specific Date */}
+              <div className="space-y-2">
+                <Label htmlFor="specificDate" className="text-xs">Specific Date</Label>
+                <Input
+                  id="specificDate"
+                  type="date"
+                  value={filters.date || ''}
+                  onChange={(e) => setFilters(prev => ({ ...prev, date: e.target.value }))}
+                  className="text-sm"
+                />
+              </div>
+
+              {/* More Status Options */}
+              <div className="space-y-2">
+                <Label htmlFor="detailedStatus" className="text-xs">Detailed Status</Label>
+                <Select
+                  value={filters.status}
+                  onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
+                >
+                  <SelectTrigger id="detailedStatus" className="text-sm">
+                    <SelectValue placeholder="All Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="present">Present</SelectItem>
+                    <SelectItem value="late">Late</SelectItem>
+                    <SelectItem value="half_day">Half Day</SelectItem>
+                    <SelectItem value="absent">Absent</SelectItem>
+                    <SelectItem value="early_checkout">Early Checkout</SelectItem>
+                    <SelectItem value="overtime">Overtime</SelectItem>
+                    <SelectItem value="leave">Leave</SelectItem>
+                    <SelectItem value="approved_leave">Approved Leave</SelectItem>
+                    <SelectItem value="pending_leave">Pending Leave</SelectItem>
+                    <SelectItem value="holiday">Holiday</SelectItem>
+                    <SelectItem value="weekly_off">Weekly Off</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Quick Action Buttons */}
+              <div className="space-y-2">
+                <Label className="text-xs">Quick Actions</Label>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setFilters(prev => ({ ...prev, status: 'present' }))}
+                    className="text-xs"
+                  >
+                    Show Present
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setFilters(prev => ({ ...prev, status: 'absent' }))}
+                    className="text-xs"
+                  >
+                    Show Absent
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-2 pt-2">
+              {filters.month && searchQuery && attendance.length > 0 && attendance[0]?.agent && (
+                <Button
+                  onClick={() => handleCalculatePayroll()}
+                  size="sm"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs"
+                >
+                  <CalculatorIcon className="h-3 w-3 mr-1" />
+                  Calculate Salary
+                </Button>
+              )}
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fetchAttendance()}
+                className="text-xs"
+              >
+                <RefreshCw className="h-3 w-3 mr-1" />
+                Apply Filters
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   // ✅ Attendance Table Columns (Desktop)
-  const attendanceColumns = [
-    {
-      label: "Agent",
-      minWidth: "180px",
-      render: (a) => (
-        <div>
-          <div className="font-medium">
-            {a.user
-              ? `${a.user?.firstName || ""} ${a.user?.lastName || ""}`
-              : a.agent?.agentName || "—"}
-          </div>
-          <div className="text-xs text-muted-foreground">
-            {a.user ? "User" : "Agent"} • {a.user ? a.user.agentId : a.agent?.email || ""}
-          </div>
-        </div>
-      ),
+  const attendanceColumns = getAttendanceColumns({
+    canEditAttendance,
+    canDeleteAttendance,
+    handleEditAttendance,
+    handleDeleteAttendance: async (id) => {
+      if(!confirm("Are you sure?")) return;
+      try {
+        const res = await attendanceService.delete(id);
+        if(res.success) {
+          toast.success("Record deleted");
+          fetchAttendance();
+        } else {
+          toast.error(res.message);
+        }
+      } catch(e) { console.error(e); }
     },
-    {
-      label: "Shift",
-      minWidth: "120px",
-      render: (a) => a.shift?.name || "—"
-    },
-    {
-      label: "Check In",
-      minWidth: "100px",
-      render: (a) => (a.checkInTime ? new Date(a.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "—")
-    },
-    {
-      label: "Check Out",
-      minWidth: "100px",
-      render: (a) => (a.checkOutTime ? new Date(a.checkOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "—")
-    },
-    {
-      label: "Status",
-      minWidth: "100px",
-      render: (a) => getStatusBadge(a.status)
-    },
-    {
-      label: "Date",
-      minWidth: "120px",
-      render: (a) => new Date(a.createdAt).toLocaleDateString()
-    },
-  ...(canEditAttendance ? [{
-      label: "Actions",
-      minWidth: "150px",
-      render: (a) => (
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleViewAttendance(a)}
-            title="View attendance details"
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleEditAttendance(a)}
-            disabled={!canEditAttendanceRecord(a)}
-            title={
-              !canEditAttendanceRecord(a)
-                ? "Cannot edit holiday/weekly off records"
-                : "Edit attendance"
-            }
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
-        </div>
-      ),
-    }] : [{
-      label: "Actions",
-      minWidth: "100px",
-      render: (a) => (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => handleViewAttendance(a)}
-          title="View attendance details"
-        >
-          <Eye className="h-4 w-4" />
-        </Button>
-      ),
-    }]),
-  ];
+    handleViewAttendance
+  });
 
   // ✅ Leave Requests Table Columns
-  const leaveColumns = [
-    {
-      label: "Agent",
-      minWidth: "200px",
-      render: (r) => (
-        <div>
-          <div className="font-medium">{r.user ? `${r.user?.firstName || ''} ${r.user?.lastName || ''}` : r.agent?.agentName || '—'}</div>
-          <div className="text-xs text-muted-foreground">{r.user ? r.user.email : r.agent?.email}</div>
-        </div>
-      )
-    },
-    {
-      label: "Leave Type",
-      minWidth: "100px",
-      render: (r) => <span className="capitalize">{r.leaveType}</span>
-    },
-    {
-      label: "Period",
-      minWidth: "150px",
-      render: (r) => (
-        <div>
-          <div className="text-sm">{new Date(r.startDate).toLocaleDateString()}</div>
-          <div className="text-xs text-muted-foreground">to</div>
-          <div className="text-sm">{new Date(r.endDate).toLocaleDateString()}</div>
-        </div>
-      )
-    },
-    {
-      label: "Reason",
-      minWidth: "150px",
-      render: (r) => (
-        <div className="max-w-[200px] truncate" title={r.reason}>
-          {r.reason}
-        </div>
-      )
-    },
-    {
-      label: "Status",
-      minWidth: "100px",
-      render: (r) => getLeaveStatusBadge(r.status)
-    },
-    ...(canApproveLeave ? [{
-      label: "Actions",
-      minWidth: "150px",
-      render: (r) => (
-        <div className="flex gap-2">
-          {r.status === 'pending' ? (
-            <>
-              <Button size="sm" onClick={() => handleLeaveAction(r._id, 'approved')}>
-                Approve
-              </Button>
-              <Button size="sm" variant="destructive" onClick={() => handleLeaveAction(r._id, 'rejected')}>
-                Reject
-              </Button>
-            </>
-          ) : (
-            <span className="text-sm text-muted-foreground italic">
-              {r.status === 'approved' ? 'Approved' :
-                r.status === 'rejected' ? 'Rejected' : 'Processed'}
-            </span>
-          )}
-        </div>
-      )
-    }] : [{
-      label: "Status Info",
-      minWidth: "100px",
-      render: (r) => (
-        <span className="text-sm text-muted-foreground">
-          {r.status === 'pending' ? 'Pending' :
-            r.status === 'approved' ? 'Approved' :
-              r.status === 'rejected' ? 'Rejected' : r.status}
-        </span>
-      )
-    }]),
-  ];
+  const leaveColumns = getLeaveColumns({
+    canApproveLeave,
+    setViewingLeave,
+    setShowViewLeaveModal,
+    handleLeaveAction
+  });
 
   // ✅ Holidays Table Columns
-  const holidayColumns = [
-    {
-      label: "Name",
-      minWidth: "150px",
-      render: (h) => <div className="font-medium">{h.name}</div>
-    },
-    {
-      label: "Date",
-      minWidth: "120px",
-      render: (h) => new Date(h.date).toLocaleDateString()
-    },
-    {
-      label: "Description",
-      minWidth: "200px",
-      render: (h) => (
-        <div className="max-w-[250px] truncate" title={h.description}>
-          {h.description || '—'}
-        </div>
-      )
-    },
-    {
-      label: "Recurring",
-      minWidth: "100px",
-      render: (h) => (
-        <Badge variant={h.isRecurring ? 'default' : 'secondary'}>
-          {h.isRecurring ? 'Yes' : 'No'}
-        </Badge>
-      )
-    },
-    ...(canDeleteHolidays ? [{
-      label: "Actions",
-      minWidth: "100px",
-      render: (h) => (
-        <Button variant="destructive" size="sm" onClick={() => handleDeleteHoliday(h._id)}>
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      )
-    }] : []),
-  ];
+  const holidayColumns = getHolidayColumns({
+    canDeleteHolidays,
+    handleDeleteHoliday
+  });
 
   // ✅ Weekly Offs Table Columns
-  const weeklyOffColumns = [
-    {
-      label: "Day",
-      minWidth: "120px",
-      render: (w) => <div className="font-medium capitalize">{w.day}</div>
-    },
-    {
-      label: "Name",
-      minWidth: "150px",
-      render: (w) => w.name
-    },
-    {
-      label: "Description",
-      minWidth: "200px",
-      render: (w) => (
-        <div className="max-w-[250px] truncate" title={w.description}>
-          {w.description || '—'}
-        </div>
-      )
-    },
-    {
-      label: "Status",
-      minWidth: "100px",
-      render: (w) => (
-        <Badge variant={w.isActive ? 'default' : 'secondary'}>
-          {w.isActive ? 'Active' : 'Inactive'}
-        </Badge>
-      )
-    },
-    ...((canEditWeeklyOff || canDeleteWeeklyOff) ? [{
-      label: "Actions",
-      minWidth: "150px",
-      render: (w) => (
-        <div className="flex gap-2">
-          {canEditWeeklyOff && (
-            <Button
-              variant={w.isActive ? "outline" : "default"}
-              size="sm"
-              onClick={() => handleToggleWeeklyOff(w._id, !w.isActive)}
-            >
-              {w.isActive ? <ToggleLeft className="h-4 w-4 mr-1" /> : <ToggleRight className="h-4 w-4 mr-1" />}
-              {w.isActive ? "Deactivate" : "Activate"}
-            </Button>
-          )}
-          {canDeleteWeeklyOff && (
-            <Button variant="destructive" size="sm" onClick={() => handleDeleteWeeklyOff(w._id)}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-      )
-    }] : []),
-  ];
+  const weeklyOffColumns = getWeeklyOffColumns({
+    canEditWeeklyOff,
+    canDeleteWeeklyOff,
+    handleToggleWeeklyOff,
+    handleDeleteWeeklyOff
+  });
 
   // ✅ Pagination Component
   const CustomPagination = () => {
@@ -1505,774 +1429,7 @@ export default function AdminAttendancePage() {
     </DropdownMenu>
   );
 
-  // Manual Attendance Modal
-  const ManualAttendanceModal = () => (
-    <CustomModal
-      isOpen={showManualModal}
-      onClose={() => setShowManualModal(false)}
-      title="Manual Attendance Entry"
-      description="Add or update attendance record manually"
-      size="md"
-      preventClose={loading.manual}
-    >
-      <form onSubmit={handleManualAttendance} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="userType">User Type</Label>
-            <Select
-              value={manualForm.userType}
-              onValueChange={(value) => setManualForm({ ...manualForm, userType: value, userId: "", agentId: "" })}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Agent" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="agent">Agent</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="person">Select Agent</Label>
-            <Select
-              value={manualForm.agentId}
-              onValueChange={(value) => setManualForm({ ...manualForm, agentId: value })}
-              disabled={!agents || agents.length === 0}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder={agents && agents.length ? 'Select Agent' : 'No agents available'} />
-              </SelectTrigger>
-              <SelectContent>
-                {agents.map(person => (
-                  <SelectItem key={person._id || person.id} value={person._id || person.id}>
-                    {`${person.agentName || person.name} (${person.agentId || person.email})`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="date">Date</Label>
-          <Input
-            type="date"
-            value={manualForm.date}
-            onChange={(e) => setManualForm({ ...manualForm, date: e.target.value })}
-            required
-            className="w-full"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="status">Status</Label>
-          <Select
-            value={manualForm.status}
-            onValueChange={(value) => setManualForm({ ...manualForm, status: value })}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="present">Present</SelectItem>
-              <SelectItem value="late">Late</SelectItem>
-              <SelectItem value="half_day">Half Day</SelectItem>
-              <SelectItem value="absent">Absent</SelectItem>
-              <SelectItem value="early_checkout">Early Checkout</SelectItem>
-              <SelectItem value="overtime">Overtime</SelectItem>
-              <SelectItem value="leave">Leave</SelectItem>
-              <SelectItem value="approved_leave">Approved Leave</SelectItem>
-              <SelectItem value="pending_leave">Pending Leave</SelectItem>
-              <SelectItem value="holiday">Holiday</SelectItem>
-              <SelectItem value="weekly_off">Weekly Off</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="checkInTime">Check In Time</Label>
-            <Input
-              type="time"
-              value={manualForm.checkInTime}
-              onChange={(e) => setManualForm({ ...manualForm, checkInTime: e.target.value })}
-              className="w-full"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="checkOutTime">Check Out Time</Label>
-            <Input
-              type="time"
-              value={manualForm.checkOutTime}
-              onChange={(e) => setManualForm({ ...manualForm, checkOutTime: e.target.value })}
-              className="w-full"
-            />
-          </div>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2 pt-4">
-          <Button
-            type="submit"
-            className="flex-1 w-full"
-            disabled={loading.manual || !manualForm.agentId || !manualForm.date || !manualForm.status}
-          >
-            {loading.manual && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Save Attendance
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setShowManualModal(false)}
-            className="flex-1 w-full"
-            disabled={loading.manual}
-          >
-            Cancel
-          </Button>
-        </div>
-      </form>
-    </CustomModal>
-  );
-  // Leave Modal
-  const LeaveModal = () => (
-    <CustomModal
-      isOpen={showLeaveModal}
-      onClose={() => setShowLeaveModal(false)}
-      title="Assign Leave"
-      description="Assign leave to user or agent"
-      size="md"
-      preventClose={loading.assign}
-    >
-      <form onSubmit={handleAssignLeave} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="userType">User Type</Label>
-            <Select
-              value={leaveForm.userType}
-              onValueChange={(value) => setLeaveForm({ ...leaveForm, userType: value, userId: "", agentId: "" })}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Agent" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="agent">Agent</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="person">Select Agent</Label>
-            <Select
-              value={leaveForm.agentId}
-              onValueChange={(value) => setLeaveForm({ ...leaveForm, agentId: value })}
-              disabled={!agents || agents.length === 0}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder={agents && agents.length ? 'Select Agent' : 'No agents available'} />
-              </SelectTrigger>
-              <SelectContent>
-                {agents.map(person => (
-                  <SelectItem key={person._id || person.id} value={person._id || person.id}>
-                    {`${person.agentName || person.name} (${person.agentId || person.email})`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="startDate">Start Date</Label>
-            <Input
-              type="date"
-              value={leaveForm.startDate}
-              onChange={(e) => setLeaveForm({ ...leaveForm, startDate: e.target.value })}
-              required
-              className="w-full"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="endDate">End Date</Label>
-            <Input
-              type="date"
-              value={leaveForm.endDate}
-              onChange={(e) => setLeaveForm({ ...leaveForm, endDate: e.target.value })}
-              required
-              className="w-full"
-            />
-          </div>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="leaveType">Leave Type</Label>
-          <Select
-            value={leaveForm.leaveType}
-            onValueChange={(value) => setLeaveForm({ ...leaveForm, leaveType: value })}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select Leave Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="sick">Sick Leave</SelectItem>
-              <SelectItem value="casual">Casual Leave</SelectItem>
-              <SelectItem value="emergency">Emergency Leave</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="reason">Reason</Label>
-          <Textarea
-            value={leaveForm.reason}
-            onChange={handleLeaveReasonChange}
-            placeholder="Reason for leave..."
-            rows={3}
-            required
-            className="w-full resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2 pt-4">
-          <Button
-            type="submit"
-            className="flex-1 w-full"
-            disabled={loading.assign || !leaveForm.agentId || !leaveForm.startDate || !leaveForm.endDate || !leaveForm.leaveType || !leaveForm.reason}
-          >
-            {loading.assign && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Assign Leave
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setShowLeaveModal(false)}
-            className="flex-1 w-full"
-            disabled={loading.assign}
-          >
-            Cancel
-          </Button>
-        </div>
-      </form>
-    </CustomModal>
-  );
-  // Holiday Modal
-  const HolidayModal = () => (
-    <CustomModal
-      isOpen={showHolidayModal}
-      onClose={() => setShowHolidayModal(false)}
-      title="Create Holiday"
-      description="Add a new holiday to the system. Recurring holidays will automatically repeat every year."
-      size="lg"
-      preventClose={loading.holidays}
-    >
-      <form onSubmit={handleCreateHoliday} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="name">Holiday Name *</Label>
-          <Input
-            type="text"
-            value={holidayForm.name}
-            onChange={(e) => setHolidayForm({ ...holidayForm, name: e.target.value })}
-            placeholder="Enter holiday name"
-            required
-            className="w-full"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="date">Date *</Label>
-          <Input
-            type="date"
-            value={holidayForm.date}
-            onChange={(e) => setHolidayForm({ ...holidayForm, date: e.target.value })}
-            required
-            className="w-full"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="description">Description</Label>
-          <Textarea
-            value={holidayForm.description}
-            onChange={(e) => setHolidayForm({ ...holidayForm, description: e.target.value })}
-            placeholder="Holiday description..."
-            rows={3}
-            className="w-full"
-          />
-        </div>
-        <div className="flex items-center space-x-2">
-          <input
-            type="checkbox"
-            id="isRecurring"
-            checked={holidayForm.isRecurring}
-            onChange={(e) => setHolidayForm({ ...holidayForm, isRecurring: e.target.checked })}
-            className="rounded border-gray-300"
-          />
-          <Label htmlFor="isRecurring" className="text-sm">
-            Recurring Holiday (will repeat every year)
-          </Label>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2 pt-4">
-          <Button
-            type="submit"
-            className="flex-1 w-full"
-            disabled={loading.holidays || !holidayForm.name || !holidayForm.date}
-          >
-            {loading.holidays && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Create Holiday
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setShowHolidayModal(false)}
-            className="flex-1 w-full"
-            disabled={loading.holidays}
-          >
-            Cancel
-          </Button>
-        </div>
-      </form>
-    </CustomModal>
-  );
-  // Weekly Off Modal
-  const WeeklyOffModal = () => (
-    <CustomModal
-      isOpen={showWeeklyOffModal}
-      onClose={() => setShowWeeklyOffModal(false)}
-      title="Add Weekly Off Day"
-      description="Set a weekly off day that will automatically mark as off every week"
-      size="md"
-      preventClose={loading.weeklyOff}
-    >
-      <form onSubmit={handleCreateWeeklyOff} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="day">Day of Week</Label>
-          <Select
-            value={weeklyOffForm.day}
-            onValueChange={(value) => setWeeklyOffForm({
-              ...weeklyOffForm,
-              day: value,
-              name: value.charAt(0).toUpperCase() + value.slice(1) + " - Weekly Off"
-            })}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select day" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="sunday">Sunday</SelectItem>
-              <SelectItem value="monday">Monday</SelectItem>
-              <SelectItem value="tuesday">Tuesday</SelectItem>
-              <SelectItem value="wednesday">Wednesday</SelectItem>
-              <SelectItem value="thursday">Thursday</SelectItem>
-              <SelectItem value="friday">Friday</SelectItem>
-              <SelectItem value="saturday">Saturday</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="name">Display Name</Label>
-          <Input
-            type="text"
-            value={weeklyOffForm.name}
-            onChange={(e) => setWeeklyOffForm({ ...weeklyOffForm, name: e.target.value })}
-            placeholder="e.g., Sunday, Weekly Off"
-            required
-            className="w-full"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="description">Description</Label>
-          <Textarea
-            value={weeklyOffForm.description}
-            onChange={(e) => setWeeklyOffForm({ ...weeklyOffForm, description: e.target.value })}
-            placeholder="Description for this weekly off..."
-            rows={2}
-            className="w-full"
-          />
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2 pt-4">
-          <Button
-            type="submit"
-            className="flex-1 w-full"
-            disabled={loading.weeklyOff || !weeklyOffForm.day || !weeklyOffForm.name}
-          >
-            {loading.weeklyOff && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Add Weekly Off
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setShowWeeklyOffModal(false)}
-            className="flex-1 w-full"
-            disabled={loading.weeklyOff}
-          >
-            Cancel
-          </Button>
-        </div>
-      </form>
-    </CustomModal>
-  );
-  // Auto Attendance Modal
-  const AutoAttendanceModal = () => (
-    <CustomModal
-      isOpen={showAutoModal}
-      onClose={() => setShowAutoModal(false)}
-      title="Process Auto Attendance (Agents)"
-      description="Automatically mark absent for agents without attendance on the selected date. Holidays and weekly offs are respected."
-      size="md"
-      preventClose={loading.auto}
-    >
-      <form onSubmit={handleAutoAttendance} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="date">Date</Label>
-          <Input
-            type="date"
-            value={autoForm.date}
-            onChange={(e) => setAutoForm({ ...autoForm, date: e.target.value })}
-            required
-            className="w-full"
-          />
-        </div>
-        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-          <h4 className="font-medium text-blue-800 mb-2">How Auto Attendance (Agents) Works:</h4>
-          <ul className="text-sm text-blue-700 space-y-1">
-            <li>• Agents without attendance will be marked as <strong>Absent</strong></li>
-            <li>• If date is a holiday, agents will be marked as <strong>Holiday</strong></li>
-            <li>• If date is weekly off, agents will be marked as <strong>Weekly Off</strong></li>
-            <li>• Existing attendance records will not be modified</li>
-          </ul>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2 pt-4">
-          <Button
-            type="submit"
-            className="flex-1 w-full"
-            disabled={loading.auto || !autoForm.date}
-          >
-            {loading.auto && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Process Auto Attendance
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setShowAutoModal(false)}
-            className="flex-1 w-full"
-            disabled={loading.auto}
-          >
-            Cancel
-          </Button>
-        </div>
-      </form>
-    </CustomModal>
-  );
-  // Shift Auto Attendance Modal
-  const ShiftAutoAttendanceModal = () => (
-    <CustomModal
-      isOpen={showShiftAutoModal}
-      onClose={() => setShowShiftAutoModal(false)}
-      title="Process Shift-based Auto Attendance"
-      description="Mark absent for agents whose shifts have ended and no check-in recorded."
-      size="md"
-      preventClose={loading.shiftAuto}
-    >
-      <form onSubmit={handleShiftAutoAttendance} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="date">Date</Label>
-          <Input
-            type="date"
-            value={shiftAutoForm.date}
-            onChange={(e) => setShiftAutoForm({ ...shiftAutoForm, date: e.target.value })}
-            required
-            className="w-full"
-          />
-        </div>
-        <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-          <h4 className="font-medium text-green-800 mb-2">How Shift-based Auto Attendance Works:</h4>
-          <ul className="text-sm text-green-700 space-y-1">
-            <li>• Checks if agent has a shift assigned</li>
-            <li>• Verifies if shift end time has passed</li>
-            <li>• Marks as <strong>Absent</strong> only if shift ended and no check-in</li>
-            <li>• Respects holidays and weekly offs automatically</li>
-            <li>• Only processes agents</li>
-          </ul>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2 pt-4">
-          <Button type="submit" className="flex-1 w-full" disabled={loading.shiftAuto}>
-            {loading.shiftAuto && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Process Shift Auto Attendance
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setShowShiftAutoModal(false)}
-            className="flex-1 w-full"
-            disabled={loading.shiftAuto}
-          >
-            Cancel
-          </Button>
-        </div>
-      </form>
-    </CustomModal>
-  );
-
-
-  // Edit Attendance Modal
-  const EditAttendanceModal = () => (
-    <CustomModal
-      isOpen={showEditModal}
-      onClose={() => setShowEditModal(false)}
-      title="Edit Attendance"
-      description={`Update attendance record for ${editingAttendance?.user ?
-        `${editingAttendance.user.firstName} ${editingAttendance.user.lastName}` :
-        editingAttendance?.agent?.agentName}`}
-      size="lg"
-      preventClose={loading.edit}
-    >
-      <form onSubmit={handleUpdateAttendance} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="status">Status</Label>
-            <Select
-              value={manualForm.status}
-              onValueChange={(value) => setManualForm({ ...manualForm, status: value })}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="present">Present</SelectItem>
-                <SelectItem value="late">Late</SelectItem>
-                <SelectItem value="half_day">Half Day</SelectItem>
-                <SelectItem value="absent">Absent</SelectItem>
-                <SelectItem value="early_checkout">Early Checkout</SelectItem>
-                <SelectItem value="overtime">Overtime</SelectItem>
-                <SelectItem value="leave">Leave</SelectItem>
-                <SelectItem value="approved_leave">Approved Leave</SelectItem>
-                <SelectItem value="pending_leave">Pending Leave</SelectItem>
-                <SelectItem value="holiday">Holiday</SelectItem>
-                <SelectItem value="weekly_off">Weekly Off</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="shift">Shift</Label>
-            <Select
-              value={manualForm.shiftId}
-              onValueChange={(value) => setManualForm({ ...manualForm, shiftId: value })}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select Shift" />
-              </SelectTrigger>
-              <SelectContent>
-                {shifts.map(shift => (
-                  <SelectItem key={shift._id} value={shift._id}>
-                    {shift.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="checkInTime">Check In Time</Label>
-            <Input
-              type="time"
-              value={manualForm.checkInTime}
-              onChange={(e) => setManualForm({ ...manualForm, checkInTime: e.target.value })}
-              className="w-full"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="checkOutTime">Check Out Time</Label>
-            <Input
-              type="time"
-              value={manualForm.checkOutTime}
-              onChange={(e) => setManualForm({ ...manualForm, checkOutTime: e.target.value })}
-              className="w-full"
-            />
-          </div>
-        </div>
-        <div className="bg-yellow-50 p-3 rounded-md border border-yellow-200 mb-4">
-          <h4 className="font-medium text-yellow-800 text-sm">Note:</h4>
-          <ul className="text-xs text-yellow-700 mt-1 space-y-1">
-            <li>• If you don't select a status, it will be auto-calculated based on check-in time</li>
-            <li>• 15 minutes grace period after shift start time</li>
-            <li>• Check-in after half shift → Half Day</li>
-            <li>• Check-in after shift end → Absent</li>
-          </ul>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2 pt-4">
-          <Button type="submit" className="flex-1 w-full" disabled={loading.edit}>
-            {loading.edit && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Update Attendance
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setShowEditModal(false)}
-            className="flex-1 w-full"
-          >
-            Cancel
-          </Button>
-        </div>
-      </form>
-    </CustomModal>
-  );
-
-  const [payrollModalData, setPayrollModalData] = useState(null);
-  const [showPayrollModal, setShowPayrollModal] = useState(false);
-  const [informedOverrides, setInformedOverrides] = useState({});
-  const [salesCount, setSalesCount] = useState(0);
-
-  // ... (previous state declarations)
-
-  // Payroll Calculation Modal
-  const PayrollCalculationModal = () => {
-    if (!payrollModalData) return null;
-    const { processedRecords, financials, stats, agent } = payrollModalData;
-
-    return (
-      <CustomModal
-        isOpen={showPayrollModal}
-        onClose={() => setShowPayrollModal(false)}
-        title={`Salary Calculation: ${agent?.agentName}`}
-        description={`Preview for ${filters.month}`}
-        size="2xl" // Wider modal
-      >
-        <div className="space-y-6">
-          {/* Financial Summary */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
-             <div>
-                 <div className="text-xs text-gray-500 uppercase">Basic Salary</div>
-                 <div className="text-lg font-bold">PKR {financials.basicSalary?.toLocaleString()}</div>
-             </div>
-             <div>
-                 <div className="text-xs text-gray-500 uppercase">Allowance</div>
-                 <div className="text-lg font-bold text-green-700">PKR {financials.earnedAllowance?.toLocaleString()}</div>
-                 {financials.earnedAllowance === 0 && <span className="text-xs text-red-500 block">{financials.allowanceCutReason}</span>}
-             </div>
-             <div>
-                 <div className="text-xs text-gray-500 uppercase">Deductions</div>
-                 <div className="text-lg font-bold text-red-600">- PKR {financials.totalDeduction?.toLocaleString()}</div>
-                 <span className="text-xs text-gray-500 block">(Late: {financials.lateDeductionAmount} + Absent: {financials.absentDeductionAmount})</span>
-             </div>
-             <div className="bg-white p-2 rounded shadow-sm border border-blue-200">
-                 <div className="text-xs text-blue-800 uppercase font-bold">Net Salary</div>
-                 <div className="text-xl font-bold text-blue-700">PKR {financials.netSalary?.toLocaleString()}</div>
-             </div>
-          </div>
-          
-           {/* Incentive Input */}
-          <div className="flex items-center gap-4 bg-yellow-50 p-3 rounded border border-yellow-200">
-              <div className="flex-1">
-                  <Label className="text-xs font-bold text-yellow-800 uppercase">Total Sales Count</Label>
-                  <p className="text-xs text-gray-600">Enter total approved sales count for incentive calculation.</p>
-              </div>
-              <div className="flex items-center gap-2">
-                  <Input 
-                      type="number" 
-                      min="0"
-                      value={salesCount} 
-                      onChange={(e) => setSalesCount(Number(e.target.value))}
-                      className="w-24 h-9 bg-white"
-                  />
-                  <Button 
-                      size="sm" 
-                      variant="outline" 
-                      onClick={() => handleCalculatePayroll()}
-                      className="h-9"
-                  >
-                      Apply
-                  </Button>
-              </div>
-              <div className="text-right">
-                  <div className="text-xs text-gray-500 uppercase">Earned Incentive</div>
-                  <div className="text-lg font-bold text-green-600">PKR {financials.earnedIncentive?.toLocaleString() || 0}</div>
-              </div>
-          </div>
-
-          {/* Stats Summary */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
-             <div className="bg-gray-100 p-2 rounded">
-                <span className="block text-xs font-semibold">Late (&gt;20m Penalty)</span>
-                {stats.latePenaltyCount}
-             </div>
-             <div className="bg-gray-100 p-2 rounded">
-                <span className="block text-xs font-semibold">Allow. Cut Lates</span>
-                {stats.informedLates} / 5
-             </div>
-             <div className="bg-gray-100 p-2 rounded">
-                <span className="block text-xs font-semibold">Allow. Cut Absents</span>
-                {stats.informedAbsents} / 3
-             </div>
-             <div className="bg-gray-100 p-2 rounded">
-                 <span className="block text-xs font-semibold">Converted Absents</span>
-                 {stats.convertedAbsents} (from {stats.uninformedLates} lates)
-             </div>
-          </div>
-
-          {/* Attendance Table with Checkbox */}
-          <div className="max-h-60 overflow-y-auto border rounded-md">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 sticky top-0">
-                <tr>
-                  <th className="p-2 text-left">Date</th>
-                  <th className="p-2 text-left">Status</th>
-                  <th className="p-2 text-left">Check In</th>
-                  <th className="p-2 text-left">Check Out</th>
-                  <th className="p-2 text-left">Late (mins)</th>
-                  <th className="p-2 text-center">Informed?</th>
-                </tr>
-              </thead>
-              <tbody>
-                {processedRecords.map((rec) => (
-                  <tr key={rec._id} className="border-t hover:bg-gray-50">
-                    <td className="p-2">{new Date(rec.date).toLocaleDateString()}</td>
-                    <td className="p-2 capitalize">
-                        <span className={`px-2 py-0.5 rounded text-xs ${
-                            rec.status==='absent' ? 'bg-red-100 text-red-800' : 
-                            rec.status==='late' ? 'bg-orange-100 text-orange-800' : 'bg-gray-100'
-                        }`}>
-                            {rec.status}
-                        </span>
-                    </td>
-                    <td className="p-2 text-gray-600">
-                        {rec.checkInTime ? new Date(rec.checkInTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "-"}
-                    </td>
-                    <td className="p-2 text-gray-600">
-                        {rec.checkOutTime ? new Date(rec.checkOutTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "-"}
-                    </td>
-                    <td className="p-2">
-                        {rec.lateMinutes > 0 ? <span className={rec.lateMinutes > 20 ? "text-red-600 font-bold" : ""}>{rec.lateMinutes}m</span> : "-"}
-                    </td>
-                    <td className="p-2 text-center">
-                      {(rec.status === 'late' || rec.status === 'absent' || rec.lateMinutes > 20) && (
-                        <input
-                          type="checkbox"
-                          checked={rec.isInformed || false}
-                          onChange={(e) => {
-                             const newVal = e.target.checked;
-                             setInformedOverrides(prev => ({ ...prev, [rec._id]: newVal }));
-                             // Trigger recalculation (in real app maybe debounce this)
-                             handleCalculatePayroll(newVal, rec._id); 
-                          }}
-                          className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
-                        />
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="flex gap-3 pt-2">
-             <Button 
-                onClick={handleGeneratePayroll} 
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                disabled={loading.payroll}
-            >
-                {loading.payroll ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Printer className="mr-2 h-4 w-4" />}
-                Generate Payroll & Notify
-             </Button>
-          </div>
-        </div>
-      </CustomModal>
-    );
-  };
-
-  // Logic to Calculate
   const handleCalculatePayroll = async (overrideValue, overrideId) => {
-      // If triggered by checkbox, update local state map first (optimistic) purely for display? 
-      // Actually we need to pass the *new* state to API.
-      // Since setState is async, we construct the new object here.
       let currentOverrides = { ...informedOverrides };
       if (overrideId) {
           currentOverrides[overrideId] = overrideValue;
@@ -2283,9 +1440,16 @@ export default function AdminAttendancePage() {
           return;
       }
       
-      // We need agent Id. attendance[0].agent?
-      const agentId = attendance[0]?.agent?._id || attendance[0]?.agent?.id;
+      const agentRecord = attendance.find(a => a?.agent?._id || a?.agent?.id);
+      const agentId = agentRecord?.agent?._id || agentRecord?.agent?.id;
+
       if (!agentId) {
+          const isUser = attendance.some(a => a?.user);
+          if (isUser) {
+             toast.error("Payroll calculation is currently only supported for Agents.");
+             return;
+          }
+
           toast.error("Please search for a specific agent first.");
           return;
       }
@@ -2293,7 +1457,7 @@ export default function AdminAttendancePage() {
       const [year, month] = filters.month.split("-");
 
       try {
-          setLoading(prev => ({ ...prev, payroll: true })); // Reuse or new loader
+          setLoading(prev => ({ ...prev, payroll: true }));
           const res = await fetch('/api/payroll', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -2303,7 +1467,7 @@ export default function AdminAttendancePage() {
                   month: parseInt(month),
                   year: parseInt(year),
                   informedOverrides: currentOverrides,
-                  salesCount: salesCount // Include Sales Count
+                  salesCount: salesCount
               })
           });
           const data = await res.json();
@@ -2335,8 +1499,8 @@ export default function AdminAttendancePage() {
                   agentId,
                   month: parseInt(month),
                   year: parseInt(year),
-                  informedOverrides, // Use state
-                  salesCount: salesCount // Include Sales Count
+                  informedOverrides,
+                  salesCount: salesCount
               })
           });
           const data = await res.json();
@@ -2358,14 +1522,91 @@ export default function AdminAttendancePage() {
     <div className="min-h-screen bg-gray-50/30 overflow-x-hidden">
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-6">
         {/* All Modals */}
-        <ManualAttendanceModal />
-        <LeaveModal />
-        <HolidayModal />
-        <WeeklyOffModal />
-        <AutoAttendanceModal />
-        <ShiftAutoAttendanceModal />
-        <EditAttendanceModal />
-        <PayrollCalculationModal />
+        <ManualAttendanceModal 
+          isOpen={showManualModal}
+          onClose={() => setShowManualModal(false)}
+          manualForm={manualForm}
+          setManualForm={setManualForm}
+          agents={agents}
+          shifts={shifts}
+          loading={loading.manual}
+          onSubmit={handleManualAttendance}
+        />
+        <LeaveRequestModal 
+          isOpen={showLeaveModal}
+          onClose={() => setShowLeaveModal(false)}
+          leaveForm={leaveForm}
+          setLeaveForm={setLeaveForm}
+          agents={agents}
+          loading={loading.assign}
+          onSubmit={handleAssignLeave}
+        />
+        <ViewLeaveModal
+          isOpen={showViewLeaveModal}
+          onClose={() => setShowViewLeaveModal(false)}
+          viewingLeave={viewingLeave}
+          canApproveLeave={true}
+          onApprove={() => viewingLeave && handleLeaveAction(viewingLeave._id, 'approved')}
+          onReject={() => viewingLeave && handleLeaveAction(viewingLeave._id, 'rejected')}
+        />
+        <HolidayModal
+          isOpen={showHolidayModal}
+          onClose={() => setShowHolidayModal(false)}
+          holidayForm={holidayForm}
+          setHolidayForm={setHolidayForm}
+          loading={loading.holidays}
+          onSubmit={handleCreateHoliday}
+        />
+        <WeeklyOffModal
+          isOpen={showWeeklyOffModal}
+          onClose={() => setShowWeeklyOffModal(false)}
+          weeklyOffForm={weeklyOffForm}
+          setWeeklyOffForm={setWeeklyOffForm}
+          agents={agents}
+          loading={loading.weeklyOff}
+          onSubmit={handleCreateWeeklyOff}
+        />
+        <AutoAttendanceModal 
+          isOpen={showAutoModal}
+          onClose={() => setShowAutoModal(false)}
+          autoForm={autoForm}
+          setAutoForm={setAutoForm}
+          loading={loading.auto}
+          onSubmit={handleAutoAttendance}
+        />
+        <ShiftAutoAttendanceModal 
+          isOpen={showShiftAutoModal}
+          onClose={() => setShowShiftAutoModal(false)}
+          shiftAutoForm={shiftAutoForm}
+          setShiftAutoForm={setShiftAutoForm}
+          loading={loading.shiftAuto}
+          onSubmit={handleShiftAutoAttendance}
+        />
+        <EditAttendanceModal 
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          editForm={manualForm}
+          setEditForm={setManualForm}
+          shifts={shifts}
+          loading={loading.edit}
+          onSubmit={handleUpdateAttendance}
+        />
+        <PayrollPreviewModal 
+          isOpen={showPayrollModal}
+          onClose={() => setShowPayrollModal(false)}
+          data={payrollModalData}
+          month={filters.month}
+          salesCount={salesCount}
+          onSalesCountChange={setSalesCount}
+          onApplySalesCount={() => handleCalculatePayroll()}
+          informedOverrides={informedOverrides}
+          onInformedOverrideChange={(id, val) => {
+             setInformedOverrides(prev => ({ ...prev, [id]: val }));
+             handleCalculatePayroll(val, id);
+          }}
+          loading={loading.payroll}
+          onGenerate={handleGeneratePayroll}
+        />
         <ViewAttendanceModal
           isOpen={showViewModal}
           onClose={() => setShowViewModal(false)}
@@ -2412,17 +1653,6 @@ export default function AdminAttendancePage() {
                   Manual Entry
                 </Button>
               )}
-              {/* {canCreateAttendance && (
-                <Button
-                  onClick={() => setShowAutoModal(true)}
-                  variant="outline"
-                  className="border-blue-600 text-blue-600 hover:bg-blue-50 text-sm"
-                  size="sm"
-                >
-                  <PlayCircle className="h-4 w-4 mr-2" />
-                  Auto
-                </Button>
-              )} */}
               {canCreateAttendance && (
                 <Button
                   onClick={() => setShowShiftAutoModal(true)}
@@ -2526,138 +1756,22 @@ export default function AdminAttendancePage() {
                       </div>
 
                       {/* Mobile Filter Toggle */}
-                      <div className="block sm:hidden">
+                      <div className="block lg:hidden">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => setShowFilters(!showFilters)}
-                          className="w-full"
+                          className="w-full sm:w-auto"
                         >
                           <Filter className="h-4 w-4 mr-2" />
-                          {showFilters ? 'Hide Filters' : 'Show Filters'}
+                          {showFilters ? 'Hide Filters' : 'Filters'}
                         </Button>
                       </div>
                     </div>
 
-                    {/* Search Bar */}
-                    <div className="relative w-full">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        placeholder="Search by name..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10 w-full"
-                      />
-                    </div>
-
-                    {/* Filters - Responsive */}
-                    <div className={`${showFilters ? 'block' : 'hidden'} sm:block`}>
-                      <div className="flex flex-col sm:flex-row gap-3">
-                        <div className="grid grid-cols-2 sm:flex gap-2 w-full">
-                          <Select
-                            value={filters.userType}
-                            onValueChange={(value) => setFilters(prev => ({ ...prev, userType: value }))}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="User Type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">All Users</SelectItem>
-                              <SelectItem value="agent">Agents</SelectItem>
-                              <SelectItem value="user">Users</SelectItem>
-                            </SelectContent>
-                          </Select>
-
-                          <Select
-                            value={filters.status}
-                            onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">All Status</SelectItem>
-                              <SelectItem value="present">Present</SelectItem>
-                              <SelectItem value="late">Late</SelectItem>
-                              <SelectItem value="half_day">Half Day</SelectItem>
-                              <SelectItem value="absent">Absent</SelectItem>
-                              <SelectItem value="early_checkout">Early Checkout</SelectItem>
-                              <SelectItem value="overtime">Overtime</SelectItem>
-                              <SelectItem value="leave">Leave</SelectItem>
-                              <SelectItem value="approved_leave">Approved Leave</SelectItem>
-                              <SelectItem value="pending_leave">Pending Leave</SelectItem>
-                              <SelectItem value="holiday">Holiday</SelectItem>
-                              <SelectItem value="weekly_off">Weekly Off</SelectItem>
-                            </SelectContent>
-                          </Select>
-
-                          <Select
-                            value={filters.month}
-                            onValueChange={(value) => setFilters(prev => ({ ...prev, month: value }))}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Month" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {Array.from({ length: 12 }, (_, i) => {
-                                const date = new Date();
-                                date.setMonth(date.getMonth() - i);
-                                const value = date.toISOString().slice(0, 7); // YYYY-MM
-                                const label = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
-                                return <SelectItem key={value} value={value}>{label}</SelectItem>;
-                              })}
-                            </SelectContent>
-                          </Select>
-
-                          <div className="grid grid-cols-1 gap-2 sm:flex sm:gap-2">
-                            <div className="flex flex-col gap-1">
-                              <label className="text-xs text-muted-foreground">From Date</label>
-                              <Input
-                                type="date"
-                                value={filters.fromDate || ''}
-                                onChange={(e) => setFilters(prev => ({ ...prev, fromDate: e.target.value }))}
-                                className="border rounded px-3 py-2 text-sm w-full"
-                              />
-                            </div>
-                            <div className="flex flex-col gap-1">
-                              <label className="text-xs text-muted-foreground">To Date</label>
-                              <Input
-                                type="date"
-                                value={filters.toDate || ''}
-                                onChange={(e) => setFilters(prev => ({ ...prev, toDate: e.target.value }))}
-                                className="border rounded px-3 py-2 text-sm w-full"
-                              />
-                            </div>
-                          </div>
-                        </div>
-
-                        {filters.month && searchQuery && attendance.length > 0 && attendance[0]?.agent && (
-                          <Button
-                            onClick={() => handleCalculatePayroll()}
-                            size="sm"
-                            className="h-10 w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white"
-                          >
-                            <CalculatorIcon className="h-4 w-4 mr-2" />
-                            Calculate Salary
-                          </Button>
-                        )}
-
-                        {(filters.status !== 'all' || filters.date || filters.month || filters.fromDate || filters.toDate || searchQuery) && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setFilters({ userType: "all", status: "all", date: "", month: "", fromDate: "", toDate: "" });
-                              setSearchQuery("");
-                              setShowFilters(false);
-                            }}
-                            className="h-10 w-full sm:w-auto"
-                          >
-                            <X className="h-4 w-4 mr-1" />
-                            Clear Filters
-                          </Button>
-                        )}
-                      </div>
+                    {/* Always show filters on large screens, toggle on mobile */}
+                    <div className={`${showFilters ? 'block' : 'hidden'} lg:block`}>
+                      <ResponsiveFilters />
                     </div>
                   </div>
                 </CardHeader>
@@ -2669,6 +1783,27 @@ export default function AdminAttendancePage() {
                       columns={attendanceColumns}
                       loading={loading.attendance}
                       emptyMessage="No attendance records found"
+                      activeTab="attendance"
+                      canEditAttendance={canEditAttendance}
+                      canEditAttendanceRecord={canEditAttendanceRecord}
+                      handleEditAttendance={handleEditAttendance}
+                      handleViewAttendance={handleViewAttendance}
+                      getStatusBadge={getStatusBadge}
+                      onDelete={async (id) => {
+                        if(!confirm("Are you sure you want to delete this record?")) return;
+                        try {
+                          const res = await attendanceService.delete(id);
+                          if(res.success) {
+                            toast.success("Record deleted successfully");
+                            fetchAttendance();
+                          } else {
+                            toast.error(res.message);
+                          }
+                        } catch(e) {
+                          console.error(e);
+                          toast.error("Failed to delete record");
+                        }
+                      }}
                     />
                   </div>
                   <CustomPagination />
@@ -2701,6 +1836,7 @@ export default function AdminAttendancePage() {
                       columns={leaveColumns}
                       loading={loading.leave}
                       emptyMessage="No leave requests found"
+                      activeTab="leave"
                     />
                   </div>
                 </CardContent>
@@ -2745,6 +1881,7 @@ export default function AdminAttendancePage() {
                         columns={holidayColumns}
                         loading={false}
                         emptyMessage="No holidays found"
+                        activeTab="holidays"
                       />
                     </div>
                   )}
@@ -2789,6 +1926,7 @@ export default function AdminAttendancePage() {
                         data={weeklyOffs}
                         columns={weeklyOffColumns}
                         loading={false}
+                        activeTab="weekly-off"
                         emptyMessage="No weekly off days found"
                       />
                     </div>

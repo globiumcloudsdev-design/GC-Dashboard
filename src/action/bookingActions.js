@@ -20,23 +20,33 @@ export async function addBooking(bookingData) {
 }
 
 // ✅ Update booking (for example: change status or details)
-export async function updateBooking(updatedBooking) {
-  const response = await fetch("/api/booking", {
+export async function updateBooking(bookingId, updatePayload) {
+  if (!bookingId) throw new Error('Missing booking ID');
+
+  const response = await fetch(`/api/booking/${bookingId}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(updatedBooking),
+    body: JSON.stringify(updatePayload),
   });
 
-  if (!response.ok) throw new Error("Failed to update booking");
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to update booking');
+  }
   return response.json();
 }
 
 // ✅ Delete a booking
 export async function deleteBooking(bookingId) {
-  const response = await fetch(`/api/booking?id=${bookingId}`, {
+  if (!bookingId) throw new Error('Missing booking ID');
+
+  const response = await fetch(`/api/booking/${bookingId}`, {
     method: "DELETE",
   });
 
-  if (!response.ok) throw new Error("Failed to delete booking");
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to delete booking');
+  }
   return response.json();
 }

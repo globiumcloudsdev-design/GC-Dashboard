@@ -12,8 +12,6 @@ const CustomModal = ({
   size = 'md',
   preventClose = false 
 }) => {
-  if (!isOpen) return null;
-
   const sizeClasses = {
     sm: 'max-w-md',
     md: 'max-w-2xl', 
@@ -36,16 +34,16 @@ const CustomModal = ({
 
     if (isOpen) {
       document.addEventListener('keydown', handleKeyDown);
-      // Lock body scroll
-      document.body.style.overflow = 'hidden';
-
-      return () => {
-        document.removeEventListener('keydown', handleKeyDown);
-        // Restore body scroll
-        document.body.style.overflow = '';
-      };
+      // document.body.style.overflow = 'hidden'; // Disabled to allow scrolling
     }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      // document.body.style.overflow = '';
+    };
   }, [isOpen, preventClose, onClose]);
+
+  if (!isOpen) return null;
 
   return (
     <div 
