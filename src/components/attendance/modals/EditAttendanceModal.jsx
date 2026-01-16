@@ -48,7 +48,11 @@ export default function EditAttendanceModal({
                 <SelectItem value="present">Present</SelectItem>
                 <SelectItem value="absent">Absent</SelectItem>
                 <SelectItem value="leave">Leave</SelectItem>
+                                <SelectItem value="approved_leave">Approved Leave</SelectItem>
                 <SelectItem value="half-day">Half Day</SelectItem>
+                <SelectItem value="late">Late</SelectItem>
+                <SelectItem value="early_checkout">Early Checkout</SelectItem>
+                <SelectItem value="overtime">Overtime</SelectItem>
                 <SelectItem value="holiday">Holiday</SelectItem>
                 <SelectItem value="weekly-off">Weekly Off</SelectItem>
               </SelectContent>

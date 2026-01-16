@@ -1,4 +1,4 @@
-//src/app/(dashboard)/dashboard/view-attendance/page.jsx
+// src/app/(dashboard)/dashboard/view-attendance/page.jsx
 "use client";
 import React, { useCallback, useEffect, useState } from "react";
 import { adminService } from "@/services/adminService";
@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -19,8 +18,8 @@ import {
   PlayCircle, ToggleLeft, ToggleRight, Edit, ChevronLeft, ChevronRight,
   Download, X, RefreshCw, ChevronDown, UserPlus, FileText, PartyPopper,
   CalendarDays, Search, Menu, Filter, MoreVertical, Eye,
-  UserCheck, Calculator, Printer,
-  CalculatorIcon
+  UserCheck, Calculator, Printer, CalculatorIcon,
+  ChevronUp
 } from "lucide-react";
 import { toast } from "sonner";
 import CustomModal from "@/components/ui/customModal";
@@ -76,13 +75,14 @@ export default function AdminAttendancePage() {
     weeklyOff: false,
     auto: false,
     edit: false,
-    shiftAuto: false
+    shiftAuto: false,
+    payroll: false
   });
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [total, setTotal] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
-  const [agentSummaryStats, setAgentSummaryStats] = useState(null); // Store summary stats from backend
+  const [agentSummaryStats, setAgentSummaryStats] = useState(null);
   const [filters, setFilters] = useState({
     userType: "all",
     status: "all",
@@ -219,7 +219,6 @@ export default function AdminAttendancePage() {
       if (response.success) {
         setAttendance(response.data || []);
         setTotal(response.meta?.total || response.data?.length || 0);
-        // Store backend summary if available
         if (response.summary) {
           setAgentSummaryStats(response.summary);
         } else {
@@ -286,7 +285,6 @@ export default function AdminAttendancePage() {
     fetchInitialData();
   }, []);
 
-  // Auto-set fromDate and toDate when month is selected
   useEffect(() => {
     if (filters.month) {
       const [year, month] = filters.month.split('-');
@@ -303,7 +301,6 @@ export default function AdminAttendancePage() {
     }
   }, [filters.month]);
 
-  // Reset page to 1 when filters or search changes
   useEffect(() => {
     setPage(1);
   }, [filters.status, filters.userType, filters.date, filters.month, filters.fromDate, filters.toDate, searchQuery]);
@@ -507,9 +504,8 @@ export default function AdminAttendancePage() {
     const formatDateOnly = (val) => {
       if (!val) return '';
       try {
-        // Convert to Pakistani date
         const date = new Date(val);
-        return date.toLocaleDateString('en-CA', { timeZone: 'Asia/Karachi' }); // YYYY-MM-DD format
+        return date.toLocaleDateString('en-CA', { timeZone: 'Asia/Karachi' });
       } catch {
         return '';
       }
@@ -519,15 +515,12 @@ export default function AdminAttendancePage() {
       if (!val) return '';
       try {
         const date = new Date(val);
-        // Get time in Pakistani timezone
         const options = {
           hour: '2-digit',
           minute: '2-digit',
           hour12: false,
           timeZone: 'Asia/Karachi'
         };
-
-        // Convert to Pakistani time and format as HH:mm
         const timeString = date.toLocaleTimeString('en-GB', options);
         return timeString;
       } catch (error) {
@@ -538,14 +531,12 @@ export default function AdminAttendancePage() {
 
     setEditingAttendance(attendance);
 
-    // Get date - prioritize attendance.date, then checkInTime
     let attendanceDate = '';
     if (attendance.date) {
       attendanceDate = formatDateOnly(attendance.date);
     } else if (attendance.checkInTime) {
       attendanceDate = formatDateOnly(attendance.checkInTime);
     } else {
-      // Fallback to current date in Pakistani timezone
       const now = new Date();
       attendanceDate = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Karachi' });
     }
@@ -569,25 +560,17 @@ export default function AdminAttendancePage() {
     try {
       setLoading(prev => ({ ...prev, edit: true }));
 
-      // Detect if admin is manually setting status
       const originalStatus = editingAttendance?.status;
       const isManuallySettingStatus = manualForm.status !== originalStatus;
 
-      // Prepare update data
       const updateData = {
         attendanceId: editingAttendance._id,
-        // Only send status if admin manually changed it
         status: isManuallySettingStatus ? manualForm.status : null,
         checkInTime: manualForm.checkInTime || null,
         checkOutTime: manualForm.checkOutTime || null,
         shiftId: manualForm.shiftId || null,
         notes: manualForm.notes || ""
       };
-
-      console.log("Sending update data:", updateData);
-      console.log("Original status:", originalStatus);
-      console.log("Manual status:", manualForm.status);
-      console.log("Is manually setting status:", isManuallySettingStatus);
 
       const response = await adminService.updateAttendance(updateData);
       if (response.success) {
@@ -686,9 +669,6 @@ export default function AdminAttendancePage() {
       </Badge>
     );
   };
-
-  // ResponsiveTable component replaced by import
-
 
   // ✅ Stats Cards Component
   const StatsCards = () => {
@@ -830,15 +810,12 @@ export default function AdminAttendancePage() {
 
   // ✅ Agent Summary Cards (Filtered Search Results)
   const AgentSummaryCards = () => {
-    // Only show if searching and we have data or backend summary
     if (!searchQuery || (!attendance.length && !agentSummaryStats)) return null;
 
-    // Use name from first record if available (for header)
     const agentName = attendance[0]?.user 
       ? `${attendance[0].user.firstName} ${attendance[0].user.lastName}` 
       : attendance[0]?.agent?.agentName || "Agent";
       
-    // Use Backend Stats if available (More accurate for full month/history), otherwise fallback to frontend calc
     const stats = agentSummaryStats ? {
        total: agentSummaryStats.total,
        present: agentSummaryStats.present,
@@ -847,13 +824,12 @@ export default function AdminAttendancePage() {
        absent: agentSummaryStats.absent,
        earlyCheckout: agentSummaryStats.early_checkout,
        overtime: agentSummaryStats.overtime,
-       leave: agentSummaryStats.leave, // generic leave logic might need split
+       leave: agentSummaryStats.leave,
        approvedLeave: agentSummaryStats.approved_leave,
        pendingLeave: agentSummaryStats.pending_leave,
        holiday: agentSummaryStats.holiday,
        weeklyOff: agentSummaryStats.weekly_off,
     } : {
-       // Fallback to frontend calculation (only for current page if not paginated fully)
        total: attendance.length,
        present: attendance.filter(a => a.status === 'present').length,
        late: attendance.filter(a => a.status === 'late').length,
@@ -868,11 +844,7 @@ export default function AdminAttendancePage() {
        weeklyOff: attendance.filter(a => a.status === 'weekly_off').length,
     };
 
-    // Calculate derived stats
-    // All Present = present + late + half_day + early_checkout + overtime (excluding absent, leave, approved_leave)
     const allPresent = stats.present + stats.late + stats.halfDay + stats.earlyCheckout + stats.overtime;
-    
-    // Total Working Days = Total - (holiday + weekly_off)
     const totalWorkingDays = stats.total - stats.holiday - stats.weeklyOff;
 
     return (
@@ -997,32 +969,310 @@ export default function AdminAttendancePage() {
     );
   };
 
-  const handleLeaveReasonChange = (e) => {
-    const value = e.target.value;
-    setLeaveForm(prev => ({
-      ...prev,
-      reason: value
-    }));
+  // ✅ Responsive Filters Component
+  const ResponsiveFilters = () => {
+    const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+    const [isSmallScreen, setIsSmallScreen] = useState(false);
+
+    useEffect(() => {
+      const checkScreen = () => {
+        setIsSmallScreen(window.innerWidth < 640);
+      };
+
+      checkScreen();
+      window.addEventListener('resize', checkScreen);
+
+      return () => window.removeEventListener('resize', checkScreen);
+    }, []);
+
+    // Clear all filters function
+    const handleClearAllFilters = () => {
+      setFilters({
+        userType: "all",
+        status: "all",
+        date: "",
+        month: "",
+        fromDate: "",
+        toDate: ""
+      });
+      setSearchQuery("");
+      setShowAdvancedFilters(false);
+      setShowFilters(false);
+    };
+
+    // Check if any filter is active
+    const hasActiveFilters = filters.status !== 'all' || 
+                            filters.date || 
+                            filters.month || 
+                            filters.fromDate || 
+                            filters.toDate || 
+                            searchQuery;
+
+    return (
+      <div className="space-y-4">
+        {/* Main Search Bar */}
+        <div className="relative w-full">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Search by agent name..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 w-full"
+          />
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSearchQuery("")}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
+
+        {/* Quick Filters - Always Visible */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {/* User Type Filter */}
+          <div className="space-y-1">
+            <Label htmlFor="userType" className="text-xs">User Type</Label>
+            <Select
+              value={filters.userType}
+              onValueChange={(value) => setFilters(prev => ({ ...prev, userType: value }))}
+            >
+              <SelectTrigger id="userType" className="w-full text-sm h-9">
+                <SelectValue placeholder="All Users" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Users</SelectItem>
+                <SelectItem value="agent">Agents</SelectItem>
+                <SelectItem value="user">Users</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Status Filter */}
+          <div className="space-y-1">
+            <Label htmlFor="status" className="text-xs">Status</Label>
+            <Select
+              value={filters.status}
+              onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
+            >
+              <SelectTrigger id="status" className="w-full text-sm h-9">
+                <SelectValue placeholder="All Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="present">Present</SelectItem>
+                <SelectItem value="late">Late</SelectItem>
+                <SelectItem value="half_day">Half Day</SelectItem>
+                <SelectItem value="absent">Absent</SelectItem>
+                <SelectItem value="leave">Leave</SelectItem>
+                <SelectItem value="holiday">Holiday</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Month Filter */}
+          <div className="space-y-1">
+            <Label htmlFor="month" className="text-xs">Month</Label>
+            <Select
+              value={filters.month}
+              onValueChange={(value) => setFilters(prev => ({ ...prev, month: value }))}
+            >
+              <SelectTrigger id="month" className="w-full text-sm h-9">
+                <SelectValue placeholder="Select Month" />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 12 }, (_, i) => {
+                  const date = new Date();
+                  date.setMonth(date.getMonth() - i);
+                  const value = date.toISOString().slice(0, 7);
+                  const label = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+                  return <SelectItem key={value} value={value}>{label}</SelectItem>;
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Date Range - For larger screens */}
+          {!isSmallScreen && (
+            <>
+              <div className="space-y-1">
+                <Label htmlFor="fromDate" className="text-xs">From Date</Label>
+                <Input
+                  id="fromDate"
+                  type="date"
+                  value={filters.fromDate || ''}
+                  onChange={(e) => setFilters(prev => ({ ...prev, fromDate: e.target.value }))}
+                  className="text-sm h-9"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="toDate" className="text-xs">To Date</Label>
+                <Input
+                  id="toDate"
+                  type="date"
+                  value={filters.toDate || ''}
+                  onChange={(e) => setFilters(prev => ({ ...prev, toDate: e.target.value }))}
+                  className="text-sm h-9"
+                />
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Advanced Filters Toggle */}
+        <div className="flex items-center justify-between">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+            className="text-xs"
+          >
+            <Filter className="h-3 w-3 mr-1" />
+            {showAdvancedFilters ? 'Hide Advanced Filters' : 'Show Advanced Filters'}
+          </Button>
+
+          {hasActiveFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClearAllFilters}
+              className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+              <X className="h-3 w-3 mr-1" />
+              Clear All
+            </Button>
+          )}
+        </div>
+
+        {/* Advanced Filters Panel */}
+        {showAdvancedFilters && (
+          <div className="border rounded-lg p-4 space-y-4 bg-gray-50/50">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Date Range (for small screens) */}
+              {isSmallScreen && (
+                <>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Date Range</Label>
+                    <div className="space-y-2">
+                      <Input
+                        type="date"
+                        value={filters.fromDate || ''}
+                        onChange={(e) => setFilters(prev => ({ ...prev, fromDate: e.target.value }))}
+                        className="text-sm"
+                        placeholder="From Date"
+                      />
+                      <Input
+                        type="date"
+                        value={filters.toDate || ''}
+                        onChange={(e) => setFilters(prev => ({ ...prev, toDate: e.target.value }))}
+                        className="text-sm"
+                        placeholder="To Date"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Specific Date */}
+              <div className="space-y-2">
+                <Label htmlFor="specificDate" className="text-xs">Specific Date</Label>
+                <Input
+                  id="specificDate"
+                  type="date"
+                  value={filters.date || ''}
+                  onChange={(e) => setFilters(prev => ({ ...prev, date: e.target.value }))}
+                  className="text-sm"
+                />
+              </div>
+
+              {/* More Status Options */}
+              <div className="space-y-2">
+                <Label htmlFor="detailedStatus" className="text-xs">Detailed Status</Label>
+                <Select
+                  value={filters.status}
+                  onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
+                >
+                  <SelectTrigger id="detailedStatus" className="text-sm">
+                    <SelectValue placeholder="All Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="present">Present</SelectItem>
+                    <SelectItem value="late">Late</SelectItem>
+                    <SelectItem value="half_day">Half Day</SelectItem>
+                    <SelectItem value="absent">Absent</SelectItem>
+                    <SelectItem value="early_checkout">Early Checkout</SelectItem>
+                    <SelectItem value="overtime">Overtime</SelectItem>
+                    <SelectItem value="leave">Leave</SelectItem>
+                    <SelectItem value="approved_leave">Approved Leave</SelectItem>
+                    <SelectItem value="pending_leave">Pending Leave</SelectItem>
+                    <SelectItem value="holiday">Holiday</SelectItem>
+                    <SelectItem value="weekly_off">Weekly Off</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Quick Action Buttons */}
+              <div className="space-y-2">
+                <Label className="text-xs">Quick Actions</Label>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setFilters(prev => ({ ...prev, status: 'present' }))}
+                    className="text-xs"
+                  >
+                    Show Present
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setFilters(prev => ({ ...prev, status: 'absent' }))}
+                    className="text-xs"
+                  >
+                    Show Absent
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-2 pt-2">
+              {filters.month && searchQuery && attendance.length > 0 && attendance[0]?.agent && (
+                <Button
+                  onClick={() => handleCalculatePayroll()}
+                  size="sm"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs"
+                >
+                  <CalculatorIcon className="h-3 w-3 mr-1" />
+                  Calculate Salary
+                </Button>
+              )}
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fetchAttendance()}
+                className="text-xs"
+              >
+                <RefreshCw className="h-3 w-3 mr-1" />
+                Apply Filters
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   // ✅ Attendance Table Columns (Desktop)
   const attendanceColumns = getAttendanceColumns({
     canEditAttendance,
     canDeleteAttendance,
-    handleEditAttendance: (item) => {
-      setEditingAttendance(item);
-      setManualForm({
-        userType: item.user ? "user" : "agent",
-        userId: item.user?._id || "",
-        agentId: item.agent?._id || "",
-        shiftId: item.shift?._id || "",
-        date: item.date ? item.date.split('T')[0] : "",
-        status: item.status,
-        checkInTime: item.checkInTime ? formatToPakistaniTime(item.checkInTime) : "",
-        checkOutTime: item.checkOutTime ? formatToPakistaniTime(item.checkOutTime) : ""
-      });
-      setShowEditModal(true);
-    },
+    handleEditAttendance,
     handleDeleteAttendance: async (id) => {
       if(!confirm("Are you sure?")) return;
       try {
@@ -1035,10 +1285,7 @@ export default function AdminAttendancePage() {
         }
       } catch(e) { console.error(e); }
     },
-    handleViewAttendance: (item) => {
-      setViewingAttendance(item);
-      setShowViewModal(true);
-    }
+    handleViewAttendance
   });
 
   // ✅ Leave Requests Table Columns
@@ -1182,11 +1429,7 @@ export default function AdminAttendancePage() {
     </DropdownMenu>
   );
 
-  // Logic to Calculate
   const handleCalculatePayroll = async (overrideValue, overrideId) => {
-      // If triggered by checkbox, update local state map first (optimistic) purely for display? 
-      // Actually we need to pass the *new* state to API.
-      // Since setState is async, we construct the new object here.
       let currentOverrides = { ...informedOverrides };
       if (overrideId) {
           currentOverrides[overrideId] = overrideValue;
@@ -1197,12 +1440,10 @@ export default function AdminAttendancePage() {
           return;
       }
       
-      // We need agent Id. Find first record with agent details.
       const agentRecord = attendance.find(a => a?.agent?._id || a?.agent?.id);
       const agentId = agentRecord?.agent?._id || agentRecord?.agent?.id;
 
       if (!agentId) {
-          // Check if user is trying to calculate for a 'User' type (not supported by API yet)
           const isUser = attendance.some(a => a?.user);
           if (isUser) {
              toast.error("Payroll calculation is currently only supported for Agents.");
@@ -1216,7 +1457,7 @@ export default function AdminAttendancePage() {
       const [year, month] = filters.month.split("-");
 
       try {
-          setLoading(prev => ({ ...prev, payroll: true })); // Reuse or new loader
+          setLoading(prev => ({ ...prev, payroll: true }));
           const res = await fetch('/api/payroll', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -1226,7 +1467,7 @@ export default function AdminAttendancePage() {
                   month: parseInt(month),
                   year: parseInt(year),
                   informedOverrides: currentOverrides,
-                  salesCount: salesCount // Include Sales Count
+                  salesCount: salesCount
               })
           });
           const data = await res.json();
@@ -1258,8 +1499,8 @@ export default function AdminAttendancePage() {
                   agentId,
                   month: parseInt(month),
                   year: parseInt(year),
-                  informedOverrides, // Use state
-                  salesCount: salesCount // Include Sales Count
+                  informedOverrides,
+                  salesCount: salesCount
               })
           });
           const data = await res.json();
@@ -1412,17 +1653,6 @@ export default function AdminAttendancePage() {
                   Manual Entry
                 </Button>
               )}
-              {/* {canCreateAttendance && (
-                <Button
-                  onClick={() => setShowAutoModal(true)}
-                  variant="outline"
-                  className="border-blue-600 text-blue-600 hover:bg-blue-50 text-sm"
-                  size="sm"
-                >
-                  <PlayCircle className="h-4 w-4 mr-2" />
-                  Auto
-                </Button>
-              )} */}
               {canCreateAttendance && (
                 <Button
                   onClick={() => setShowShiftAutoModal(true)}
@@ -1526,138 +1756,22 @@ export default function AdminAttendancePage() {
                       </div>
 
                       {/* Mobile Filter Toggle */}
-                      <div className="block sm:hidden">
+                      <div className="block lg:hidden">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => setShowFilters(!showFilters)}
-                          className="w-full"
+                          className="w-full sm:w-auto"
                         >
                           <Filter className="h-4 w-4 mr-2" />
-                          {showFilters ? 'Hide Filters' : 'Show Filters'}
+                          {showFilters ? 'Hide Filters' : 'Filters'}
                         </Button>
                       </div>
                     </div>
 
-                    {/* Search Bar */}
-                    <div className="relative w-full">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        placeholder="Search by name..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10 w-full"
-                      />
-                    </div>
-
-                    {/* Filters - Responsive */}
-                    <div className={`${showFilters ? 'block' : 'hidden'} sm:block`}>
-                      <div className="flex flex-col sm:flex-row gap-3">
-                        <div className="grid grid-cols-2 sm:flex gap-2 w-full">
-                          <Select
-                            value={filters.userType}
-                            onValueChange={(value) => setFilters(prev => ({ ...prev, userType: value }))}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="User Type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">All Users</SelectItem>
-                              <SelectItem value="agent">Agents</SelectItem>
-                              <SelectItem value="user">Users</SelectItem>
-                            </SelectContent>
-                          </Select>
-
-                          <Select
-                            value={filters.status}
-                            onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">All Status</SelectItem>
-                              <SelectItem value="present">Present</SelectItem>
-                              <SelectItem value="late">Late</SelectItem>
-                              <SelectItem value="half_day">Half Day</SelectItem>
-                              <SelectItem value="absent">Absent</SelectItem>
-                              <SelectItem value="early_checkout">Early Checkout</SelectItem>
-                              <SelectItem value="overtime">Overtime</SelectItem>
-                              <SelectItem value="leave">Leave</SelectItem>
-                              <SelectItem value="approved_leave">Approved Leave</SelectItem>
-                              <SelectItem value="pending_leave">Pending Leave</SelectItem>
-                              <SelectItem value="holiday">Holiday</SelectItem>
-                              <SelectItem value="weekly_off">Weekly Off</SelectItem>
-                            </SelectContent>
-                          </Select>
-
-                          <Select
-                            value={filters.month}
-                            onValueChange={(value) => setFilters(prev => ({ ...prev, month: value }))}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Month" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {Array.from({ length: 12 }, (_, i) => {
-                                const date = new Date();
-                                date.setMonth(date.getMonth() - i);
-                                const value = date.toISOString().slice(0, 7); // YYYY-MM
-                                const label = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
-                                return <SelectItem key={value} value={value}>{label}</SelectItem>;
-                              })}
-                            </SelectContent>
-                          </Select>
-
-                          <div className="grid grid-cols-1 gap-2 sm:flex sm:gap-2">
-                            <div className="flex flex-col gap-1">
-                              <label className="text-xs text-muted-foreground">From Date</label>
-                              <Input
-                                type="date"
-                                value={filters.fromDate || ''}
-                                onChange={(e) => setFilters(prev => ({ ...prev, fromDate: e.target.value }))}
-                                className="border rounded px-3 py-2 text-sm w-full"
-                              />
-                            </div>
-                            <div className="flex flex-col gap-1">
-                              <label className="text-xs text-muted-foreground">To Date</label>
-                              <Input
-                                type="date"
-                                value={filters.toDate || ''}
-                                onChange={(e) => setFilters(prev => ({ ...prev, toDate: e.target.value }))}
-                                className="border rounded px-3 py-2 text-sm w-full"
-                              />
-                            </div>
-                          </div>
-                        </div>
-
-                        {filters.month && searchQuery && attendance.length > 0 && attendance[0]?.agent && (
-                          <Button
-                            onClick={() => handleCalculatePayroll()}
-                            size="sm"
-                            className="h-10 w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white"
-                          >
-                            <CalculatorIcon className="h-4 w-4 mr-2" />
-                            Calculate Salary
-                          </Button>
-                        )}
-
-                        {(filters.status !== 'all' || filters.date || filters.month || filters.fromDate || filters.toDate || searchQuery) && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setFilters({ userType: "all", status: "all", date: "", month: "", fromDate: "", toDate: "" });
-                              setSearchQuery("");
-                              setShowFilters(false);
-                            }}
-                            className="h-10 w-full sm:w-auto"
-                          >
-                            <X className="h-4 w-4 mr-1" />
-                            Clear Filters
-                          </Button>
-                        )}
-                      </div>
+                    {/* Always show filters on large screens, toggle on mobile */}
+                    <div className={`${showFilters ? 'block' : 'hidden'} lg:block`}>
+                      <ResponsiveFilters />
                     </div>
                   </div>
                 </CardHeader>
@@ -1670,6 +1784,26 @@ export default function AdminAttendancePage() {
                       loading={loading.attendance}
                       emptyMessage="No attendance records found"
                       activeTab="attendance"
+                      canEditAttendance={canEditAttendance}
+                      canEditAttendanceRecord={canEditAttendanceRecord}
+                      handleEditAttendance={handleEditAttendance}
+                      handleViewAttendance={handleViewAttendance}
+                      getStatusBadge={getStatusBadge}
+                      onDelete={async (id) => {
+                        if(!confirm("Are you sure you want to delete this record?")) return;
+                        try {
+                          const res = await attendanceService.delete(id);
+                          if(res.success) {
+                            toast.success("Record deleted successfully");
+                            fetchAttendance();
+                          } else {
+                            toast.error(res.message);
+                          }
+                        } catch(e) {
+                          console.error(e);
+                          toast.error("Failed to delete record");
+                        }
+                      }}
                     />
                   </div>
                   <CustomPagination />
