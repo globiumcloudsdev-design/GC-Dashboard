@@ -1,3 +1,4 @@
+
 // src/app/(dashboard)/dashboard/view-attendance/page.jsx
 "use client";
 import React, { useCallback, useEffect, useState } from "react";
@@ -10,21 +11,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Loader2, Calendar, Users, CheckCircle, XCircle, Clock, Plus, Trash2,
-  PlayCircle, ToggleLeft, ToggleRight, Edit, ChevronLeft, ChevronRight,
-  Download, X, RefreshCw, ChevronDown, UserPlus, FileText, PartyPopper,
-  CalendarDays, Search, Menu, Filter, MoreVertical, Eye,
-  UserCheck, Calculator, Printer, CalculatorIcon,
-  ChevronUp
+  Loader2, Calendar, CheckCircle, XCircle, Clock, Plus, Trash2,
+  PlayCircle, Edit, Download, X, RefreshCw, UserPlus, FileText, PartyPopper,
+  CalendarDays, Search, Menu, Filter, Eye, UserCheck, CalculatorIcon,
 } from "lucide-react";
 import { toast } from "sonner";
-import CustomModal from "@/components/ui/customModal";
 import ViewAttendanceModal from "@/components/ViewAttendanceModal";
-// Modals
 import ManualAttendanceModal from "@/components/attendance/modals/ManualAttendanceModal";
 import LeaveRequestModal from "@/components/attendance/modals/LeaveModal";
 import ViewLeaveModal from "@/components/attendance/modals/ViewLeaveModal";
@@ -92,7 +87,7 @@ export default function AdminAttendancePage() {
     toDate: ""
   });
   const [activeTab, setActiveTab] = useState("attendance");
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(true); // Default show filters
 
   // Permission checks
   const canViewAttendance = hasPermission('attendance', 'view');
@@ -104,7 +99,6 @@ export default function AdminAttendancePage() {
   const canApproveLeave = hasPermission('leaveRequest', 'approve');
   const canViewHolidays = hasPermission('holiday', 'view');
   const canCreateHolidays = hasPermission('holiday', 'create');
-  const canEditHolidays = hasPermission('holiday', 'edit');
   const canDeleteHolidays = hasPermission('holiday', 'delete');
   const canViewWeeklyOff = hasPermission('weeklyOff', 'view');
   const canCreateWeeklyOff = hasPermission('weeklyOff', 'create');
@@ -657,19 +651,6 @@ export default function AdminAttendancePage() {
     );
   };
 
-  const getLeaveStatusBadge = (status) => {
-    const statusConfig = {
-      pending: "bg-yellow-100 text-yellow-700 border-yellow-200",
-      approved: "bg-green-100 text-green-700 border-green-200",
-      rejected: "bg-red-100 text-red-700 border-red-200"
-    };
-    return (
-      <Badge variant="outline" className={`${statusConfig[status] || "bg-gray-100 text-gray-700 border-gray-200"} text-xs px-2 py-1`}>
-        {status}
-      </Badge>
-    );
-  };
-
   // ✅ Stats Cards Component
   const StatsCards = () => {
     const [isMobile, setIsMobile] = useState(false);
@@ -969,7 +950,7 @@ export default function AdminAttendancePage() {
     );
   };
 
-  // ✅ Responsive Filters Component
+  // ✅ Responsive Filters Component (FIXED VERSION)
   const ResponsiveFilters = () => {
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
     const [isSmallScreen, setIsSmallScreen] = useState(false);
@@ -985,6 +966,17 @@ export default function AdminAttendancePage() {
       return () => window.removeEventListener('resize', checkScreen);
     }, []);
 
+    // Function to apply filters
+    const handleApplyFilters = () => {
+      fetchAttendance();
+      toast.success("Filters applied successfully");
+    };
+
+    // Function to handle filter changes
+    const handleFilterChange = (key, value) => {
+      setFilters(prev => ({ ...prev, [key]: value }));
+    };
+
     // Clear all filters function
     const handleClearAllFilters = () => {
       setFilters({
@@ -996,8 +988,7 @@ export default function AdminAttendancePage() {
         toDate: ""
       });
       setSearchQuery("");
-      setShowAdvancedFilters(false);
-      setShowFilters(false);
+      toast.success("All filters cleared");
     };
 
     // Check if any filter is active
@@ -1017,13 +1008,21 @@ export default function AdminAttendancePage() {
             placeholder="Search by agent name..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleApplyFilters();
+              }
+            }}
             className="pl-10 w-full"
           />
           {searchQuery && (
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setSearchQuery("")}
+              onClick={() => {
+                setSearchQuery("");
+                handleApplyFilters();
+              }}
               className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
             >
               <X className="h-3 w-3" />
@@ -1038,7 +1037,7 @@ export default function AdminAttendancePage() {
             <Label htmlFor="userType" className="text-xs">User Type</Label>
             <Select
               value={filters.userType}
-              onValueChange={(value) => setFilters(prev => ({ ...prev, userType: value }))}
+              onValueChange={(value) => handleFilterChange('userType', value)}
             >
               <SelectTrigger id="userType" className="w-full text-sm h-9">
                 <SelectValue placeholder="All Users" />
@@ -1056,7 +1055,7 @@ export default function AdminAttendancePage() {
             <Label htmlFor="status" className="text-xs">Status</Label>
             <Select
               value={filters.status}
-              onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
+              onValueChange={(value) => handleFilterChange('status', value)}
             >
               <SelectTrigger id="status" className="w-full text-sm h-9">
                 <SelectValue placeholder="All Status" />
@@ -1078,7 +1077,7 @@ export default function AdminAttendancePage() {
             <Label htmlFor="month" className="text-xs">Month</Label>
             <Select
               value={filters.month}
-              onValueChange={(value) => setFilters(prev => ({ ...prev, month: value }))}
+              onValueChange={(value) => handleFilterChange('month', value)}
             >
               <SelectTrigger id="month" className="w-full text-sm h-9">
                 <SelectValue placeholder="Select Month" />
@@ -1104,7 +1103,7 @@ export default function AdminAttendancePage() {
                   id="fromDate"
                   type="date"
                   value={filters.fromDate || ''}
-                  onChange={(e) => setFilters(prev => ({ ...prev, fromDate: e.target.value }))}
+                  onChange={(e) => handleFilterChange('fromDate', e.target.value)}
                   className="text-sm h-9"
                 />
               </div>
@@ -1114,7 +1113,7 @@ export default function AdminAttendancePage() {
                   id="toDate"
                   type="date"
                   value={filters.toDate || ''}
-                  onChange={(e) => setFilters(prev => ({ ...prev, toDate: e.target.value }))}
+                  onChange={(e) => handleFilterChange('toDate', e.target.value)}
                   className="text-sm h-9"
                 />
               </div>
@@ -1122,78 +1121,93 @@ export default function AdminAttendancePage() {
           )}
         </div>
 
-        {/* Advanced Filters Toggle */}
-        <div className="flex items-center justify-between">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-            className="text-xs"
-          >
-            <Filter className="h-3 w-3 mr-1" />
-            {showAdvancedFilters ? 'Hide Advanced Filters' : 'Show Advanced Filters'}
-          </Button>
-
-          {hasActiveFilters && (
+        {/* Advanced Filters Toggle and Actions */}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
-              onClick={handleClearAllFilters}
-              className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+              className="text-xs"
             >
-              <X className="h-3 w-3 mr-1" />
-              Clear All
+              <Filter className="h-3 w-3 mr-1" />
+              {showAdvancedFilters ? 'Hide Advanced Filters' : 'Show Advanced Filters'}
             </Button>
-          )}
+
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearAllFilters}
+                className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                <X className="h-3 w-3 mr-1" />
+                Clear All
+              </Button>
+            )}
+          </div>
+
+          {/* Apply Filters Button - Always visible */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleApplyFilters}
+            className="text-xs"
+          >
+            <RefreshCw className="h-3 w-3 mr-1" />
+            Apply Filters
+          </Button>
         </div>
 
         {/* Advanced Filters Panel */}
         {showAdvancedFilters && (
-          <div className="border rounded-lg p-4 space-y-4 bg-gray-50/50">
+          <div className="border rounded-lg p-4 space-y-4 bg-gray-50/50 animate-in fade-in duration-300">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Date Range (for small screens) */}
               {isSmallScreen && (
-                <>
-                  <div className="space-y-2">
-                    <Label className="text-xs">Date Range</Label>
-                    <div className="space-y-2">
+                <div className="space-y-2 col-span-full">
+                  <Label className="text-xs font-medium">Date Range</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">From</Label>
                       <Input
                         type="date"
                         value={filters.fromDate || ''}
-                        onChange={(e) => setFilters(prev => ({ ...prev, fromDate: e.target.value }))}
+                        onChange={(e) => handleFilterChange('fromDate', e.target.value)}
                         className="text-sm"
-                        placeholder="From Date"
                       />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">To</Label>
                       <Input
                         type="date"
                         value={filters.toDate || ''}
-                        onChange={(e) => setFilters(prev => ({ ...prev, toDate: e.target.value }))}
+                        onChange={(e) => handleFilterChange('toDate', e.target.value)}
                         className="text-sm"
-                        placeholder="To Date"
                       />
                     </div>
                   </div>
-                </>
+                </div>
               )}
 
               {/* Specific Date */}
               <div className="space-y-2">
-                <Label htmlFor="specificDate" className="text-xs">Specific Date</Label>
+                <Label htmlFor="specificDate" className="text-xs font-medium">Specific Date</Label>
                 <Input
                   id="specificDate"
                   type="date"
                   value={filters.date || ''}
-                  onChange={(e) => setFilters(prev => ({ ...prev, date: e.target.value }))}
+                  onChange={(e) => handleFilterChange('date', e.target.value)}
                   className="text-sm"
                 />
               </div>
 
               {/* More Status Options */}
               <div className="space-y-2">
-                <Label htmlFor="detailedStatus" className="text-xs">Detailed Status</Label>
+                <Label htmlFor="detailedStatus" className="text-xs font-medium">Detailed Status</Label>
                 <Select
                   value={filters.status}
-                  onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
+                  onValueChange={(value) => handleFilterChange('status', value)}
                 >
                   <SelectTrigger id="detailedStatus" className="text-sm">
                     <SelectValue placeholder="All Status" />
@@ -1217,12 +1231,15 @@ export default function AdminAttendancePage() {
 
               {/* Quick Action Buttons */}
               <div className="space-y-2">
-                <Label className="text-xs">Quick Actions</Label>
+                <Label className="text-xs font-medium">Quick Actions</Label>
                 <div className="flex flex-wrap gap-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setFilters(prev => ({ ...prev, status: 'present' }))}
+                    onClick={() => {
+                      handleFilterChange('status', 'present');
+                      toast.success("Showing present records only");
+                    }}
                     className="text-xs"
                   >
                     Show Present
@@ -1230,37 +1247,59 @@ export default function AdminAttendancePage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setFilters(prev => ({ ...prev, status: 'absent' }))}
+                    onClick={() => {
+                      handleFilterChange('status', 'absent');
+                      toast.success("Showing absent records only");
+                    }}
                     className="text-xs"
                   >
                     Show Absent
                   </Button>
                 </div>
               </div>
+
+              {/* Reset to Default */}
+              <div className="space-y-2">
+                <Label className="text-xs font-medium">Reset Options</Label>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setFilters({
+                      userType: "all",
+                      status: "all",
+                      date: "",
+                      month: "",
+                      fromDate: "",
+                      toDate: ""
+                    });
+                    toast.success("Reset to default filters");
+                  }}
+                  className="text-xs w-full"
+                >
+                  Reset to Default
+                </Button>
+              </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-wrap gap-2 pt-2">
-              {filters.month && searchQuery && attendance.length > 0 && attendance[0]?.agent && (
-                <Button
-                  onClick={() => handleCalculatePayroll()}
-                  size="sm"
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs"
-                >
-                  <CalculatorIcon className="h-3 w-3 mr-1" />
-                  Calculate Salary
-                </Button>
-              )}
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => fetchAttendance()}
-                className="text-xs"
-              >
-                <RefreshCw className="h-3 w-3 mr-1" />
-                Apply Filters
-              </Button>
+            {/* Action Buttons at Bottom */}
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-4 border-t">
+              <div className="text-xs text-muted-foreground">
+                Active Filters: {hasActiveFilters ? Object.values(filters).filter(f => f && f !== 'all').length : 0}
+              </div>
+              
+              <div className="flex flex-wrap gap-2">
+                {filters.month && searchQuery && attendance.length > 0 && attendance[0]?.agent && (
+                  <Button
+                    onClick={() => handleCalculatePayroll()}
+                    size="sm"
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs"
+                  >
+                    <CalculatorIcon className="h-3 w-3 mr-1" />
+                    Calculate Salary
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -1755,7 +1794,7 @@ export default function AdminAttendancePage() {
                         </CardDescription>
                       </div>
 
-                      {/* Mobile Filter Toggle */}
+                      {/* Mobile Filter Toggle - Removed since filters always show */}
                       <div className="block lg:hidden">
                         <Button
                           variant="outline"
@@ -1764,13 +1803,13 @@ export default function AdminAttendancePage() {
                           className="w-full sm:w-auto"
                         >
                           <Filter className="h-4 w-4 mr-2" />
-                          {showFilters ? 'Hide Filters' : 'Filters'}
+                          {showFilters ? 'Hide Filters' : 'Show Filters'}
                         </Button>
                       </div>
                     </div>
 
-                    {/* Always show filters on large screens, toggle on mobile */}
-                    <div className={`${showFilters ? 'block' : 'hidden'} lg:block`}>
+                    {/* Filters - Always show on large screens, toggle on mobile */}
+                    <div className={showFilters ? 'block' : 'hidden lg:block'}>
                       <ResponsiveFilters />
                     </div>
                   </div>
