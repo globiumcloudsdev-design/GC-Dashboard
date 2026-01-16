@@ -303,6 +303,11 @@ export async function GET(request) {
         if (record) {
              // Use actual record
              item = { ...item, ...record.toObject(), generated: false };
+             
+             // Restore populated entity (because record.agent/user is just an ID)
+             if (targetEntityType === 'agent') item.agent = targetEntity;
+             else item.user = targetEntity;
+
              item.status = normalizeStatus(record.status);
         } else {
              // Generate status

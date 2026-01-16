@@ -25,6 +25,16 @@ import {
 import { toast } from "sonner";
 import CustomModal from "@/components/ui/customModal";
 import ViewAttendanceModal from "@/components/ViewAttendanceModal";
+// Modals
+import ManualAttendanceModal from "@/components/attendance/modals/ManualAttendanceModal";
+import LeaveRequestModal from "@/components/attendance/modals/LeaveModal";
+import ViewLeaveModal from "@/components/attendance/modals/ViewLeaveModal";
+import HolidayModal from "@/components/attendance/modals/HolidayModal";
+import WeeklyOffModal from "@/components/attendance/modals/WeeklyOffModal";
+import AutoAttendanceModal from "@/components/attendance/modals/AutoAttendanceModal";
+import ShiftAutoAttendanceModal from "@/components/attendance/modals/ShiftAutoAttendanceModal";
+import EditAttendanceModal from "@/components/attendance/modals/EditAttendanceModal";
+import PayrollPreviewModal from "@/components/attendance/modals/PayrollPreviewModal";
 import { useAuth } from "@/context/AuthContext";
 import {
   Pagination,
@@ -106,6 +116,10 @@ export default function AdminAttendancePage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showViewLeaveModal, setShowViewLeaveModal] = useState(false);
+  const [payrollModalData, setPayrollModalData] = useState(null);
+  const [showPayrollModal, setShowPayrollModal] = useState(false);
+  const [informedOverrides, setInformedOverrides] = useState({});
+  const [salesCount, setSalesCount] = useState(0);
   const [editingAttendance, setEditingAttendance] = useState(null);
   const [viewingAttendance, setViewingAttendance] = useState(null);
   const [viewingLeave, setViewingLeave] = useState(null);
@@ -1524,981 +1538,6 @@ export default function AdminAttendancePage() {
     </DropdownMenu>
   );
 
-  // Manual Attendance Modal
-  const ManualAttendanceModal = () => (
-    <CustomModal
-      isOpen={showManualModal}
-      onClose={() => setShowManualModal(false)}
-      title="Manual Attendance Entry"
-      description="Add or update attendance record manually"
-      size="md"
-      preventClose={loading.manual}
-    >
-      <form onSubmit={handleManualAttendance} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="userType">User Type</Label>
-            <Select
-              value={manualForm.userType}
-              onValueChange={(value) => setManualForm({ ...manualForm, userType: value, userId: "", agentId: "" })}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Agent" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="agent">Agent</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="person">Select Agent</Label>
-            <Select
-              value={manualForm.agentId}
-              onValueChange={(value) => setManualForm({ ...manualForm, agentId: value })}
-              disabled={!agents || agents.length === 0}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder={agents && agents.length ? 'Select Agent' : 'No agents available'} />
-              </SelectTrigger>
-              <SelectContent>
-                {agents.map(person => (
-                  <SelectItem key={person._id || person.id} value={person._id || person.id}>
-                    {`${person.agentName || person.name} (${person.agentId || person.email})`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="date">Date</Label>
-          <Input
-            type="date"
-            value={manualForm.date}
-            onChange={(e) => setManualForm({ ...manualForm, date: e.target.value })}
-            required
-            className="w-full"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="status">Status</Label>
-          <Select
-            value={manualForm.status}
-            onValueChange={(value) => setManualForm({ ...manualForm, status: value })}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="present">Present</SelectItem>
-              <SelectItem value="late">Late</SelectItem>
-              <SelectItem value="half_day">Half Day</SelectItem>
-              <SelectItem value="absent">Absent</SelectItem>
-              <SelectItem value="early_checkout">Early Checkout</SelectItem>
-              <SelectItem value="overtime">Overtime</SelectItem>
-              <SelectItem value="leave">Leave</SelectItem>
-              <SelectItem value="approved_leave">Approved Leave</SelectItem>
-              <SelectItem value="pending_leave">Pending Leave</SelectItem>
-              <SelectItem value="holiday">Holiday</SelectItem>
-              <SelectItem value="weekly_off">Weekly Off</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="checkInTime">Check In Time</Label>
-            <Input
-              type="time"
-              value={manualForm.checkInTime}
-              onChange={(e) => setManualForm({ ...manualForm, checkInTime: e.target.value })}
-              className="w-full"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="checkOutTime">Check Out Time</Label>
-            <Input
-              type="time"
-              value={manualForm.checkOutTime}
-              onChange={(e) => setManualForm({ ...manualForm, checkOutTime: e.target.value })}
-              className="w-full"
-            />
-          </div>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2 pt-4">
-          <Button
-            type="submit"
-            className="flex-1 w-full"
-            disabled={loading.manual || !manualForm.agentId || !manualForm.date || !manualForm.status}
-          >
-            {loading.manual && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Save Attendance
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setShowManualModal(false)}
-            className="flex-1 w-full"
-            disabled={loading.manual}
-          >
-            Cancel
-          </Button>
-        </div>
-      </form>
-    </CustomModal>
-  );
-  // Leave Modal
-  const LeaveModal = () => (
-    <CustomModal
-      isOpen={showLeaveModal}
-      onClose={() => setShowLeaveModal(false)}
-      title="Assign Leave"
-      description="Assign leave to user or agent"
-      size="md"
-      preventClose={loading.assign}
-    >
-      <form onSubmit={handleAssignLeave} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="userType">User Type</Label>
-            <Select
-              value={leaveForm.userType}
-              onValueChange={(value) => setLeaveForm({ ...leaveForm, userType: value, userId: "", agentId: "" })}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Agent" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="agent">Agent</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="person">Select Agent</Label>
-            <Select
-              value={leaveForm.agentId}
-              onValueChange={(value) => setLeaveForm({ ...leaveForm, agentId: value })}
-              disabled={!agents || agents.length === 0}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder={agents && agents.length ? 'Select Agent' : 'No agents available'} />
-              </SelectTrigger>
-              <SelectContent>
-                {agents.map(person => (
-                  <SelectItem key={person._id || person.id} value={person._id || person.id}>
-                    {`${person.agentName || person.name} (${person.agentId || person.email})`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="startDate">Start Date</Label>
-            <Input
-              type="date"
-              value={leaveForm.startDate}
-              onChange={(e) => setLeaveForm({ ...leaveForm, startDate: e.target.value })}
-              required
-              className="w-full"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="endDate">End Date</Label>
-            <Input
-              type="date"
-              value={leaveForm.endDate}
-              onChange={(e) => setLeaveForm({ ...leaveForm, endDate: e.target.value })}
-              required
-              className="w-full"
-            />
-          </div>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="leaveType">Leave Type</Label>
-          <Select
-            value={leaveForm.leaveType}
-            onValueChange={(value) => setLeaveForm({ ...leaveForm, leaveType: value })}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select Leave Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="sick">Sick Leave</SelectItem>
-              <SelectItem value="casual">Casual Leave</SelectItem>
-              <SelectItem value="emergency">Emergency Leave</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="reason">Reason</Label>
-          <Textarea
-            value={leaveForm.reason}
-            onChange={handleLeaveReasonChange}
-            placeholder="Reason for leave..."
-            rows={3}
-            required
-            className="w-full resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2 pt-4">
-          <Button
-            type="submit"
-            className="flex-1 w-full"
-            disabled={loading.assign || !leaveForm.agentId || !leaveForm.startDate || !leaveForm.endDate || !leaveForm.leaveType || !leaveForm.reason}
-          >
-            {loading.assign && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Assign Leave
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setShowLeaveModal(false)}
-            className="flex-1 w-full"
-            disabled={loading.assign}
-          >
-            Cancel
-          </Button>
-        </div>
-      </form>
-    </CustomModal>
-  );
-
-  // View Leave Details Modal
-  const ViewLeaveModal = () => {
-    if (!viewingLeave) return null;
-    
-    const getStatusColor = (status) => {
-      switch(status) {
-        case 'approved': return 'bg-green-100 text-green-800 border-green-200';
-        case 'rejected': return 'bg-red-100 text-red-800 border-red-200';
-        case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-        default: return 'bg-gray-100 text-gray-800 border-gray-200';
-      }
-    };
-
-    const getLeaveTypeIcon = (type) => {
-      switch(type) {
-        case 'sick': return '🤒';
-        case 'casual': return '🏖️';
-        case 'emergency': return '🚨';
-        default: return '📋';
-      }
-    };
-
-    const calculateLeaveDays = () => {
-      const start = new Date(viewingLeave.startDate);
-      const end = new Date(viewingLeave.endDate);
-      const diffTime = Math.abs(end - start);
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-      return diffDays;
-    };
-
-    return (
-      <CustomModal
-        isOpen={showViewLeaveModal}
-        onClose={() => {
-          setShowViewLeaveModal(false);
-          setViewingLeave(null);
-        }}
-        title="Leave Request Details"
-        description="Complete information about the leave request"
-        size="lg"
-      >
-        <div className="space-y-6">
-          {/* Employee Information */}
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
-            <h3 className="font-semibold text-lg mb-3 text-blue-900 flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Employee Information
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Name</p>
-                <p className="font-medium text-gray-900">
-                  {viewingLeave.user 
-                    ? `${viewingLeave.user.firstName} ${viewingLeave.user.lastName}` 
-                    : viewingLeave.agent?.agentName || '—'}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Email</p>
-                <p className="font-medium text-gray-900">
-                  {viewingLeave.user?.email || viewingLeave.agent?.email || '—'}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Type</p>
-                <p className="font-medium text-gray-900">
-                  {viewingLeave.user ? 'User' : 'Agent'}
-                </p>
-              </div>
-              {viewingLeave.agent?.agentId && (
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Agent ID</p>
-                  <p className="font-medium text-gray-900">{viewingLeave.agent.agentId}</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Leave Details */}
-          <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-4 rounded-lg border border-amber-200">
-            <h3 className="font-semibold text-lg mb-3 text-amber-900 flex items-center gap-2">
-              <CalendarDays className="h-5 w-5" />
-              Leave Details
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Leave Type</p>
-                <p className="font-medium text-gray-900 capitalize flex items-center gap-2">
-                  <span>{getLeaveTypeIcon(viewingLeave.leaveType)}</span>
-                  {viewingLeave.leaveType}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Duration</p>
-                <p className="font-medium text-gray-900">{calculateLeaveDays()} day(s)</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Start Date</p>
-                <p className="font-medium text-gray-900">{formatToPakistaniDate(viewingLeave.startDate)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600 mb-1">End Date</p>
-                <p className="font-medium text-gray-900">{formatToPakistaniDate(viewingLeave.endDate)}</p>
-              </div>
-              <div className="md:col-span-2">
-                <p className="text-sm text-gray-600 mb-1">Reason</p>
-                <p className="font-medium text-gray-900 bg-white p-3 rounded border">
-                  {viewingLeave.reason || '—'}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Status Information */}
-          <div className={`p-4 rounded-lg border ${
-            viewingLeave.status === 'approved' ? 'bg-green-50 border-green-200' :
-            viewingLeave.status === 'rejected' ? 'bg-red-50 border-red-200' :
-            'bg-yellow-50 border-yellow-200'
-          }`}>
-            <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
-              {viewingLeave.status === 'approved' ? (
-                <><CheckCircle className="h-5 w-5 text-green-600" /> Status: Approved</>
-              ) : viewingLeave.status === 'rejected' ? (
-                <><XCircle className="h-5 w-5 text-red-600" /> Status: Rejected</>
-              ) : (
-                <><Clock className="h-5 w-5 text-yellow-600" /> Status: Pending</>
-              )}
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Current Status</p>
-                <Badge className={`${getStatusColor(viewingLeave.status)} text-sm px-3 py-1`}>
-                  {viewingLeave.status.toUpperCase()}
-                </Badge>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Request Submitted</p>
-                <p className="font-medium text-gray-900">
-                  {formatToPakistaniDate(viewingLeave.createdAt)}
-                </p>
-              </div>
-              {viewingLeave.reviewedBy && (
-                <>
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">Reviewed By</p>
-                    <p className="font-medium text-gray-900">
-                      {viewingLeave.reviewedBy?.firstName} {viewingLeave.reviewedBy?.lastName}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">Reviewed At</p>
-                    <p className="font-medium text-gray-900">
-                      {formatToPakistaniDate(viewingLeave.reviewedAt)}
-                    </p>
-                  </div>
-                  {viewingLeave.comments && (
-                    <div className="md:col-span-2">
-                      <p className="text-sm text-gray-600 mb-1">Admin Comments</p>
-                      <p className="font-medium text-gray-900 bg-white p-3 rounded border">
-                        {viewingLeave.comments}
-                      </p>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowViewLeaveModal(false);
-                setViewingLeave(null);
-              }}
-              className="flex-1 w-full"
-            >
-              Close
-            </Button>
-            {canApproveLeave && viewingLeave.status === 'pending' && (
-              <>
-                <Button
-                  onClick={() => {
-                    handleLeaveAction(viewingLeave._id, 'approved');
-                    setShowViewLeaveModal(false);
-                  }}
-                  className="flex-1 w-full bg-green-600 hover:bg-green-700"
-                >
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Approve Leave
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => {
-                    handleLeaveAction(viewingLeave._id, 'rejected');
-                    setShowViewLeaveModal(false);
-                  }}
-                  className="flex-1 w-full"
-                >
-                  <XCircle className="h-4 w-4 mr-2" />
-                  Reject Leave
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-      </CustomModal>
-    );
-  };
-
-  // Holiday Modal
-  const HolidayModal = () => (
-    <CustomModal
-      isOpen={showHolidayModal}
-      onClose={() => setShowHolidayModal(false)}
-      title="Create Holiday"
-      description="Add a new holiday to the system. Recurring holidays will automatically repeat every year."
-      size="lg"
-      preventClose={loading.holidays}
-    >
-      <form onSubmit={handleCreateHoliday} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="name">Holiday Name *</Label>
-          <Input
-            type="text"
-            value={holidayForm.name}
-            onChange={(e) => setHolidayForm({ ...holidayForm, name: e.target.value })}
-            placeholder="Enter holiday name"
-            required
-            className="w-full"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="date">Date *</Label>
-          <Input
-            type="date"
-            value={holidayForm.date}
-            onChange={(e) => setHolidayForm({ ...holidayForm, date: e.target.value })}
-            required
-            className="w-full"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="description">Description</Label>
-          <Textarea
-            value={holidayForm.description}
-            onChange={(e) => setHolidayForm({ ...holidayForm, description: e.target.value })}
-            placeholder="Holiday description..."
-            rows={3}
-            className="w-full"
-          />
-        </div>
-        <div className="flex items-center space-x-2">
-          <input
-            type="checkbox"
-            id="isRecurring"
-            checked={holidayForm.isRecurring}
-            onChange={(e) => setHolidayForm({ ...holidayForm, isRecurring: e.target.checked })}
-            className="rounded border-gray-300"
-          />
-          <Label htmlFor="isRecurring" className="text-sm">
-            Recurring Holiday (will repeat every year)
-          </Label>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2 pt-4">
-          <Button
-            type="submit"
-            className="flex-1 w-full"
-            disabled={loading.holidays || !holidayForm.name || !holidayForm.date}
-          >
-            {loading.holidays && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Create Holiday
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setShowHolidayModal(false)}
-            className="flex-1 w-full"
-            disabled={loading.holidays}
-          >
-            Cancel
-          </Button>
-        </div>
-      </form>
-    </CustomModal>
-  );
-  // Weekly Off Modal
-  const WeeklyOffModal = () => (
-    <CustomModal
-      isOpen={showWeeklyOffModal}
-      onClose={() => setShowWeeklyOffModal(false)}
-      title="Add Weekly Off Day"
-      description="Set a weekly off day that will automatically mark as off every week"
-      size="md"
-      preventClose={loading.weeklyOff}
-    >
-      <form onSubmit={handleCreateWeeklyOff} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="day">Day of Week</Label>
-          <Select
-            value={weeklyOffForm.day}
-            onValueChange={(value) => setWeeklyOffForm({
-              ...weeklyOffForm,
-              day: value,
-              name: value.charAt(0).toUpperCase() + value.slice(1) + " - Weekly Off"
-            })}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select day" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="sunday">Sunday</SelectItem>
-              <SelectItem value="monday">Monday</SelectItem>
-              <SelectItem value="tuesday">Tuesday</SelectItem>
-              <SelectItem value="wednesday">Wednesday</SelectItem>
-              <SelectItem value="thursday">Thursday</SelectItem>
-              <SelectItem value="friday">Friday</SelectItem>
-              <SelectItem value="saturday">Saturday</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="name">Display Name</Label>
-          <Input
-            type="text"
-            value={weeklyOffForm.name}
-            onChange={(e) => setWeeklyOffForm({ ...weeklyOffForm, name: e.target.value })}
-            placeholder="e.g., Sunday, Weekly Off"
-            required
-            className="w-full"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="description">Description</Label>
-          <Textarea
-            value={weeklyOffForm.description}
-            onChange={(e) => setWeeklyOffForm({ ...weeklyOffForm, description: e.target.value })}
-            placeholder="Description for this weekly off..."
-            rows={2}
-            className="w-full"
-          />
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2 pt-4">
-          <Button
-            type="submit"
-            className="flex-1 w-full"
-            disabled={loading.weeklyOff || !weeklyOffForm.day || !weeklyOffForm.name}
-          >
-            {loading.weeklyOff && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Add Weekly Off
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setShowWeeklyOffModal(false)}
-            className="flex-1 w-full"
-            disabled={loading.weeklyOff}
-          >
-            Cancel
-          </Button>
-        </div>
-      </form>
-    </CustomModal>
-  );
-  // Auto Attendance Modal
-  const AutoAttendanceModal = () => (
-    <CustomModal
-      isOpen={showAutoModal}
-      onClose={() => setShowAutoModal(false)}
-      title="Process Auto Attendance (Agents)"
-      description="Automatically mark absent for agents without attendance on the selected date. Holidays and weekly offs are respected."
-      size="md"
-      preventClose={loading.auto}
-    >
-      <form onSubmit={handleAutoAttendance} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="date">Date</Label>
-          <Input
-            type="date"
-            value={autoForm.date}
-            onChange={(e) => setAutoForm({ ...autoForm, date: e.target.value })}
-            required
-            className="w-full"
-          />
-        </div>
-        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-          <h4 className="font-medium text-blue-800 mb-2">How Auto Attendance (Agents) Works:</h4>
-          <ul className="text-sm text-blue-700 space-y-1">
-            <li>• Agents without attendance will be marked as <strong>Absent</strong></li>
-            <li>• If date is a holiday, agents will be marked as <strong>Holiday</strong></li>
-            <li>• If date is weekly off, agents will be marked as <strong>Weekly Off</strong></li>
-            <li>• Existing attendance records will not be modified</li>
-          </ul>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2 pt-4">
-          <Button
-            type="submit"
-            className="flex-1 w-full"
-            disabled={loading.auto || !autoForm.date}
-          >
-            {loading.auto && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Process Auto Attendance
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setShowAutoModal(false)}
-            className="flex-1 w-full"
-            disabled={loading.auto}
-          >
-            Cancel
-          </Button>
-        </div>
-      </form>
-    </CustomModal>
-  );
-  // Shift Auto Attendance Modal
-  const ShiftAutoAttendanceModal = () => (
-    <CustomModal
-      isOpen={showShiftAutoModal}
-      onClose={() => setShowShiftAutoModal(false)}
-      title="Process Shift-based Auto Attendance"
-      description="Mark absent for agents whose shifts have ended and no check-in recorded."
-      size="md"
-      preventClose={loading.shiftAuto}
-    >
-      <form onSubmit={handleShiftAutoAttendance} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="date">Date</Label>
-          <Input
-            type="date"
-            value={shiftAutoForm.date}
-            onChange={(e) => setShiftAutoForm({ ...shiftAutoForm, date: e.target.value })}
-            required
-            className="w-full"
-          />
-        </div>
-        <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-          <h4 className="font-medium text-green-800 mb-2">How Shift-based Auto Attendance Works:</h4>
-          <ul className="text-sm text-green-700 space-y-1">
-            <li>• Checks if agent has a shift assigned</li>
-            <li>• Verifies if shift end time has passed</li>
-            <li>• Marks as <strong>Absent</strong> only if shift ended and no check-in</li>
-            <li>• Respects holidays and weekly offs automatically</li>
-            <li>• Only processes agents</li>
-          </ul>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2 pt-4">
-          <Button type="submit" className="flex-1 w-full" disabled={loading.shiftAuto}>
-            {loading.shiftAuto && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Process Shift Auto Attendance
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setShowShiftAutoModal(false)}
-            className="flex-1 w-full"
-            disabled={loading.shiftAuto}
-          >
-            Cancel
-          </Button>
-        </div>
-      </form>
-    </CustomModal>
-  );
-
-
-  // Edit Attendance Modal
-  const EditAttendanceModal = () => (
-    <CustomModal
-      isOpen={showEditModal}
-      onClose={() => setShowEditModal(false)}
-      title="Edit Attendance"
-      description={`Update attendance record for ${editingAttendance?.user ?
-        `${editingAttendance.user.firstName} ${editingAttendance.user.lastName}` :
-        editingAttendance?.agent?.agentName}`}
-      size="lg"
-      preventClose={loading.edit}
-    >
-      <form onSubmit={handleUpdateAttendance} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="status">Status</Label>
-            <Select
-              value={manualForm.status}
-              onValueChange={(value) => setManualForm({ ...manualForm, status: value })}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="present">Present</SelectItem>
-                <SelectItem value="late">Late</SelectItem>
-                <SelectItem value="half_day">Half Day</SelectItem>
-                <SelectItem value="absent">Absent</SelectItem>
-                <SelectItem value="early_checkout">Early Checkout</SelectItem>
-                <SelectItem value="overtime">Overtime</SelectItem>
-                <SelectItem value="leave">Leave</SelectItem>
-                <SelectItem value="approved_leave">Approved Leave</SelectItem>
-                <SelectItem value="pending_leave">Pending Leave</SelectItem>
-                <SelectItem value="holiday">Holiday</SelectItem>
-                <SelectItem value="weekly_off">Weekly Off</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="shift">Shift</Label>
-            <Select
-              value={manualForm.shiftId}
-              onValueChange={(value) => setManualForm({ ...manualForm, shiftId: value })}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select Shift" />
-              </SelectTrigger>
-              <SelectContent>
-                {shifts.map(shift => (
-                  <SelectItem key={shift._id} value={shift._id}>
-                    {shift.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="checkInTime">Check In Time</Label>
-            <Input
-              type="time"
-              value={manualForm.checkInTime}
-              onChange={(e) => setManualForm({ ...manualForm, checkInTime: e.target.value })}
-              className="w-full"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="checkOutTime">Check Out Time</Label>
-            <Input
-              type="time"
-              value={manualForm.checkOutTime}
-              onChange={(e) => setManualForm({ ...manualForm, checkOutTime: e.target.value })}
-              className="w-full"
-            />
-          </div>
-        </div>
-        <div className="bg-yellow-50 p-3 rounded-md border border-yellow-200 mb-4">
-          <h4 className="font-medium text-yellow-800 text-sm">Note:</h4>
-          <ul className="text-xs text-yellow-700 mt-1 space-y-1">
-            <li>• If you don't select a status, it will be auto-calculated based on check-in time</li>
-            <li>• 15 minutes grace period after shift start time</li>
-            <li>• Check-in after half shift → Half Day</li>
-            <li>• Check-in after shift end → Absent</li>
-          </ul>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2 pt-4">
-          <Button type="submit" className="flex-1 w-full" disabled={loading.edit}>
-            {loading.edit && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Update Attendance
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setShowEditModal(false)}
-            className="flex-1 w-full"
-          >
-            Cancel
-          </Button>
-        </div>
-      </form>
-    </CustomModal>
-  );
-
-  const [payrollModalData, setPayrollModalData] = useState(null);
-  const [showPayrollModal, setShowPayrollModal] = useState(false);
-  const [informedOverrides, setInformedOverrides] = useState({});
-  const [salesCount, setSalesCount] = useState(0);
-
-  // ... (previous state declarations)
-
-  // Payroll Calculation Modal
-  const PayrollCalculationModal = () => {
-    if (!payrollModalData) return null;
-    const { processedRecords, financials, stats, agent } = payrollModalData;
-
-    return (
-      <CustomModal
-        isOpen={showPayrollModal}
-        onClose={() => setShowPayrollModal(false)}
-        title={`Salary Calculation: ${agent?.agentName}`}
-        description={`Preview for ${filters.month}`}
-        size="2xl" // Wider modal
-      >
-        <div className="space-y-6">
-          {/* Financial Summary */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
-             <div>
-                 <div className="text-xs text-gray-500 uppercase">Basic Salary</div>
-                 <div className="text-lg font-bold">PKR {financials.basicSalary?.toLocaleString()}</div>
-             </div>
-             <div>
-                 <div className="text-xs text-gray-500 uppercase">Allowance</div>
-                 <div className="text-lg font-bold text-green-700">PKR {financials.earnedAllowance?.toLocaleString()}</div>
-                 {financials.earnedAllowance === 0 && <span className="text-xs text-red-500 block">{financials.allowanceCutReason}</span>}
-             </div>
-             <div>
-                 <div className="text-xs text-gray-500 uppercase">Deductions</div>
-                 <div className="text-lg font-bold text-red-600">- PKR {financials.totalDeduction?.toLocaleString()}</div>
-                 <span className="text-xs text-gray-500 block">(Late: {financials.lateDeductionAmount} + Absent: {financials.absentDeductionAmount})</span>
-             </div>
-             <div className="bg-white p-2 rounded shadow-sm border border-blue-200">
-                 <div className="text-xs text-blue-800 uppercase font-bold">Net Salary</div>
-                 <div className="text-xl font-bold text-blue-700">PKR {financials.netSalary?.toLocaleString()}</div>
-             </div>
-          </div>
-          
-           {/* Incentive Input */}
-          <div className="flex items-center gap-4 bg-yellow-50 p-3 rounded border border-yellow-200">
-              <div className="flex-1">
-                  <Label className="text-xs font-bold text-yellow-800 uppercase">Total Sales Count</Label>
-                  <p className="text-xs text-gray-600">Enter total approved sales count for incentive calculation.</p>
-              </div>
-              <div className="flex items-center gap-2">
-                  <Input 
-                      type="number" 
-                      min="0"
-                      value={salesCount} 
-                      onChange={(e) => setSalesCount(Number(e.target.value))}
-                      className="w-24 h-9 bg-white"
-                  />
-                  <Button 
-                      size="sm" 
-                      variant="outline" 
-                      onClick={() => handleCalculatePayroll()}
-                      className="h-9"
-                  >
-                      Apply
-                  </Button>
-              </div>
-              <div className="text-right">
-                  <div className="text-xs text-gray-500 uppercase">Earned Incentive</div>
-                  <div className="text-lg font-bold text-green-600">PKR {financials.earnedIncentive?.toLocaleString() || 0}</div>
-              </div>
-          </div>
-
-          {/* Stats Summary */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
-             <div className="bg-gray-100 p-2 rounded">
-                <span className="block text-xs font-semibold">Late (&gt;20m Penalty)</span>
-                {stats.latePenaltyCount}
-             </div>
-             <div className="bg-gray-100 p-2 rounded">
-                <span className="block text-xs font-semibold">Allow. Cut Lates</span>
-                {stats.informedLates} / 5
-             </div>
-             <div className="bg-gray-100 p-2 rounded">
-                <span className="block text-xs font-semibold">Allow. Cut Absents</span>
-                {stats.informedAbsents} / 3
-             </div>
-             <div className="bg-gray-100 p-2 rounded">
-                 <span className="block text-xs font-semibold">Converted Absents</span>
-                 {stats.convertedAbsents} (from {stats.uninformedLates} lates)
-             </div>
-          </div>
-
-          {/* Attendance Table with Checkbox */}
-          <div className="max-h-60 overflow-y-auto border rounded-md">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 sticky top-0">
-                <tr>
-                  <th className="p-2 text-left">Date</th>
-                  <th className="p-2 text-left">Status</th>
-                  <th className="p-2 text-left">Check In</th>
-                  <th className="p-2 text-left">Check Out</th>
-                  <th className="p-2 text-left">Late (mins)</th>
-                  <th className="p-2 text-center">Informed?</th>
-                </tr>
-              </thead>
-              <tbody>
-                {processedRecords.map((rec) => (
-                  <tr key={rec._id} className="border-t hover:bg-gray-50">
-                    <td className="p-2">{formatToPakistaniDate(rec.date)}</td>
-                    <td className="p-2 capitalize">
-                        <span className={`px-2 py-0.5 rounded text-xs ${
-                            rec.status==='absent' ? 'bg-red-100 text-red-800' : 
-                            rec.status==='late' ? 'bg-orange-100 text-orange-800' : 'bg-gray-100'
-                        }`}>
-                            {rec.status}
-                        </span>
-                    </td>
-                    <td className="p-2 text-gray-600">
-                        {rec.checkInTime ? formatToPakistaniTime(rec.checkInTime) : "-"}
-                    </td>
-                    <td className="p-2 text-gray-600">
-                        {rec.checkOutTime ? formatToPakistaniTime(rec.checkOutTime) : "-"}
-                    </td>
-                    <td className="p-2">
-                        {rec.lateMinutes > 0 ? <span className={rec.lateMinutes > 20 ? "text-red-600 font-bold" : ""}>{rec.lateMinutes}m</span> : "-"}
-                    </td>
-                    <td className="p-2 text-center">
-                      {(rec.status === 'late' || rec.status === 'absent' || rec.lateMinutes > 20) && (
-                        <input
-                          type="checkbox"
-                          checked={rec.isInformed || false}
-                          onChange={(e) => {
-                             const newVal = e.target.checked;
-                             setInformedOverrides(prev => ({ ...prev, [rec._id]: newVal }));
-                             // Trigger recalculation (in real app maybe debounce this)
-                             handleCalculatePayroll(newVal, rec._id); 
-                          }}
-                          className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
-                        />
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="flex gap-3 pt-2">
-             <Button 
-                onClick={handleGeneratePayroll} 
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                disabled={loading.payroll}
-            >
-                {loading.payroll ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Printer className="mr-2 h-4 w-4" />}
-                Generate Payroll & Notify
-             </Button>
-          </div>
-        </div>
-      </CustomModal>
-    );
-  };
-
   // Logic to Calculate
   const handleCalculatePayroll = async (overrideValue, overrideId) => {
       // If triggered by checkbox, update local state map first (optimistic) purely for display? 
@@ -2514,9 +1553,18 @@ export default function AdminAttendancePage() {
           return;
       }
       
-      // We need agent Id. attendance[0].agent?
-      const agentId = attendance[0]?.agent?._id || attendance[0]?.agent?.id;
+      // We need agent Id. Find first record with agent details.
+      const agentRecord = attendance.find(a => a?.agent?._id || a?.agent?.id);
+      const agentId = agentRecord?.agent?._id || agentRecord?.agent?.id;
+
       if (!agentId) {
+          // Check if user is trying to calculate for a 'User' type (not supported by API yet)
+          const isUser = attendance.some(a => a?.user);
+          if (isUser) {
+             toast.error("Payroll calculation is currently only supported for Agents.");
+             return;
+          }
+
           toast.error("Please search for a specific agent first.");
           return;
       }
@@ -2589,15 +1637,91 @@ export default function AdminAttendancePage() {
     <div className="min-h-screen bg-gray-50/30 overflow-x-hidden">
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-6">
         {/* All Modals */}
-        <ManualAttendanceModal />
-        <LeaveModal />
-        <ViewLeaveModal />
-        <HolidayModal />
-        <WeeklyOffModal />
-        <AutoAttendanceModal />
-        <ShiftAutoAttendanceModal />
-        <EditAttendanceModal />
-        <PayrollCalculationModal />
+        <ManualAttendanceModal 
+          isOpen={showManualModal}
+          onClose={() => setShowManualModal(false)}
+          manualForm={manualForm}
+          setManualForm={setManualForm}
+          agents={agents}
+          shifts={shifts}
+          loading={loading.manual}
+          onSubmit={handleManualAttendance}
+        />
+        <LeaveRequestModal 
+          isOpen={showLeaveModal}
+          onClose={() => setShowLeaveModal(false)}
+          leaveForm={leaveForm}
+          setLeaveForm={setLeaveForm}
+          agents={agents}
+          loading={loading.assign}
+          onSubmit={handleAssignLeave}
+        />
+        <ViewLeaveModal
+          isOpen={showViewLeaveModal}
+          onClose={() => setShowViewLeaveModal(false)}
+          viewingLeave={viewingLeave}
+          canApproveLeave={true}
+          onApprove={() => viewingLeave && handleLeaveAction(viewingLeave._id, 'approved')}
+          onReject={() => viewingLeave && handleLeaveAction(viewingLeave._id, 'rejected')}
+        />
+        <HolidayModal
+          isOpen={showHolidayModal}
+          onClose={() => setShowHolidayModal(false)}
+          holidayForm={holidayForm}
+          setHolidayForm={setHolidayForm}
+          loading={loading.holidays}
+          onSubmit={handleCreateHoliday}
+        />
+        <WeeklyOffModal
+          isOpen={showWeeklyOffModal}
+          onClose={() => setShowWeeklyOffModal(false)}
+          weeklyOffForm={weeklyOffForm}
+          setWeeklyOffForm={setWeeklyOffForm}
+          agents={agents}
+          loading={loading.weeklyOff}
+          onSubmit={handleCreateWeeklyOff}
+        />
+        <AutoAttendanceModal 
+          isOpen={showAutoModal}
+          onClose={() => setShowAutoModal(false)}
+          autoForm={autoForm}
+          setAutoForm={setAutoForm}
+          loading={loading.auto}
+          onSubmit={handleAutoAttendance}
+        />
+        <ShiftAutoAttendanceModal 
+          isOpen={showShiftAutoModal}
+          onClose={() => setShowShiftAutoModal(false)}
+          shiftAutoForm={shiftAutoForm}
+          setShiftAutoForm={setShiftAutoForm}
+          loading={loading.shiftAuto}
+          onSubmit={handleShiftAutoAttendance}
+        />
+        <EditAttendanceModal 
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          editForm={manualForm}
+          setEditForm={setManualForm}
+          shifts={shifts}
+          loading={loading.edit}
+          onSubmit={handleUpdateAttendance}
+        />
+        <PayrollPreviewModal 
+          isOpen={showPayrollModal}
+          onClose={() => setShowPayrollModal(false)}
+          data={payrollModalData}
+          month={filters.month}
+          salesCount={salesCount}
+          onSalesCountChange={setSalesCount}
+          onApplySalesCount={() => handleCalculatePayroll()}
+          informedOverrides={informedOverrides}
+          onInformedOverrideChange={(id, val) => {
+             setInformedOverrides(prev => ({ ...prev, [id]: val }));
+             handleCalculatePayroll(val, id);
+          }}
+          loading={loading.payroll}
+          onGenerate={handleGeneratePayroll}
+        />
         <ViewAttendanceModal
           isOpen={showViewModal}
           onClose={() => setShowViewModal(false)}
