@@ -36,6 +36,17 @@ import ShiftAutoAttendanceModal from "@/components/attendance/modals/ShiftAutoAt
 import EditAttendanceModal from "@/components/attendance/modals/EditAttendanceModal";
 import PayrollPreviewModal from "@/components/attendance/modals/PayrollPreviewModal";
 import { useAuth } from "@/context/AuthContext";
+import { getAttendanceColumns } from "@/components/attendance/tables/AttendanceTableColumns";
+import { getLeaveColumns } from "@/components/attendance/tables/LeaveTableColumns";
+import { getHolidayColumns } from "@/components/attendance/tables/HolidayTableColumns";
+import { getWeeklyOffColumns } from "@/components/attendance/tables/WeeklyOffTableColumns";
+import ResponsiveTable from "@/components/attendance/ResponsiveTable";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Pagination,
   PaginationContent,
@@ -44,12 +55,6 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { formatToPakistaniDate, formatToPakistaniTime } from "@/utils/TimeFuntions";
 
 export default function AdminAttendancePage() {
@@ -682,150 +687,8 @@ export default function AdminAttendancePage() {
     );
   };
 
-  // ✅ Custom Responsive Table Component
-  const ResponsiveTable = ({
-    data,
-    columns,
-    loading,
-    emptyMessage = "No data found",
-    className = ""
-  }) => {
-    const [isMobile, setIsMobile] = useState(false);
+  // ResponsiveTable component replaced by import
 
-    useEffect(() => {
-      const checkMobile = () => {
-        setIsMobile(window.innerWidth < 768);
-      };
-
-      checkMobile();
-      window.addEventListener('resize', checkMobile);
-
-      return () => window.removeEventListener('resize', checkMobile);
-    }, []);
-
-    if (isMobile && activeTab === "attendance") {
-      return (
-        <div className="space-y-3">
-          {loading ? (
-            <div className="text-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin mx-auto text-blue-600" />
-              <p className="mt-2 text-muted-foreground">Loading data...</p>
-            </div>
-          ) : data.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              {emptyMessage}
-            </div>
-          ) : (
-            data.map((item) => (
-              <Card key={item._id} className="overflow-hidden">
-                <CardContent className="p-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-medium">
-                          {item.user
-                            ? `${item.user?.firstName || ""} ${item.user?.lastName || ""}`
-                            : item.agent?.agentName || "—"}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {item.shift?.name || "No shift"} • {formatToPakistaniDate(item.createdAt)}
-                        </div>
-                      </div>
-                      {getStatusBadge(item.status)}
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div>
-                        <span className="text-muted-foreground">Check In:</span>
-                        <div className="font-medium">
-                          {item.checkInTime ? formatToPakistaniTime(item.checkInTime) : "—"}
-                        </div>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Check Out:</span>
-                        <div className="font-medium">
-                          {item.checkOutTime ? formatToPakistaniTime(item.checkOutTime) : "—"}
-                        </div>
-                      </div>
-                    </div>
-
-                    {canEditAttendance && (
-                      <div className="flex justify-end pt-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditAttendance(item)}
-                          disabled={!canEditAttendanceRecord(item)}
-                          className="text-xs"
-                        >
-                          <Edit className="h-3 w-3 mr-1" />
-                          Edit
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </div>
-      );
-    }
-
-    return (
-      <div className={`w-full overflow-x-auto ${className}`}>
-        <div className="min-w-[800px] md:min-w-0 inline-block align-middle">
-          <div className="overflow-hidden border rounded-lg">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {columns.map((column, index) => (
-                    <TableHead
-                      key={index}
-                      style={column.minWidth ? { minWidth: column.minWidth } : {}}
-                      className="whitespace-nowrap px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      {column.label}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className="text-center py-8">
-                      <Loader2 className="h-8 w-8 animate-spin mx-auto text-blue-600" />
-                      <p className="mt-2 text-muted-foreground">Loading data...</p>
-                    </TableCell>
-                  </TableRow>
-                ) : data.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className="text-center py-8">
-                      <div className="text-muted-foreground">{emptyMessage}</div>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  data.map((item, index) => (
-                    <TableRow key={item._id || index} className="hover:bg-gray-50/50">
-                      {columns.map((column, colIndex) => (
-                        <TableCell
-                          key={colIndex}
-                          className={`px-4 py-3 text-sm ${column.cellClassName || ""}`}
-                          style={column.minWidth ? { minWidth: column.minWidth } : {}}
-                        >
-                          {column.render ? column.render(item) : item[column.key]}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   // ✅ Stats Cards Component
   const StatsCards = () => {
@@ -1143,281 +1006,62 @@ export default function AdminAttendancePage() {
   };
 
   // ✅ Attendance Table Columns (Desktop)
-  const attendanceColumns = [
-    {
-      label: "Agent",
-      minWidth: "180px",
-      render: (a) => (
-        <div>
-          <div className="font-medium">
-            {a.user
-              ? `${a.user?.firstName || ""} ${a.user?.lastName || ""}`
-              : a.agent?.agentName || "—"}
-          </div>
-          <div className="text-xs text-muted-foreground">
-            {a.user ? "User" : "Agent"} • {a.user ? a.user.agentId : a.agent?.email || ""}
-          </div>
-        </div>
-      ),
+  const attendanceColumns = getAttendanceColumns({
+    canEditAttendance,
+    canDeleteAttendance,
+    handleEditAttendance: (item) => {
+      setEditingAttendance(item);
+      setManualForm({
+        userType: item.user ? "user" : "agent",
+        userId: item.user?._id || "",
+        agentId: item.agent?._id || "",
+        shiftId: item.shift?._id || "",
+        date: item.date ? item.date.split('T')[0] : "",
+        status: item.status,
+        checkInTime: item.checkInTime ? formatToPakistaniTime(item.checkInTime) : "",
+        checkOutTime: item.checkOutTime ? formatToPakistaniTime(item.checkOutTime) : ""
+      });
+      setShowEditModal(true);
     },
-    {
-      label: "Shift",
-      minWidth: "120px",
-      render: (a) => a.shift?.name || "—"
+    handleDeleteAttendance: async (id) => {
+      if(!confirm("Are you sure?")) return;
+      try {
+        const res = await attendanceService.delete(id);
+        if(res.success) {
+          toast.success("Record deleted");
+          fetchAttendance();
+        } else {
+          toast.error(res.message);
+        }
+      } catch(e) { console.error(e); }
     },
-    {
-      label: "Check In",
-      minWidth: "100px",
-      render: (a) => (a.checkInTime ? formatToPakistaniTime(a.checkInTime) : "—")
-    },
-    {
-      label: "Check Out",
-      minWidth: "100px",
-      render: (a) => (a.checkOutTime ? formatToPakistaniTime(a.checkOutTime) : "—")
-    },
-    {
-      label: "Status",
-      minWidth: "100px",
-      render: (a) => getStatusBadge(a.status)
-    },
-    {
-      label: "Date",
-      minWidth: "120px",
-      render: (a) => formatToPakistaniDate(a.createdAt)
-    },
-  ...(canEditAttendance ? [{
-      label: "Actions",
-      minWidth: "150px",
-      render: (a) => (
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleViewAttendance(a)}
-            title="View attendance details"
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleEditAttendance(a)}
-            disabled={!canEditAttendanceRecord(a)}
-            title={
-              !canEditAttendanceRecord(a)
-                ? "Cannot edit holiday/weekly off records"
-                : "Edit attendance"
-            }
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
-        </div>
-      ),
-    }] : [{
-      label: "Actions",
-      minWidth: "100px",
-      render: (a) => (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => handleViewAttendance(a)}
-          title="View attendance details"
-        >
-          <Eye className="h-4 w-4" />
-        </Button>
-      ),
-    }]),
-  ];
+    handleViewAttendance: (item) => {
+      setViewingAttendance(item);
+      setShowViewModal(true);
+    }
+  });
 
   // ✅ Leave Requests Table Columns
-  const leaveColumns = [
-    {
-      label: "Agent",
-      minWidth: "200px",
-      render: (r) => (
-        <div>
-          <div className="font-medium">{r.user ? `${r.user?.firstName || ''} ${r.user?.lastName || ''}` : r.agent?.agentName || '—'}</div>
-          <div className="text-xs text-muted-foreground">{r.user ? r.user.email : r.agent?.email}</div>
-        </div>
-      )
-    },
-    {
-      label: "Leave Type",
-      minWidth: "100px",
-      render: (r) => <span className="capitalize">{r.leaveType}</span>
-    },
-    {
-      label: "Period",
-      minWidth: "150px",
-      render: (r) => (
-        <div>
-          <div className="text-sm">{formatToPakistaniDate(r.startDate)}</div>
-          <div className="text-xs text-muted-foreground">to</div>
-          <div className="text-sm">{formatToPakistaniDate(r.endDate)}</div>
-        </div>
-      )
-    },
-    {
-      label: "Reason",
-      minWidth: "150px",
-      render: (r) => (
-        <div className="max-w-[200px] truncate" title={r.reason}>
-          {r.reason}
-        </div>
-      )
-    },
-    {
-      label: "Status",
-      minWidth: "100px",
-      render: (r) => getLeaveStatusBadge(r.status)
-    },
-    ...(canApproveLeave ? [{
-      label: "Actions",
-      minWidth: "200px",
-      render: (r) => (
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => {
-              setViewingLeave(r);
-              setShowViewLeaveModal(true);
-            }}
-            title="View leave details"
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-          {r.status === 'pending' ? (
-            <>
-              <Button size="sm" onClick={() => handleLeaveAction(r._id, 'approved')}>
-                Approve
-              </Button>
-              <Button size="sm" variant="destructive" onClick={() => handleLeaveAction(r._id, 'rejected')}>
-                Reject
-              </Button>
-            </>
-          ) : (
-            <span className="text-sm text-muted-foreground italic">
-              {r.status === 'approved' ? 'Approved' :
-                r.status === 'rejected' ? 'Rejected' : 'Processed'}
-            </span>
-          )}
-        </div>
-      )
-    }] : [{
-      label: "Actions",
-      minWidth: "100px",
-      render: (r) => (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            setViewingLeave(r);
-            setShowViewLeaveModal(true);
-          }}
-          title="View leave details"
-        >
-          <Eye className="h-4 w-4" />
-        </Button>
-      )
-    }]),
-  ];
+  const leaveColumns = getLeaveColumns({
+    canApproveLeave,
+    setViewingLeave,
+    setShowViewLeaveModal,
+    handleLeaveAction
+  });
 
   // ✅ Holidays Table Columns
-  const holidayColumns = [
-    {
-      label: "Name",
-      minWidth: "150px",
-      render: (h) => <div className="font-medium">{h.name}</div>
-    },
-    {
-      label: "Date",
-      minWidth: "120px",
-      render: (h) => formatToPakistaniDate(h.date)
-    },
-    {
-      label: "Description",
-      minWidth: "200px",
-      render: (h) => (
-        <div className="max-w-[250px] truncate" title={h.description}>
-          {h.description || '—'}
-        </div>
-      )
-    },
-    {
-      label: "Recurring",
-      minWidth: "100px",
-      render: (h) => (
-        <Badge variant={h.isRecurring ? 'default' : 'secondary'}>
-          {h.isRecurring ? 'Yes' : 'No'}
-        </Badge>
-      )
-    },
-    ...(canDeleteHolidays ? [{
-      label: "Actions",
-      minWidth: "100px",
-      render: (h) => (
-        <Button variant="destructive" size="sm" onClick={() => handleDeleteHoliday(h._id)}>
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      )
-    }] : []),
-  ];
+  const holidayColumns = getHolidayColumns({
+    canDeleteHolidays,
+    handleDeleteHoliday
+  });
 
   // ✅ Weekly Offs Table Columns
-  const weeklyOffColumns = [
-    {
-      label: "Day",
-      minWidth: "120px",
-      render: (w) => <div className="font-medium capitalize">{w.day}</div>
-    },
-    {
-      label: "Name",
-      minWidth: "150px",
-      render: (w) => w.name
-    },
-    {
-      label: "Description",
-      minWidth: "200px",
-      render: (w) => (
-        <div className="max-w-[250px] truncate" title={w.description}>
-          {w.description || '—'}
-        </div>
-      )
-    },
-    {
-      label: "Status",
-      minWidth: "100px",
-      render: (w) => (
-        <Badge variant={w.isActive ? 'default' : 'secondary'}>
-          {w.isActive ? 'Active' : 'Inactive'}
-        </Badge>
-      )
-    },
-    ...((canEditWeeklyOff || canDeleteWeeklyOff) ? [{
-      label: "Actions",
-      minWidth: "150px",
-      render: (w) => (
-        <div className="flex gap-2">
-          {canEditWeeklyOff && (
-            <Button
-              variant={w.isActive ? "outline" : "default"}
-              size="sm"
-              onClick={() => handleToggleWeeklyOff(w._id, !w.isActive)}
-            >
-              {w.isActive ? <ToggleLeft className="h-4 w-4 mr-1" /> : <ToggleRight className="h-4 w-4 mr-1" />}
-              {w.isActive ? "Deactivate" : "Activate"}
-            </Button>
-          )}
-          {canDeleteWeeklyOff && (
-            <Button variant="destructive" size="sm" onClick={() => handleDeleteWeeklyOff(w._id)}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-      )
-    }] : []),
-  ];
+  const weeklyOffColumns = getWeeklyOffColumns({
+    canEditWeeklyOff,
+    canDeleteWeeklyOff,
+    handleToggleWeeklyOff,
+    handleDeleteWeeklyOff
+  });
 
   // ✅ Pagination Component
   const CustomPagination = () => {
@@ -2025,6 +1669,7 @@ export default function AdminAttendancePage() {
                       columns={attendanceColumns}
                       loading={loading.attendance}
                       emptyMessage="No attendance records found"
+                      activeTab="attendance"
                     />
                   </div>
                   <CustomPagination />
@@ -2057,6 +1702,7 @@ export default function AdminAttendancePage() {
                       columns={leaveColumns}
                       loading={loading.leave}
                       emptyMessage="No leave requests found"
+                      activeTab="leave"
                     />
                   </div>
                 </CardContent>
@@ -2101,6 +1747,7 @@ export default function AdminAttendancePage() {
                         columns={holidayColumns}
                         loading={false}
                         emptyMessage="No holidays found"
+                        activeTab="holidays"
                       />
                     </div>
                   )}
@@ -2145,6 +1792,7 @@ export default function AdminAttendancePage() {
                         data={weeklyOffs}
                         columns={weeklyOffColumns}
                         loading={false}
+                        activeTab="weekly-off"
                         emptyMessage="No weekly off days found"
                       />
                     </div>

@@ -50,7 +50,7 @@ export const getAttendanceColumns = ({
     {
       label: "Date",
       minWidth: "120px",
-      render: (a) => formatToPakistaniDate(a.date),
+      render: (a) => formatToPakistaniDate(a.date || a.createdAt),
     },
     {
       label: "Status",
@@ -61,22 +61,28 @@ export const getAttendanceColumns = ({
       label: "Check-In",
       minWidth: "100px",
       render: (a) =>
-        a.checkIn ? formatToPakistaniTime(a.checkIn) : "—",
+        a.checkInTime ? formatToPakistaniTime(a.checkInTime) : "—",
     },
     {
       label: "Check-Out",
       minWidth: "100px",
       render: (a) =>
-        a.checkOut ? formatToPakistaniTime(a.checkOut) : "—",
+        a.checkOutTime ? formatToPakistaniTime(a.checkOutTime) : "—",
     },
     {
       label: "Work Hours",
       minWidth: "100px",
       render: (a) => {
-        if (!a.checkIn || !a.checkOut) return "—";
-        const checkInTime = new Date(a.checkIn);
-        const checkOutTime = new Date(a.checkOut);
+        if (!a.checkInTime || !a.checkOutTime) return "—";
+        const checkInTime = new Date(a.checkInTime);
+        const checkOutTime = new Date(a.checkOutTime);
+        
+        // Handle invalid dates
+        if (isNaN(checkInTime.getTime()) || isNaN(checkOutTime.getTime())) return "—";
+
         const diff = checkOutTime - checkInTime;
+        if (diff < 0) return "—"; // Handle error cases
+
         const hours = Math.floor(diff / (1000 * 60 * 60));
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         return `${hours}h ${minutes}m`;

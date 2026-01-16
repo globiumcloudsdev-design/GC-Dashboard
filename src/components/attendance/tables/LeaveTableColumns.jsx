@@ -59,15 +59,15 @@ export const getLeaveColumns = ({
         </div>
       ),
     },
-    {
-      label: "Reason",
-      minWidth: "150px",
-      render: (r) => (
-        <div className="max-w-[200px] truncate" title={r.reason}>
-          {r.reason}
-        </div>
-      ),
-    },
+    // {
+    //   label: "Reason",
+    //   minWidth: "150px",
+    //   render: (r) => (
+    //     <div className="max-w-[200px] truncate" title={r.reason}>
+    //       {r.reason}
+    //     </div>
+    //   ),
+    // },
     {
       label: "Status",
       minWidth: "100px",

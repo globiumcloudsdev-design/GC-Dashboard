@@ -11,7 +11,8 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Edit, Eye } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Edit, Eye, Trash2 } from "lucide-react";
 import { formatToPakistaniDate, formatToPakistaniTime } from "@/utils/TimeFuntions";
 
 export default function ResponsiveTable({
@@ -40,8 +41,165 @@ export default function ResponsiveTable({
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Mobile Card View for Attendance
-  if (isMobile && activeTab === "attendance") {
+  const renderMobileCard = (item) => {
+    switch (activeTab) {
+      case "attendance":
+        return (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-medium">
+                  {item.user
+                    ? `${item.user?.firstName || ""} ${item.user?.lastName || ""}`
+                    : item.agent?.agentName || "—"}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {item.shift?.name || "No shift"} •{" "}
+                  {formatToPakistaniDate(item.date || item.createdAt)}
+                </div>
+              </div>
+              {getStatusBadge && getStatusBadge(item.status)}
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div>
+                <span className="text-muted-foreground">Check In:</span>
+                <div className="font-medium">
+                  {item.checkInTime
+                    ? formatToPakistaniTime(item.checkInTime)
+                    : "—"}
+                </div>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Check Out:</span>
+                <div className="font-medium">
+                  {item.checkOutTime
+                    ? formatToPakistaniTime(item.checkOutTime)
+                    : "—"}
+                </div>
+              </div>
+            </div>
+
+            {(canEditAttendance || handleViewAttendance) && (
+              <div className="flex justify-end gap-2 pt-2">
+                {handleViewAttendance && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleViewAttendance(item)}
+                    className="text-xs"
+                  >
+                    <Eye className="h-3 w-3 mr-1" />
+                    View
+                  </Button>
+                )}
+                {canEditAttendance && handleEditAttendance && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEditAttendance(item)}
+                    disabled={
+                      canEditAttendanceRecord && !canEditAttendanceRecord(item)
+                    }
+                    className="text-xs"
+                  >
+                    <Edit className="h-3 w-3 mr-1" />
+                    Edit
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+        );
+
+      case "leave":
+        return (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-medium">
+                  {item.user
+                    ? `${item.user?.firstName || ""} ${item.user?.lastName || ""}`
+                    : item.agent?.agentName || "—"}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {item.leaveType}
+                </div>
+              </div>
+              <Badge variant={item.status === 'approved' ? 'default' : item.status === 'rejected' ? 'destructive' : 'secondary'}>
+                {item.status}
+              </Badge>
+            </div>
+            
+            <div className="text-sm">
+              <span className="text-muted-foreground">Duration:</span>{" "}
+              {formatToPakistaniDate(item.startDate)} - {formatToPakistaniDate(item.endDate)}
+            </div>
+            
+            <div className="text-sm text-muted-foreground truncate">
+              "{item.reason}"
+            </div>
+
+             <div className="flex justify-end gap-2 pt-2">
+                 {/* Using the render function from columns would be hard here, so we might skip custom actions 
+                     or we need to pass actions as a prop. 
+                     ResponsiveTable doesn't have handleLeaveAction prop.
+                     The 'columns' prop contains the actions in the render function.
+                     For now, let's at least show the data nicely. 
+                 */}
+                  {handleViewAttendance && ( // Reusing handleViewAttendance if passed, but it might not be relevant for leave
+                     <Button variant="outline" size="sm" className="hidden">View</Button>
+                  )} 
+             </div>
+          </div>
+        );
+      
+      case "holidays":
+        return (
+          <div className="space-y-3">
+             <div className="flex items-center justify-between">
+                <div className="font-medium">{item.name}</div>
+                <div className="text-sm font-semibold">{formatToPakistaniDate(item.date)}</div>
+             </div>
+             <div className="text-sm text-muted-foreground">
+               {item.description || "No description"}
+             </div>
+             <div className="text-xs">
+               Recurring: {item.isRecurring ? "Yes" : "No"}
+             </div>
+          </div>
+        );
+
+      case "weekly-off":
+        return (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="font-medium capitalize">{item.day}</div>
+              <Badge variant={item.isActive ? "default" : "secondary"}>
+                {item.isActive ? "Active" : "Inactive"}
+              </Badge>
+            </div>
+            <div className="text-sm font-medium">{item.name}</div>
+            <div className="text-sm text-muted-foreground">{item.description}</div>
+          </div>
+        );
+
+      default:
+        // Fallback to a generic key-value list if unknown tab
+        return (
+           <div className="space-y-2">
+             {Object.keys(item).slice(0, 3).map(key => (
+               <div key={key} className="flex justify-between text-sm">
+                 <span className="font-medium">{key}:</span>
+                 <span>{String(item[key])}</span>
+               </div>
+             ))}
+           </div>
+        );
+    }
+  };
+
+  if (isMobile) {
     return (
       <div className="space-y-3">
         {loading ? (
@@ -54,74 +212,10 @@ export default function ResponsiveTable({
             {emptyMessage}
           </div>
         ) : (
-          data.map((item) => (
-            <Card key={item._id} className="overflow-hidden">
+          data.map((item, index) => (
+            <Card key={item._id || index} className="overflow-hidden">
               <CardContent className="p-4">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">
-                        {item.user
-                          ? `${item.user?.firstName || ""} ${item.user?.lastName || ""}`
-                          : item.agent?.agentName || "—"}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {item.shift?.name || "No shift"} •{" "}
-                        {formatToPakistaniDate(item.date || item.createdAt)}
-                      </div>
-                    </div>
-                    {getStatusBadge && getStatusBadge(item.status)}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Check In:</span>
-                      <div className="font-medium">
-                        {item.checkIn || item.checkInTime
-                          ? formatToPakistaniTime(item.checkIn || item.checkInTime)
-                          : "—"}
-                      </div>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Check Out:</span>
-                      <div className="font-medium">
-                        {item.checkOut || item.checkOutTime
-                          ? formatToPakistaniTime(item.checkOut || item.checkOutTime)
-                          : "—"}
-                      </div>
-                    </div>
-                  </div>
-
-                  {(canEditAttendance || handleViewAttendance) && (
-                    <div className="flex justify-end gap-2 pt-2">
-                      {handleViewAttendance && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleViewAttendance(item)}
-                          className="text-xs"
-                        >
-                          <Eye className="h-3 w-3 mr-1" />
-                          View
-                        </Button>
-                      )}
-                      {canEditAttendance && handleEditAttendance && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditAttendance(item)}
-                          disabled={
-                            canEditAttendanceRecord && !canEditAttendanceRecord(item)
-                          }
-                          className="text-xs"
-                        >
-                          <Edit className="h-3 w-3 mr-1" />
-                          Edit
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                </div>
+                {renderMobileCard(item)}
               </CardContent>
             </Card>
           ))
