@@ -286,6 +286,38 @@ async function calculatePayrollLogic(agentId, month, year, informedOverrides = {
 // API ROUTES
 // -------------------------------------------------------------------------
 
+export async function GET(request) {
+    try {
+        await connectDB();
+        const url = new URL(request.url);
+        const params = url.searchParams;
+
+        const month = params.get('month');
+        const year = params.get('year');
+        const agent = params.get('agent');
+        const status = params.get('status');
+
+        const query = {};
+        if (month && month !== 'all') {
+            const m = parseInt(month, 10);
+            if (!isNaN(m)) query.month = m;
+        }
+        if (year) {
+            const y = parseInt(year, 10);
+            if (!isNaN(y)) query.year = y;
+        }
+        if (agent) query.agent = agent;
+        if (status && status !== 'all') query.status = status;
+
+        const payrolls = await Payroll.find(query).populate('agent').sort({ year: -1, month: -1 });
+
+        return NextResponse.json({ success: true, data: payrolls });
+    } catch (error) {
+        console.error('GET Payrolls Error:', error);
+        return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    }
+}
+
 export async function POST(request) {
   try {
     await connectDB();
