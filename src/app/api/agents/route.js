@@ -272,7 +272,13 @@ export async function POST(request) {
       minSaleAmountForIncentive = 0,
       
       // New Commission Structure Type
-      commissionType = 'Basic + Commission' 
+      commissionType = 'Basic + Commission',
+      
+      // Bank Details
+      bankDetails = {},
+      
+      // Documents
+      documents = []
     } = body;
 
     // Validation
@@ -344,7 +350,11 @@ export async function POST(request) {
       perSaleIncentiveAfterTarget: strToNum(perSaleIncentiveAfterTarget),
       afterTargetIncentiveType,
       incentivePercentageOn,
-      minSaleAmountForIncentive: strToNum(minSaleAmountForIncentive)
+      minSaleAmountForIncentive: strToNum(minSaleAmountForIncentive),
+
+      // Bank Details & Documents
+      bankDetails: bankDetails || {},
+      documents: documents || []
     });
 
     // Send welcome email

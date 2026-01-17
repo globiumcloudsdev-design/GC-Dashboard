@@ -10,7 +10,7 @@ export async function GET(request, { params }) {
   try {
     await connectDB();
     
-    const { id } = params;
+    const { id } = await params;
     
     const agent = await Agent.findById(id)
       .populate('shift')
@@ -66,7 +66,9 @@ export async function PUT(request, { params }) {
       afterTargetIncentiveType,
       incentivePercentageOn,
       minSaleAmountForIncentive,
-      commissionType
+      commissionType,
+      bankDetails,
+      documents
     } = body;
     
     // Find agent
@@ -152,6 +154,10 @@ export async function PUT(request, { params }) {
     if (afterTargetIncentiveType) updateData.afterTargetIncentiveType = afterTargetIncentiveType;
     if (incentivePercentageOn) updateData.incentivePercentageOn = incentivePercentageOn;
     if (minSaleAmountForIncentive !== undefined) updateData.minSaleAmountForIncentive = parseFloat(minSaleAmountForIncentive) || 0;
+
+    // Update Bank Details & Documents
+    if (bankDetails) updateData.bankDetails = bankDetails;
+    if (documents) updateData.documents = documents;
 
     // Remove old field if present in body 
     // if (perSaleIncentive !== undefined) updateData.perSaleIncentive = parseFloat(perSaleIncentive) || 0;
