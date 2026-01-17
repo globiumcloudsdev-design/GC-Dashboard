@@ -236,6 +236,24 @@ const agentSchema = new mongoose.Schema({
     min: [0, 'Minimum sale amount cannot be negative']
   },
 
+  // ✅ Bank Details
+  bankDetails: {
+    bankName: { type: String, trim: true },
+    accountTitle: { type: String, trim: true },
+    accountNumber: { type: String, trim: true },
+    iban: { type: String, trim: true },
+    branchCode: { type: String, trim: true }
+  },
+
+  // ✅ Documents
+  documents: [{
+    name: { type: String, required: true }, // e.g., "CNIC Front"
+    url: { type: String, required: true },
+    type: { type: String }, // 'image', 'pdf', etc.
+    publicId: { type: String },
+    uploadedAt: { type: Date, default: Date.now }
+  }],
+
   // Naye fields
   employeeType: {
     type: String,

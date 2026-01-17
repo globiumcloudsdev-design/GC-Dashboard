@@ -59,6 +59,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
     { label: "Promo Code", href: "/dashboard/promo-codes", icon: Code2Icon, permission: { module: "promoCode", action: "view" } },
     { label: "Sales", href: "/dashboard/sales", icon: DollarSign, permission: { module: "sales", action: "view" } },
     { label: "Attendance", href: "/dashboard/view-attendance", icon: ClipboardList, permission: { module: "attendance", action: "view" } },
+        { label: "Payroll", href: "/dashboard/payroll", icon: ClipboardList, permission: { module: "payroll", action: "view" } },
     { label: "Notifications", href: "/dashboard/notifications", icon: Bell, permission: { module: "notification", action: "view" } },
     { label: "Teams", href: "/dashboard/teams", icon: UsersRound, permission: { module: "team", action: "view" } },
     { label: "Projects", href: "/dashboard/projects", icon: FolderKanban, permission: { module: "project", action: "view" } },

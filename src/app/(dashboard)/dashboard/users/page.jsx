@@ -110,6 +110,7 @@ export default function Users() {
     promoCode: { view: false, create: false, edit: false, delete: false, export: false, approve: false },
     notification: { view: false, create: false, edit: false, delete: false, export: false, approve: false },
     attendance: { view: false, create: false, edit: false, delete: false, export: false, manage_leave: false },
+    payroll: { view: false, create: false, edit: false, delete: false, export: false, approve: false },
     leaveRequest: { view: false, create: false, edit: false, delete: false, export: false, approve: false },
     holiday: { view: false, create: false, edit: false, delete: false, export: false, approve: false },
     weeklyOff: { view: false, create: false, edit: false, delete: false, export: false, approve: false },
@@ -680,6 +681,12 @@ export default function Users() {
       title: 'Attendance',
       description: 'Manage attendance, leaves and exports',
       permissions: ['view', 'create', 'edit', 'delete', 'export', 'manage_leave']
+    },
+    {
+      name: 'payroll',
+      title: 'Payroll',
+      description: 'Manage payroll, payslips and payment status',
+      permissions: ['view', 'create', 'edit', 'delete', 'export', 'approve']
     },
     {
       name: 'leaveRequest',

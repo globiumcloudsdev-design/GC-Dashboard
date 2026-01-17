@@ -286,6 +286,53 @@ async function calculatePayrollLogic(agentId, month, year, informedOverrides = {
 // API ROUTES
 // -------------------------------------------------------------------------
 
+export async function GET(request) {
+    try {
+        await connectDB();
+        const url = new URL(request.url);
+        const params = url.searchParams;
+
+        const month = params.get('month');
+        const year = params.get('year');
+        const agent = params.get('agent');
+        const status = params.get('status');
+        const page = parseInt(params.get('page') || '1', 10);
+        const limit = parseInt(params.get('limit') || '10', 10);
+        const skip = (page - 1) * limit;
+
+        const query = {};
+        if (month && month !== 'all') {
+            const m = parseInt(month, 10);
+            if (!isNaN(m)) query.month = m;
+        }
+        if (year) {
+            const y = parseInt(year, 10);
+            if (!isNaN(y)) query.year = y;
+        }
+        if (agent) query.agent = agent;
+        if (status && status !== 'all') query.status = status;
+
+        const [payrolls, total] = await Promise.all([
+            Payroll.find(query).populate('agent').sort({ year: -1, month: -1 }).skip(skip).limit(limit),
+            Payroll.countDocuments(query)
+        ]);
+
+        return NextResponse.json({ 
+            success: true, 
+            data: payrolls,
+            pagination: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit)
+            }
+        });
+    } catch (error) {
+        console.error('GET Payrolls Error:', error);
+        return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    }
+}
+
 export async function POST(request) {
   try {
     await connectDB();

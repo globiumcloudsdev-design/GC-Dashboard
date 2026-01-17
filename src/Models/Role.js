@@ -81,6 +81,9 @@ const roleSchema = new mongoose.Schema({
       manage_leave: { type: Boolean, default: false }
     },
 
+    // 🧾 Payroll Management
+    payroll: permissionGroupSchema,
+
     // 🏖️ Leave Request Management
     leaveRequest: permissionGroupSchema,
 

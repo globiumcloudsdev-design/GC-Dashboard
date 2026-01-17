@@ -1,6 +1,7 @@
 // src/app/(dashboard)/dashboard/agents/page.jsx
 "use client";
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { agentService } from '@/services/agentService';
 import { shiftService } from '@/services/shiftService';
@@ -15,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter
 } from '@/components/ui/dialog';
 import {
   Card,
@@ -39,6 +41,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ResetPasswordDialog } from '@/components/ResetPasswordDialog';
 import { 
   Search, 
@@ -64,7 +75,12 @@ import {
   DollarSign,
   Building,
   Briefcase,
-  Shield
+  Shield,
+  MoreHorizontal,
+  Upload,
+  FileText,
+  X,
+  Loader2
 } from 'lucide-react';
 
 // Constants
@@ -108,8 +124,10 @@ const PAGE_SIZES = [
 ];
 
 export default function AgentsPage() {
+  const router = useRouter();
   const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -151,7 +169,15 @@ export default function AgentsPage() {
     perSaleIncentiveAfterTarget: '',
     afterTargetIncentiveType: 'fixed',
     incentivePercentageOn: 'sale_amount',
-    minSaleAmountForIncentive: ''
+    minSaleAmountForIncentive: '',
+    bankDetails: {
+      bankName: '',
+      accountTitle: '',
+      accountNumber: '',
+      iban: '',
+      branchCode: ''
+    },
+    documents: []
   });
 
   const [editFormData, setEditFormData] = useState({
@@ -177,7 +203,15 @@ export default function AgentsPage() {
     perSaleIncentiveAfterTarget: '',
     afterTargetIncentiveType: 'fixed',
     incentivePercentageOn: 'sale_amount',
-    minSaleAmountForIncentive: ''
+    minSaleAmountForIncentive: '',
+    bankDetails: {
+      bankName: '',
+      accountTitle: '',
+      accountNumber: '',
+      iban: '',
+      branchCode: ''
+    },
+    documents: []
   });
 
   const [shifts, setShifts] = useState([]);
@@ -348,6 +382,130 @@ export default function AgentsPage() {
     setEditFormData({ ...editFormData, [name]: value });
   };
 
+  const handleBankChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      bankDetails: {
+        ...prev.bankDetails,
+        [name]: value
+      }
+    }));
+  };
+
+  const handleEditBankChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData(prev => ({
+      ...prev,
+      bankDetails: {
+        ...prev.bankDetails,
+        [name]: value
+      }
+    }));
+  };
+
+  const handleFileUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    setUploading(true);
+    try {
+      const uploadPromises = files.map(async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('folder', 'agent-documents');
+        
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (!response.ok) throw new Error('Upload failed');
+        
+        const json = await response.json();
+        const uploadedFile = json.data || json;
+
+        return {
+          name: file.name,
+          url: uploadedFile.url,
+          publicId: uploadedFile.publicId,
+          type: file.type
+        };
+      });
+
+      const uploadedDocs = await Promise.all(uploadPromises);
+      
+      setFormData(prev => ({
+        ...prev,
+        documents: [...prev.documents, ...uploadedDocs]
+      }));
+      toast.success('Documents uploaded successfully');
+    } catch (error) {
+      console.error('Upload Error:', error);
+      toast.error('Failed to upload documents');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleEditFileUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    setUploading(true);
+    try {
+      const uploadPromises = files.map(async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('folder', 'agent-documents');
+        
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (!response.ok) throw new Error('Upload failed');
+        
+        const json = await response.json();
+        const uploadedFile = json.data || json;
+
+        return {
+          name: file.name,
+          url: uploadedFile.url,
+          publicId: uploadedFile.publicId,
+          type: file.type
+        };
+      });
+
+      const uploadedDocs = await Promise.all(uploadPromises);
+      
+      setEditFormData(prev => ({
+        ...prev,
+        documents: [...(prev.documents || []), ...uploadedDocs]
+      }));
+      toast.success('Documents uploaded successfully');
+    } catch (error) {
+      console.error('Upload Error:', error);
+      toast.error('Failed to upload documents');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileDelete = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      documents: prev.documents.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleEditFileDelete = (index) => {
+    setEditFormData(prev => ({
+      ...prev,
+      documents: prev.documents.filter((_, i) => i !== index)
+    }));
+  };
+
   const generatePassword = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%';
     let password = '';
@@ -411,7 +569,15 @@ export default function AgentsPage() {
         perSaleIncentiveAfterTarget: '',
         afterTargetIncentiveType: 'fixed',
         incentivePercentageOn: 'sale_amount',
-        minSaleAmountForIncentive: ''
+        minSaleAmountForIncentive: '',
+        bankDetails: {
+          bankName: '',
+          accountTitle: '',
+          accountNumber: '',
+          iban: '',
+          branchCode: ''
+        },
+        documents: []
       });
       fetchAgents();
     } catch (error) {
@@ -457,7 +623,9 @@ export default function AgentsPage() {
         perSaleIncentiveAfterTarget: editFormData.perSaleIncentiveAfterTarget ? parseFloat(editFormData.perSaleIncentiveAfterTarget) : 0,
         afterTargetIncentiveType: editFormData.afterTargetIncentiveType,
         incentivePercentageOn: editFormData.incentivePercentageOn,
-        minSaleAmountForIncentive: editFormData.minSaleAmountForIncentive ? parseFloat(editFormData.minSaleAmountForIncentive) : 0
+        minSaleAmountForIncentive: editFormData.minSaleAmountForIncentive ? parseFloat(editFormData.minSaleAmountForIncentive) : 0,
+        bankDetails: editFormData.bankDetails,
+        documents: editFormData.documents
       });
       toast.success('Agent updated successfully!');
       setShowEditForm(false);
@@ -477,7 +645,22 @@ export default function AgentsPage() {
         isActive: true,
         basicSalary: '',
         attendanceAllowance: '',
-        perSaleIncentive: ''
+        perSaleIncentive: '',
+        commissionType: 'Basic + Commission',
+        perSaleIncentiveInTarget: '',
+        inTargetIncentiveType: 'fixed',
+        perSaleIncentiveAfterTarget: '',
+        afterTargetIncentiveType: 'fixed',
+        incentivePercentageOn: 'sale_amount',
+        minSaleAmountForIncentive: '',
+        bankDetails: {
+          bankName: '',
+          accountTitle: '',
+          accountNumber: '',
+          iban: '',
+          branchCode: ''
+        },
+        documents: []
       });
       fetchAgents();
     } catch (error) {
@@ -511,7 +694,15 @@ export default function AgentsPage() {
       perSaleIncentiveAfterTarget: agent.perSaleIncentiveAfterTarget?.toString() || '',
       afterTargetIncentiveType: agent.afterTargetIncentiveType || 'fixed',
       incentivePercentageOn: agent.incentivePercentageOn || 'sale_amount',
-      minSaleAmountForIncentive: agent.minSaleAmountForIncentive?.toString() || ''
+      minSaleAmountForIncentive: agent.minSaleAmountForIncentive?.toString() || '',
+      bankDetails: {
+        bankName: agent.bankDetails?.bankName || '',
+        accountTitle: agent.bankDetails?.accountTitle || '',
+        accountNumber: agent.bankDetails?.accountNumber || '',
+        iban: agent.bankDetails?.iban || '',
+        branchCode: agent.bankDetails?.branchCode || ''
+      },
+      documents: agent.documents || []
     });
     setShowEditForm(true);
   };
@@ -580,7 +771,7 @@ export default function AgentsPage() {
                 </Button>
               </DialogTrigger>
               
-              <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+              <DialogContent className="sm:max-w-[800px] max-h-[90vh] flex flex-col">
                 <DialogHeader>
                   <DialogTitle>Create New Agent</DialogTitle>
                   <DialogDescription>
@@ -588,7 +779,16 @@ export default function AgentsPage() {
                   </DialogDescription>
                 </DialogHeader>
                 
-                <form onSubmit={handleCreateAgent} className="space-y-4">
+                <Tabs defaultValue="profile" className="flex-1 flex flex-col overflow-hidden">
+                  <TabsList className="grid w-full grid-cols-3 mb-4">
+                    <TabsTrigger value="profile">Profile & Info</TabsTrigger>
+                    <TabsTrigger value="financials">Financials & Bank</TabsTrigger>
+                    <TabsTrigger value="documents">Documents</TabsTrigger>
+                  </TabsList>
+                
+                <form onSubmit={handleCreateAgent} className="flex flex-col flex-1 overflow-hidden">
+                  <div className="flex-1 overflow-y-auto pr-2">
+                  <TabsContent value="profile" className="space-y-4 mt-0">
                   {/* Basic Information */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -684,6 +884,61 @@ export default function AgentsPage() {
                     </div>
                   </div>
 
+                  {/* Shift & Password */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="shift" className="flex items-center gap-2">
+                        <Clock className="h-4 w-4" />
+                        Shift *
+                      </Label>
+                      <Select 
+                        value={formData.shift} 
+                        onValueChange={(v) => handleSelectChange('shift', v)} 
+                        disabled={shiftsLoading}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a shift" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {shiftsLoading ? (
+                            <SelectItem value="loading" disabled>Loading shifts...</SelectItem>
+                          ) : shifts.length === 0 ? (
+                            <SelectItem value="none" disabled>No shifts available</SelectItem>
+                          ) : (
+                            shifts.map(shift => (
+                              <SelectItem key={shift._id} value={shift._id}>
+                                {shift.name} ({shift.startTime}-{shift.endTime})
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="password" className="flex items-center gap-2">
+                        <Key className="h-4 w-4" />
+                        Password *
+                      </Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="password"
+                          name="password"
+                          type="text"
+                          value={formData.password}
+                          onChange={handleInputChange}
+                          required
+                          placeholder="Enter password"
+                        />
+                        <Button type="button" variant="outline" onClick={generatePassword} className="whitespace-nowrap">
+                          Generate
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                  </TabsContent>
+
+                  <TabsContent value="financials" className="space-y-4 mt-0">
                   {/* Target Settings */}
                   <div className="border-t pt-4 mt-2">
                     <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -903,63 +1158,113 @@ export default function AgentsPage() {
                             </div> */}
                         </div>
                     </div>
+                    
+                    {/* Bank Details */}
+                    <div className="bg-slate-50 p-4 rounded-md border mt-4">
+                        <h4 className="text-sm font-semibold mb-3 text-slate-700 flex items-center gap-2">
+                           <Building className="h-4 w-4" /> Bank Account Details
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="bankName">Bank Name</Label>
+                                <Input
+                                    id="bankName"
+                                    name="bankName"
+                                    value={formData.bankDetails.bankName}
+                                    onChange={handleBankChange}
+                                    placeholder="e.g. HBL"
+                                />
+                            </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="accountTitle">Account Title</Label>
+                                <Input
+                                    id="accountTitle"
+                                    name="accountTitle"
+                                    value={formData.bankDetails.accountTitle}
+                                    onChange={handleBankChange}
+                                    placeholder="Account Holder Name"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="accountNumber">Account Number</Label>
+                                <Input
+                                    id="accountNumber"
+                                    name="accountNumber"
+                                    value={formData.bankDetails.accountNumber}
+                                    onChange={handleBankChange}
+                                    placeholder="Account Number"
+                                />
+                            </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="iban">IBAN</Label>
+                                <Input
+                                    id="iban"
+                                    name="iban"
+                                    value={formData.bankDetails.iban}
+                                    onChange={handleBankChange}
+                                    placeholder="PK..."
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="branchCode">Branch Code</Label>
+                                <Input
+                                    id="branchCode"
+                                    name="branchCode"
+                                    value={formData.bankDetails.branchCode}
+                                    onChange={handleBankChange}
+                                    placeholder="e.g. 0911"
+                                />
+                            </div>
+                        </div>
+                    </div>
                   </div>
+                  </TabsContent>
 
-                  {/* Shift & Password */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="shift" className="flex items-center gap-2">
-                        <Clock className="h-4 w-4" />
-                        Shift *
-                      </Label>
-                      <Select 
-                        value={formData.shift} 
-                        onValueChange={(v) => handleSelectChange('shift', v)} 
-                        disabled={shiftsLoading}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a shift" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {shiftsLoading ? (
-                            <SelectItem value="loading" disabled>Loading shifts...</SelectItem>
-                          ) : shifts.length === 0 ? (
-                            <SelectItem value="none" disabled>No shifts available</SelectItem>
-                          ) : (
-                            shifts.map(shift => (
-                              <SelectItem key={shift._id} value={shift._id}>
-                                {shift.name} ({shift.startTime}-{shift.endTime})
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
+                  <TabsContent value="documents" className="space-y-4 mt-0">
+                    <div className="border p-4 rounded-md border-dashed text-center">
+                        <Input 
+                            type="file" 
+                            multiple 
+                            onChange={handleFileUpload} 
+                            className="hidden" 
+                            id="doc-upload"
+                            accept="image/*,application/pdf"
+                        />
+                        <Label htmlFor="doc-upload" className="cursor-pointer flex flex-col items-center gap-2 py-4">
+                            {uploading ? <Loader2 className="h-8 w-8 animate-spin text-blue-500" /> : <Upload className="h-8 w-8 text-slate-400" />}
+                            <span className="text-sm text-slate-600">Click to upload documents (CNIC, Contract, CV)</span>
+                            <span className="text-xs text-slate-400">Supports Images & PDF (Max 5MB)</span>
+                        </Label>
                     </div>
                     
-                    <div className="space-y-2">
-                      <Label htmlFor="password" className="flex items-center gap-2">
-                        <Key className="h-4 w-4" />
-                        Password *
-                      </Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="password"
-                          name="password"
-                          type="text"
-                          value={formData.password}
-                          onChange={handleInputChange}
-                          required
-                          placeholder="Enter password"
-                        />
-                        <Button type="button" variant="outline" onClick={generatePassword} className="whitespace-nowrap">
-                          Generate
-                        </Button>
-                      </div>
-                    </div>
+                    {formData.documents.length > 0 && (
+                        <div className="space-y-2">
+                            <h4 className="text-sm font-medium">Uploaded Documents</h4>
+                            <div className="space-y-2">
+                                {formData.documents.map((doc, index) => (
+                                    <div key={index} className="flex items-center justify-between p-2 border rounded-md bg-slate-50">
+                                        <div className="flex items-center gap-2 overflow-hidden">
+                                            <FileText className="h-4 w-4 flex-shrink-0 text-blue-500" />
+                                            <span className="text-sm truncate">{doc.name}</span>
+                                        </div>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleFileDelete(index)}
+                                            className="text-red-500 hover:text-red-700 h-8 w-8 p-0"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                  </TabsContent>
                   </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-3 pt-4">
+                  
+                  <DialogFooter className="pt-4 border-t mt-auto">
                     <Button
                       type="submit"
                       disabled={loading || shifts.length === 0 || !validateAgentId(formData.agentId)}
@@ -980,8 +1285,9 @@ export default function AgentsPage() {
                     >
                       Cancel
                     </Button>
-                  </div>
+                  </DialogFooter>
                 </form>
+                </Tabs>
               </DialogContent>
             </Dialog>
           )}
@@ -990,7 +1296,7 @@ export default function AgentsPage() {
 
       {/* Edit Dialog */}
       <Dialog open={showEditForm} onOpenChange={setShowEditForm}>
-        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[800px] max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Edit className="h-5 w-5" />
@@ -1001,7 +1307,16 @@ export default function AgentsPage() {
             </DialogDescription>
           </DialogHeader>
           
-          <form onSubmit={handleEditAgent} className="space-y-4">
+          <Tabs defaultValue="profile" className="flex-1 flex flex-col overflow-hidden">
+            <TabsList className="grid w-full grid-cols-3 mb-4">
+              <TabsTrigger value="profile">Profile & Info</TabsTrigger>
+              <TabsTrigger value="financials">Financials & Bank</TabsTrigger>
+              <TabsTrigger value="documents">Documents</TabsTrigger>
+            </TabsList>
+
+          <form onSubmit={handleEditAgent} className="flex flex-col flex-1 overflow-hidden">
+            <div className="flex-1 overflow-y-auto pr-2">
+            <TabsContent value="profile" className="space-y-4 mt-0">
             {/* Edit Form Structure - Similar to Create Form */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -1091,6 +1406,56 @@ export default function AgentsPage() {
               </div>
             </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-shift" className="flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  Shift *
+                </Label>
+                <Select
+                  value={editFormData.shift}
+                  onValueChange={(value) => handleEditSelectChange('shift', value)}
+                  disabled={shiftsLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {shifts.map(shift => (
+                      <SelectItem key={shift._id} value={shift._id}>
+                        {shift.name} ({shift.startTime} - {shift.endTime})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="edit-status" className="flex items-center gap-2">
+                  {editFormData.isActive ? (
+                    <UserCheck className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <UserX className="h-4 w-4 text-red-600" />
+                  )}
+                  Status
+                </Label>
+                <Select
+                  value={editFormData.isActive.toString()}
+                  onValueChange={(value) => handleEditSelectChange('isActive', value === 'true')}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="true">Active</SelectItem>
+                    <SelectItem value="false">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="financials" className="space-y-4 mt-0">
             {/* Target Settings */}
             <div className="border-t pt-4 mt-2">
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -1318,55 +1683,111 @@ export default function AgentsPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-shift" className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  Shift *
-                </Label>
-                <Select
-                  value={editFormData.shift}
-                  onValueChange={(value) => handleEditSelectChange('shift', value)}
-                  disabled={shiftsLoading}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {shifts.map(shift => (
-                      <SelectItem key={shift._id} value={shift._id}>
-                        {shift.name} ({shift.startTime} - {shift.endTime})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="edit-status" className="flex items-center gap-2">
-                  {editFormData.isActive ? (
-                    <UserCheck className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <UserX className="h-4 w-4 text-red-600" />
-                  )}
-                  Status
-                </Label>
-                <Select
-                  value={editFormData.isActive.toString()}
-                  onValueChange={(value) => handleEditSelectChange('isActive', value === 'true')}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="true">Active</SelectItem>
-                    <SelectItem value="false">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            {/* Bank Details */}
+            <div className="bg-slate-50 p-4 rounded-md border mt-4">
+                <h4 className="text-sm font-semibold mb-3 text-slate-700 flex items-center gap-2">
+                   <Building className="h-4 w-4" /> Bank Account Details
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="edit-bankName">Bank Name</Label>
+                        <Input
+                            id="edit-bankName"
+                            name="bankName"
+                            value={editFormData.bankDetails.bankName}
+                            onChange={handleEditBankChange}
+                            placeholder="e.g. HBL"
+                        />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="edit-accountTitle">Account Title</Label>
+                        <Input
+                            id="edit-accountTitle"
+                            name="accountTitle"
+                            value={editFormData.bankDetails.accountTitle}
+                            onChange={handleEditBankChange}
+                            placeholder="Account Holder Name"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="edit-accountNumber">Account Number</Label>
+                        <Input
+                            id="edit-accountNumber"
+                            name="accountNumber"
+                            value={editFormData.bankDetails.accountNumber}
+                            onChange={handleEditBankChange}
+                            placeholder="Account Number"
+                        />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="edit-iban">IBAN</Label>
+                        <Input
+                            id="edit-iban"
+                            name="iban"
+                            value={editFormData.bankDetails.iban}
+                            onChange={handleEditBankChange}
+                            placeholder="PK..."
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="edit-branchCode">Branch Code</Label>
+                        <Input
+                            id="edit-branchCode"
+                            name="branchCode"
+                            value={editFormData.bankDetails.branchCode}
+                            onChange={handleEditBankChange}
+                            placeholder="e.g. 0911"
+                        />
+                    </div>
+                </div>
             </div>
+          </TabsContent>
 
-            <div className="flex gap-3 pt-4">
+          <TabsContent value="documents" className="space-y-4 mt-0">
+            <div className="border p-4 rounded-md border-dashed text-center">
+                <Input 
+                    type="file" 
+                    multiple 
+                    onChange={handleEditFileUpload} 
+                    className="hidden" 
+                    id="edit-doc-upload"
+                    accept="image/*,application/pdf"
+                />
+                <Label htmlFor="edit-doc-upload" className="cursor-pointer flex flex-col items-center gap-2 py-4">
+                    {uploading ? <Loader2 className="h-8 w-8 animate-spin text-blue-500" /> : <Upload className="h-8 w-8 text-slate-400" />}
+                    <span className="text-sm text-slate-600">Click to upload documents (CNIC, Contract, CV)</span>
+                    <span className="text-xs text-slate-400">Supports Images & PDF (Max 5MB)</span>
+                </Label>
+            </div>
+            
+            {editFormData.documents && editFormData.documents.length > 0 && (
+                <div className="space-y-2">
+                    <h4 className="text-sm font-medium">Uploaded Documents</h4>
+                    <div className="space-y-2">
+                        {(editFormData.documents || []).map((doc, index) => (
+                            <div key={index} className="flex items-center justify-between p-2 border rounded-md bg-slate-50">
+                                <div className="flex items-center gap-2 overflow-hidden">
+                                    <FileText className="h-4 w-4 flex-shrink-0 text-blue-500" />
+                                    <span className="text-sm truncate">{doc.name}</span>
+                                </div>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleEditFileDelete(index)}
+                                    className="text-red-500 hover:text-red-700 h-8 w-8 p-0"
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+          </TabsContent>
+          </div>
+
+          <DialogFooter className="pt-4 border-t mt-auto">
               <Button
                 type="submit"
                 disabled={loading || !validateAgentId(editFormData.agentId)}
@@ -1387,8 +1808,9 @@ export default function AgentsPage() {
               >
                 Cancel
               </Button>
-            </div>
+          </DialogFooter>
           </form>
+          </Tabs>
         </DialogContent>
       </Dialog>
 
@@ -1872,9 +2294,9 @@ export default function AgentsPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleViewAgent(agent)}
+                            onClick={() => router.push(`/dashboard/agents/${agent._id}`)}
                             className="h-8 w-8 p-0 text-gray-600 hover:text-[#10B5DB] hover:bg-[#10B5DB]/10"
-                            title="View Details"
+                            title="View Full Details"
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
