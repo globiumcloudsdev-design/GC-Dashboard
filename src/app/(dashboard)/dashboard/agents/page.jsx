@@ -123,6 +123,23 @@ const PAGE_SIZES = [
   { value: 50, label: '50 / page' }
 ];
 
+const DOCUMENT_TYPES = [
+  "CNIC",
+  "Resume / CV",
+  "Educational Certificates",
+  "Experience Certificates",
+  "Photos",
+  "Bank Letter",
+  "Medical Certificate",
+  "Profile Photo"
+];
+
+const MULTIPLE_ALLOWED_TYPES = [
+  "Educational Certificates",
+  "Experience Certificates",
+  "Photos"
+];
+
 export default function AgentsPage() {
   const router = useRouter();
   const [agents, setAgents] = useState([]);
@@ -132,6 +149,10 @@ export default function AgentsPage() {
   const [showEditForm, setShowEditForm] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState(null);
+
+  // Document Upload State
+  const [createDocType, setCreateDocType] = useState("");
+  const [editDocType, setEditDocType] = useState("");
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -408,6 +429,12 @@ export default function AgentsPage() {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
 
+    if (!createDocType) {
+      toast.error("Please select a document type first");
+      e.target.value = null; // Reset input
+      return;
+    }
+
     setUploading(true);
     try {
       const uploadPromises = files.map(async (file) => {
@@ -426,10 +453,12 @@ export default function AgentsPage() {
         const uploadedFile = json.data || json;
 
         return {
-          name: file.name,
+          name: createDocType, // Classification Name
+          originalName: file.name,
           url: uploadedFile.url,
           publicId: uploadedFile.publicId,
-          type: file.type
+          type: createDocType, // Classification Type
+          mimeType: file.type
         };
       });
 
@@ -439,6 +468,8 @@ export default function AgentsPage() {
         ...prev,
         documents: [...prev.documents, ...uploadedDocs]
       }));
+      setCreateDocType(""); // Reset selection
+      if(e.target) e.target.value = null; // Reset input
       toast.success('Documents uploaded successfully');
     } catch (error) {
       console.error('Upload Error:', error);
@@ -452,6 +483,12 @@ export default function AgentsPage() {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
 
+    if (!editDocType) {
+      toast.error("Please select a document type first");
+      e.target.value = null;
+      return;
+    }
+
     setUploading(true);
     try {
       const uploadPromises = files.map(async (file) => {
@@ -470,10 +507,12 @@ export default function AgentsPage() {
         const uploadedFile = json.data || json;
 
         return {
-          name: file.name,
+          name: editDocType,
+          originalName: file.name,
           url: uploadedFile.url,
           publicId: uploadedFile.publicId,
-          type: file.type
+          type: editDocType,
+          mimeType: file.type
         };
       });
 
@@ -483,6 +522,8 @@ export default function AgentsPage() {
         ...prev,
         documents: [...(prev.documents || []), ...uploadedDocs]
       }));
+      setEditDocType("");
+      if(e.target) e.target.value = null;
       toast.success('Documents uploaded successfully');
     } catch (error) {
       console.error('Upload Error:', error);
@@ -1221,20 +1262,47 @@ export default function AgentsPage() {
                   </TabsContent>
 
                   <TabsContent value="documents" className="space-y-4 mt-0">
-                    <div className="border p-4 rounded-md border-dashed text-center">
-                        <Input 
-                            type="file" 
-                            multiple 
-                            onChange={handleFileUpload} 
-                            className="hidden" 
-                            id="doc-upload"
-                            accept="image/*,application/pdf"
-                        />
-                        <Label htmlFor="doc-upload" className="cursor-pointer flex flex-col items-center gap-2 py-4">
-                            {uploading ? <Loader2 className="h-8 w-8 animate-spin text-blue-500" /> : <Upload className="h-8 w-8 text-slate-400" />}
-                            <span className="text-sm text-slate-600">Click to upload documents (CNIC, Contract, CV)</span>
-                            <span className="text-xs text-slate-400">Supports Images & PDF (Max 5MB)</span>
-                        </Label>
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                           <Label>Document Type</Label>
+                           <Select value={createDocType} onValueChange={setCreateDocType}>
+                             <SelectTrigger>
+                               <SelectValue placeholder="Select type to upload" />
+                             </SelectTrigger>
+                             <SelectContent>
+                               {DOCUMENT_TYPES.filter(type => {
+                                 // Show if multiple allowed OR not already present
+                                 const isMultiple = MULTIPLE_ALLOWED_TYPES.includes(type);
+                                 const isPresent = formData.documents.some(d => d.type === type);
+                                 return isMultiple || !isPresent;
+                               }).map(type => (
+                                 <SelectItem key={type} value={type}>{type}</SelectItem>
+                               ))}
+                             </SelectContent>
+                           </Select>
+                        </div>
+                    
+                        <div className="border p-4 rounded-md border-dashed text-center">
+                            <Input 
+                                type="file" 
+                                // multiple // Disable multiple if we want strictly one type per file, or keep it if logic handles it
+                                onChange={handleFileUpload} 
+                                className="hidden" 
+                                id="doc-upload"
+                                accept="image/*,application/pdf"
+                                disabled={!createDocType}
+                            />
+                            <Label 
+                                htmlFor="doc-upload" 
+                                className={`flex flex-col items-center gap-2 py-4 ${!createDocType ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                            >
+                                {uploading ? <Loader2 className="h-8 w-8 animate-spin text-blue-500" /> : <Upload className="h-8 w-8 text-slate-400" />}
+                                <span className="text-sm text-slate-600">
+                                    {createDocType ? `Click to upload ${createDocType}` : 'Select a document type first'}
+                                </span>
+                                <span className="text-xs text-slate-400">Supports Images & PDF (Max 5MB)</span>
+                            </Label>
+                        </div>
                     </div>
                     
                     {formData.documents.length > 0 && (
@@ -1245,7 +1313,10 @@ export default function AgentsPage() {
                                     <div key={index} className="flex items-center justify-between p-2 border rounded-md bg-slate-50">
                                         <div className="flex items-center gap-2 overflow-hidden">
                                             <FileText className="h-4 w-4 flex-shrink-0 text-blue-500" />
-                                            <span className="text-sm truncate">{doc.name}</span>
+                                            <div className="flex flex-col">
+                                                <span className="text-sm font-medium truncate">{doc.name}</span>
+                                                {doc.originalName && <span className="text-xs text-slate-400 truncate">{doc.originalName}</span>}
+                                            </div>
                                         </div>
                                         <Button
                                             type="button"
@@ -1744,20 +1815,47 @@ export default function AgentsPage() {
           </TabsContent>
 
           <TabsContent value="documents" className="space-y-4 mt-0">
-            <div className="border p-4 rounded-md border-dashed text-center">
-                <Input 
-                    type="file" 
-                    multiple 
-                    onChange={handleEditFileUpload} 
-                    className="hidden" 
-                    id="edit-doc-upload"
-                    accept="image/*,application/pdf"
-                />
-                <Label htmlFor="edit-doc-upload" className="cursor-pointer flex flex-col items-center gap-2 py-4">
-                    {uploading ? <Loader2 className="h-8 w-8 animate-spin text-blue-500" /> : <Upload className="h-8 w-8 text-slate-400" />}
-                    <span className="text-sm text-slate-600">Click to upload documents (CNIC, Contract, CV)</span>
-                    <span className="text-xs text-slate-400">Supports Images & PDF (Max 5MB)</span>
-                </Label>
+            <div className="space-y-4">
+                <div className="space-y-2">
+                    <Label>Document Type</Label>
+                    <Select value={editDocType} onValueChange={setEditDocType}>
+                        <SelectTrigger>
+                        <SelectValue placeholder="Select type to upload" />
+                        </SelectTrigger>
+                        <SelectContent>
+                        {DOCUMENT_TYPES.filter(type => {
+                            const isMultiple = MULTIPLE_ALLOWED_TYPES.includes(type);
+                            // Ensure documents array exists
+                            const docs = editFormData.documents || [];
+                            const isPresent = docs.some(d => d.type === type);
+                            return isMultiple || !isPresent;
+                        }).map(type => (
+                            <SelectItem key={type} value={type}>{type}</SelectItem>
+                        ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div className="border p-4 rounded-md border-dashed text-center">
+                    <Input 
+                        type="file" 
+                        onChange={handleEditFileUpload} 
+                        className="hidden" 
+                        id="edit-doc-upload"
+                        accept="image/*,application/pdf"
+                        disabled={!editDocType}
+                    />
+                    <Label 
+                        htmlFor="edit-doc-upload" 
+                        className={`cursor-pointer flex flex-col items-center gap-2 py-4 ${!editDocType ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                    >
+                        {uploading ? <Loader2 className="h-8 w-8 animate-spin text-blue-500" /> : <Upload className="h-8 w-8 text-slate-400" />}
+                        <span className="text-sm text-slate-600">
+                             {editDocType ? `Click to upload ${editDocType}` : 'Select a document type first'}
+                        </span>
+                        <span className="text-xs text-slate-400">Supports Images & PDF (Max 5MB)</span>
+                    </Label>
+                </div>
             </div>
             
             {editFormData.documents && editFormData.documents.length > 0 && (
@@ -1768,7 +1866,10 @@ export default function AgentsPage() {
                             <div key={index} className="flex items-center justify-between p-2 border rounded-md bg-slate-50">
                                 <div className="flex items-center gap-2 overflow-hidden">
                                     <FileText className="h-4 w-4 flex-shrink-0 text-blue-500" />
-                                    <span className="text-sm truncate">{doc.name}</span>
+                                    <div className="flex flex-col">
+                                        <span className="text-sm font-medium truncate">{doc.name}</span>
+                                        {doc.originalName && <span className="text-xs text-slate-400 truncate">{doc.originalName}</span>}
+                                    </div>
                                 </div>
                                 <Button
                                     type="button"

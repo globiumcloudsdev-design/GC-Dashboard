@@ -33,9 +33,21 @@ import {
 } from "@/components/ui/table";
 import { format } from 'date-fns';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import {
   ArrowLeft,
   Printer,
   Download,
+  Upload,
   Calendar,
   Mail,
   Phone,
@@ -56,6 +68,23 @@ import {
 import { toast } from 'sonner';
 import Image from 'next/image';
 
+const DOCUMENT_TYPES = [
+  "CNIC",
+  "Resume / CV",
+  "Educational Certificates",
+  "Experience Certificates",
+  "Photos",
+  "Bank Letter",
+  "Medical Certificate",
+  "Profile Photo"
+];
+
+const MULTIPLE_ALLOWED_TYPES = [
+  "Educational Certificates",
+  "Experience Certificates",
+  "Photos"
+];
+
 export default function AgentDetailPage({ params }) {
   const router = useRouter();
   const resolvedParams = use(params);
@@ -65,6 +94,12 @@ export default function AgentDetailPage({ params }) {
   const [agent, setAgent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
+
+  // Document Upload State
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [selectedDocType, setSelectedDocType] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
 
   // State for sub-sections
   const [attendance, setAttendance] = useState([]);
@@ -176,7 +211,6 @@ export default function AgentDetailPage({ params }) {
 
       if (data.success && data.agent) {
         setAgent(data.agent);
-        console.log("Agent data loaded:", data.agent);
       } else {
         toast.error(data.error || 'Failed to load agent details');
       }
@@ -194,13 +228,10 @@ export default function AgentDetailPage({ params }) {
       const targetMonth = isInitial ? new Date().getMonth() + 1 : selectedMonth;
       const targetYear = isInitial ? new Date().getFullYear() : selectedYear;
 
-      console.log(`Fetching attendance for agent: ${id}, month: ${targetMonth}, year: ${targetYear}`);
 
       // Use direct API call
       const res = await fetch(`/api/attendance?agentId=${id}&month=${targetMonth}&year=${targetYear}`);
       const json = await res.json();
-
-      console.log("Attendance response:", json);
 
       if (json.success) {
         const attendanceData = json.data || [];
@@ -236,13 +267,11 @@ export default function AgentDetailPage({ params }) {
       const start = new Date(targetYear, targetMonth - 1, 1).toISOString();
       const end = new Date(targetYear, targetMonth, 0, 23, 59, 59).toISOString();
 
-      console.log(`Fetching bookings for agent: ${id}, start: ${start}, end: ${end}`);
 
       // Direct API call
       const res = await fetch(`/api/promo-codes/agent/${id}/bookings?startDate=${start}&endDate=${end}&limit=1000`);
       const json = await res.json();
 
-      console.log("Bookings response:", json);
 
       if (json.success) {
         const bookingData = json.data?.bookings || json.data || [];
@@ -279,13 +308,11 @@ export default function AgentDetailPage({ params }) {
       const start = new Date(targetYear, targetMonth - 1, 1).toISOString();
       const end = new Date(targetYear, targetMonth, 0).toISOString();
 
-      console.log(`Fetching projects for agent: ${id}, start: ${start}, end: ${end}`);
 
       // Fetch projects assigned to this agent
       const res = await fetch(`/api/projects?assignedAgent=${id}&startDate=${start}&endDate=${end}&limit=1000`);
       const json = await res.json();
 
-      console.log("Projects response:", json);
 
       if (json.success) {
         const projectData = json.data || [];
@@ -319,7 +346,6 @@ export default function AgentDetailPage({ params }) {
       const start = new Date(targetYear, targetMonth - 1, 1);
       const end = new Date(targetYear, targetMonth, 0, 23, 59, 59);
 
-      console.log(`Fetching combined sales data for agent: ${id}, month: ${targetMonth}, year: ${targetYear}`);
 
       // Fetch bookings with date filter
       const bookingsRes = await fetch(`/api/promo-codes/agent/${id}/bookings?startDate=${start.toISOString()}&endDate=${end.toISOString()}&limit=1000`);
@@ -436,13 +462,9 @@ export default function AgentDetailPage({ params }) {
   async function fetchPayrolls() {
     setPayrollsLoading(true);
     try {
-      console.log(`Fetching payroll for agent: ${id}`);
-
       // Direct API call
       const res = await fetch(`/api/payroll?agent=${id}&limit=50`);
       const json = await res.json();
-
-      console.log("Payroll response:", json);
 
       if (json.success) {
         setPayrolls(json.data || []);
@@ -454,6 +476,71 @@ export default function AgentDetailPage({ params }) {
       toast.error('Failed to load payroll history');
     } finally {
       setPayrollsLoading(false);
+    }
+  }
+
+  async function handleUploadDocument() {
+    if (!selectedFile || !selectedDocType) {
+      toast.error("Please select a document type and file");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      // 1. Upload to Cloudinary
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('folder', 'agent-documents');
+
+      const uploadRes = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+      const uploadJson = await uploadRes.json();
+
+      if (!uploadJson.success) {
+        throw new Error(uploadJson.message || "Upload failed");
+      }
+
+      // 2. Prepare new document object
+      const newDoc = {
+        name: selectedDocType, // Using type as name for simplicity, or we can add a name field
+        url: uploadJson.data.url,
+        type: selectedDocType,
+        publicId: uploadJson.data.publicId,
+        uploadedAt: new Date()
+      };
+
+      // 3. Update Agent
+      // We need to send ALL existing documents + new one
+      const currentDocs = agent.documents || [];
+      const updatedDocs = [...currentDocs, newDoc];
+
+      const updateRes = await fetch(`/api/agents/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          documents: updatedDocs
+        })
+      });
+
+      const updateJson = await updateRes.json();
+
+      if (updateJson.success) {
+        toast.success("Document uploaded successfully");
+        setAgent(prev => ({ ...prev, documents: updatedDocs }));
+        setIsUploadOpen(false);
+        setSelectedFile(null);
+        setSelectedDocType("");
+      } else {
+        throw new Error(updateJson.error || "Failed to update agent");
+      }
+
+    } catch (error) {
+      console.error("Document upload error:", error);
+      toast.error(error.message || "Failed to upload document");
+    } finally {
+      setUploading(false);
     }
   }
 
@@ -499,6 +586,13 @@ export default function AgentDetailPage({ params }) {
   const handlePrint = () => {
     window.print();
   };
+
+  const isImage = (url = "") =>
+    url.match(/\.(jpeg|jpg|png)$/i);
+
+  const isPDF = (url = "") =>
+    url.match(/\.pdf$/i);
+
 
   if (loading) {
     return (
@@ -655,6 +749,10 @@ export default function AgentDetailPage({ params }) {
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => router.push(`/dashboard/agents/${id}/letters/relieving`)} className="text-red-600 focus:text-red-700">
                     Relieving Letter
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => router.push(`/dashboard/agents/${id}/id-card`)} className="font-medium text-blue-600">
+                    <User className="mr-2 h-4 w-4" /> Employee ID Card
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -1130,16 +1228,68 @@ export default function AgentDetailPage({ params }) {
 
             {/* Section 6: Documents */}
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-              <div className="bg-gradient-to-r from-slate-700 to-slate-800 px-6 py-4">
+              <div className="bg-gradient-to-r from-slate-700 to-slate-800 px-6 py-4 flex justify-between items-center">
                 <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                   <FileText className="h-5 w-5" />
                   Uploaded Documents
                 </h2>
+
+                <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
+                  <DialogTrigger asChild>
+                    <Button size="sm" variant="secondary" className="gap-2 text-slate-800 hover:bg-slate-100 font-medium border-0">
+                      <Upload className="h-4 w-4" /> Upload Document
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Upload Document</DialogTitle>
+                      <DialogDescription>
+                        Select the document type and choose a file to upload.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="doc-type">Document Type</Label>
+                        <Select value={selectedDocType} onValueChange={setSelectedDocType}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select document type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {DOCUMENT_TYPES.filter(type => {
+                              const isMultiple = MULTIPLE_ALLOWED_TYPES.includes(type);
+                              const isPresent = agent?.documents?.some(d => d.type === type);
+                              return isMultiple || !isPresent;
+                            }).map(type => (
+                              <SelectItem key={type} value={type}>{type}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="file">File (PDF, Image)</Label>
+                        <Input
+                          id="file"
+                          type="file"
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                          className="cursor-pointer file:cursor-pointer"
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setIsUploadOpen(false)} disabled={uploading}>Cancel</Button>
+                      <Button onClick={handleUploadDocument} disabled={uploading || !selectedFile || !selectedDocType}>
+                        {uploading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
+                        {uploading ? 'Uploading...' : 'Upload'}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
               <div className="p-6">
                 {agent.documents && agent.documents.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {agent.documents.map((doc, idx) => (
+                    {/* {agent.documents.map((doc, idx) => (
                       <div key={idx} className="group flex items-center justify-between p-4 rounded-lg border-2 border-slate-200 bg-slate-50 hover:border-blue-400 hover:bg-blue-50 transition-all duration-200">
                         <div className="flex items-center gap-3 overflow-hidden flex-1">
                           <div className="h-10 w-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 group-hover:bg-blue-200 transition-colors">
@@ -1164,6 +1314,54 @@ export default function AgentDetailPage({ params }) {
                             <Download className="h-4 w-4" />
                           </a>
                         </Button>
+                      </div>
+                    ))} */}
+                    {agent.documents.map((doc, idx) => (
+                      <div
+                        key={idx}
+                        className="group p-4 rounded-lg border-2 border-slate-200 bg-slate-50 hover:border-blue-400 hover:bg-blue-50 transition-all"
+                      >
+                        <div className="flex items-center gap-3">
+                          {/* Preview */}
+                          <div className="h-12 w-12 rounded-lg overflow-hidden bg-blue-100 flex items-center justify-center shrink-0">
+                            {isImage(doc.url) ? (
+                              <img
+                                src={doc.url}
+                                alt={doc.name}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : isPDF(doc.url) ? (
+                              <FileText className="h-6 w-6 text-red-500" />
+                            ) : (
+                              <FileText className="h-6 w-6 text-blue-600" />
+                            )}
+                          </div>
+
+                          {/* Info */}
+                          <div className="flex-1 overflow-hidden">
+                            <p className="font-medium text-sm truncate text-slate-900">
+                              {doc.name}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              Type: <span className="font-semibold">{doc.type}</span>
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex justify-end gap-2 mt-3">
+                          <Button size="sm" variant="outline" asChild>
+                            <a href={doc.url} target="_blank" rel="noopener noreferrer">
+                              View
+                            </a>
+                          </Button>
+
+                          <Button size="sm" variant="secondary" asChild>
+                            <a href={doc.url} download>
+                              Download
+                            </a>
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
