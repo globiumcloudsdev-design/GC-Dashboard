@@ -90,13 +90,54 @@ export default function AgentDetailPage({ params }) {
     performance: 0
   });
 
-  // Month options
-  const months = Array.from({ length: 12 }, (_, i) => ({
-    value: i + 1,
-    label: new Date(2000, i, 1).toLocaleString('default', { month: 'long' })
-  }));
+  // Generate list of available months from joining date to now
+  const availableMonths = React.useMemo(() => {
+    const list = [];
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth(); // 0-11
+    
+    let startYear = currentYear;
+    let startMonth = 0; 
+    
+    if (agent?.createdAt) {
+      try {
+        const d = new Date(agent.createdAt);
+        startYear = d.getFullYear();
+        startMonth = d.getMonth();
+      } catch (e) {
+        console.error("Invalid joining date", e);
+      }
+    }
+    
+    if (startYear > currentYear) startYear = currentYear;
 
-  const years = [2024, 2025, 2026, 2027];
+    // Iterate backwards from current date to start date
+    for (let y = currentYear; y >= startYear; y--) {
+       const endM = (y === currentYear) ? currentMonth : 11;
+       const startMVal = (y === startYear) ? startMonth : 0;
+       
+       for (let m = endM; m >= startMVal; m--) {
+          list.push({
+            value: `${m + 1}-${y}`,
+            label: `${new Date(2000, m, 1).toLocaleString('default', { month: 'long' })} ${y}`,
+            month: m + 1,
+            year: y
+          });
+       }
+    }
+    
+    if (list.length === 0) {
+       list.push({
+         value: `${currentMonth + 1}-${currentYear}`,
+         label: `${new Date(2000, currentMonth, 1).toLocaleString('default', { month: 'long' })} ${currentYear}`,
+         month: currentMonth + 1,
+         year: currentYear
+       });
+    }
+    
+    return list;
+  }, [agent?.createdAt]);
 
   useEffect(() => {
     fetchAgentDetails();
@@ -1127,31 +1168,24 @@ export default function AgentDetailPage({ params }) {
                         <div className="flex flex-wrap items-center gap-2 print:hidden">
                             <div className="bg-white rounded-md border flex items-center p-1 shadow-sm">
                                 <Calendar className="h-4 w-4 ml-2 mr-1 text-slate-400" />
-                                <Select value={selectedMonth.toString()} onValueChange={(v) => setSelectedMonth(parseInt(v))}>
-                                    <SelectTrigger className="w-[130px] border-0 h-8 focus:ring-0">
-                                        <SelectValue />
+                                <Select value={`${selectedMonth}-${selectedYear}`} onValueChange={(v) => {
+                                    const [m, y] = v.split('-');
+                                    setSelectedMonth(parseInt(m));
+                                    setSelectedYear(parseInt(y));
+                                }}>
+                                    <SelectTrigger className="w-[180px] border-0 h-8 focus:ring-0">
+                                        <SelectValue placeholder="Select Month" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {months.map(m => (
-                                          <SelectItem key={m.value} value={m.value.toString()}>
-                                            {m.label}
+                                        {availableMonths.map(item => (
+                                          <SelectItem key={item.value} value={item.value}>
+                                            {item.label}
                                           </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
-                                <div className="w-[1px] h-6 bg-slate-200 mx-1"></div>
-                                <Select value={selectedYear.toString()} onValueChange={(v) => setSelectedYear(parseInt(v))}>
-                                    <SelectTrigger className="w-[90px] border-0 h-8 focus:ring-0">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {years.map(y => (
-                                          <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
                             </div>
-                             <Button 
+                             <Button  
                                variant="outline" 
                                size="sm" 
                                className="h-10 bg-white" 
@@ -1248,24 +1282,19 @@ export default function AgentDetailPage({ params }) {
                         <div className="flex flex-wrap items-center gap-2 print:hidden">
                             <div className="bg-white rounded-md border flex items-center p-1 shadow-sm">
                                 <Calendar className="h-4 w-4 ml-2 mr-1 text-slate-400" />
-                                <Select value={selectedMonth.toString()} onValueChange={(v) => setSelectedMonth(parseInt(v))}>
-                                    <SelectTrigger className="w-[130px] border-0 h-8 focus:ring-0">
-                                        <SelectValue />
+                                <Select value={`${selectedMonth}-${selectedYear}`} onValueChange={(v) => {
+                                    const [m, y] = v.split('-');
+                                    setSelectedMonth(parseInt(m));
+                                    setSelectedYear(parseInt(y));
+                                }}>
+                                    <SelectTrigger className="w-[180px] border-0 h-8 focus:ring-0">
+                                        <SelectValue placeholder="Select Month" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {months.map(m => (
-                                          <SelectItem key={m.value} value={m.value.toString()}>{m.label}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <div className="w-[1px] h-6 bg-slate-200 mx-1"></div>
-                                <Select value={selectedYear.toString()} onValueChange={(v) => setSelectedYear(parseInt(v))}>
-                                    <SelectTrigger className="w-[90px] border-0 h-8 focus:ring-0">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {years.map(y => (
-                                          <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+                                        {availableMonths.map(item => (
+                                          <SelectItem key={item.value} value={item.value}>
+                                            {item.label}
+                                          </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
@@ -1276,12 +1305,14 @@ export default function AgentDetailPage({ params }) {
                               className="h-10 bg-white" 
                               onClick={() => {
                                 let data = [];
+                                const targetCurrency = agent?.targetCurrency || 'PKR';
+                                
                                 if (agent?.monthlyTargetType === 'digit') {
                                   data = bookings.map(b => ({
                                     ID: b.bookingId || b._id,
                                     Customer: (b.formData?.firstName || '') + ' ' + (b.formData?.lastName || ''),
                                     Service: b.bookingType || b.serviceType || 'N/A',
-                                    Amount: b.discountedPrice || b.totalPrice || 0,
+                                    Amount: `$${(b.discountedPrice || b.totalPrice || 0).toLocaleString()}`,
                                     Status: b.status?.toUpperCase() || 'PENDING',
                                     Date: b.createdAt ? format(new Date(b.createdAt), 'dd MMM yyyy') : 'N/A'
                                   }));
@@ -1290,23 +1321,27 @@ export default function AgentDetailPage({ params }) {
                                     ID: p.slug || p._id,
                                     Title: p.title,
                                     Client: p.client?.name || 'N/A',
-                                    Amount: p.price || 0,
+                                    Amount: `${targetCurrency} ${(p.price || 0).toLocaleString()}`,
                                     Status: p.status?.toUpperCase() || 'PENDING',
                                     Date: p.createdAt ? format(new Date(p.createdAt), 'dd MMM yyyy') : 'N/A'
                                   }));
                                 } else if (agent?.monthlyTargetType === 'both') {
-                                  data = salesData.map(item => ({
-                                    Type: item.type.toUpperCase(),
-                                    ID: item.type === 'booking' ? (item.bookingId || item._id) : (item.slug || item._id),
-                                    Title: item.type === 'booking' ? 
-                                      `${item.formData?.firstName || ''} ${item.formData?.lastName || ''}` : 
-                                      item.title,
-                                    Amount: item.type === 'booking' ? 
-                                      (item.discountedPrice || item.totalPrice || 0) : 
-                                      (item.price || 0),
-                                    Status: item.status?.toUpperCase() || 'PENDING',
-                                    Date: item.date ? format(new Date(item.date), 'dd MMM yyyy') : 'N/A'
-                                  }));
+                                  data = salesData.map(item => {
+                                    const isBooking = item.type === 'booking';
+                                    const amount = isBooking ? (item.discountedPrice || item.totalPrice || 0) : (item.price || 0);
+                                    const currency = isBooking ? '$' : targetCurrency;
+                                    
+                                    return {
+                                      Type: item.type.toUpperCase(),
+                                      ID: isBooking ? (item.bookingId || item._id) : (item.slug || item._id),
+                                      Title: isBooking ? 
+                                        `${item.formData?.firstName || ''} ${item.formData?.lastName || ''}` : 
+                                        item.title,
+                                      Amount: `${currency} ${amount.toLocaleString()}`,
+                                      Status: item.status?.toUpperCase() || 'PENDING',
+                                      Date: item.date ? format(new Date(item.date), 'dd MMM yyyy') : 'N/A'
+                                    };
+                                  });
                                 }
                                 downloadCSV(data, `Sales_${agent.agentName}_${selectedMonth}_${selectedYear}`);
                               }}
@@ -1334,7 +1369,9 @@ export default function AgentDetailPage({ params }) {
                                        {agent?.monthlyTargetType === 'digit' ? 'Customer' : 
                                         agent?.monthlyTargetType === 'amount' ? 'Project Title' : 'Title'}
                                      </TableHead>
-                                     <TableHead className="text-right">Amount ({agent?.targetCurrency || 'PKR'})</TableHead>
+                                     <TableHead className="text-right">
+                                       Amount
+                                     </TableHead>
                                      <TableHead className="text-right">Status</TableHead>
                                  </TableRow>
                              </TableHeader>
@@ -1343,6 +1380,7 @@ export default function AgentDetailPage({ params }) {
                                    let isLoading = false;
                                    let data = [];
                                    let noDataText = '';
+                                   const targetCurrency = agent?.targetCurrency || 'PKR';
                                    
                                    if (agent?.monthlyTargetType === 'digit') {
                                      isLoading = bookingsLoading;
@@ -1381,48 +1419,50 @@ export default function AgentDetailPage({ params }) {
                                      );
                                    }
                                    
-                                   return data.map((item) => (
+                                   return data.map((item) => {
+                                      let currency = targetCurrency;
+                                      let amount = 0;
+                                      let dateValue;
+                                      let titleOrCustomer = '';
+                                      let idDisplay = '';
+                                      
+                                      if (agent?.monthlyTargetType === 'digit') {
+                                         // Booking
+                                         currency = '$';
+                                         amount = item.discountedPrice || item.totalPrice || 0;
+                                         dateValue = item.createdAt || item.date;
+                                         titleOrCustomer = `${item.formData?.firstName} ${item.formData?.lastName}`;
+                                         idDisplay = item.bookingId || item._id?.slice(-6);
+                                      } else if (agent?.monthlyTargetType === 'amount') {
+                                         // Project
+                                         currency = targetCurrency;
+                                         amount = item.price || 0;
+                                         dateValue = item.createdAt || item.date;
+                                         titleOrCustomer = item.title;
+                                         idDisplay = item.slug || item._id?.slice(-6);
+                                      } else {
+                                         // Both
+                                         const isBooking = item.type === 'booking';
+                                         currency = isBooking ? '$' : targetCurrency;
+                                         amount = isBooking ? (item.discountedPrice || item.totalPrice || 0) : (item.price || 0);
+                                         dateValue = item.date || item.createdAt;
+                                         titleOrCustomer = isBooking ? `${item.formData?.firstName || ''} ${item.formData?.lastName || ''}` : item.title;
+                                         idDisplay = isBooking ? (item.bookingId || item._id?.slice(-6)) : (item.slug || item._id?.slice(-6));
+                                      }
+
+                                      return (
                                        <TableRow key={item._id} className="hover:bg-slate-50/50">
                                            <TableCell className="font-mono text-xs font-medium text-slate-600 bg-slate-50/50 w-min whitespace-nowrap">
-                                             {agent?.monthlyTargetType === 'digit' ? 
-                                               (item.bookingId || item._id?.slice(-6)) :
-                                               agent?.monthlyTargetType === 'amount' ? 
-                                               (item.slug || item._id?.slice(-6)) :
-                                               (item.type === 'booking' ? (item.bookingId || item._id?.slice(-6)) : (item.slug || item._id?.slice(-6)))
-                                             }
+                                             {idDisplay}
                                            </TableCell>
                                            <TableCell className="text-slate-600">
-                                             {(() => {
-                                               let dateValue;
-                                               if (agent?.monthlyTargetType === 'digit') {
-                                                 dateValue = item.createdAt || item.date;
-                                               } else if (agent?.monthlyTargetType === 'amount') {
-                                                 dateValue = item.createdAt || item.date;
-                                               } else {
-                                                 dateValue = item.date || item.createdAt;
-                                               }
-                                               return dateValue ? format(new Date(dateValue), 'dd MMM yyyy') : 'N/A';
-                                             })()}
+                                             {dateValue ? format(new Date(dateValue), 'dd MMM yyyy') : 'N/A'}
                                            </TableCell>
                                            <TableCell className="font-medium text-slate-800">
-                                             {agent?.monthlyTargetType === 'digit' ? 
-                                               `${item.formData?.firstName} ${item.formData?.lastName}` :
-                                               agent?.monthlyTargetType === 'amount' ? 
-                                               item.title :
-                                               (item.type === 'booking' ? 
-                                                 `${item.formData?.firstName || ''} ${item.formData?.lastName || ''}` : 
-                                                 item.title)
-                                             }
+                                             {titleOrCustomer}
                                            </TableCell>
                                            <TableCell className="text-right font-medium text-slate-700">
-                                             {agent?.monthlyTargetType === 'digit' ? 
-                                               ((item.discountedPrice || item.totalPrice) || 0).toLocaleString() :
-                                               agent?.monthlyTargetType === 'amount' ? 
-                                               (item.price || 0).toLocaleString() :
-                                               (item.type === 'booking' ? 
-                                                 ((item.discountedPrice || item.totalPrice) || 0).toLocaleString() : 
-                                                 (item.price || 0).toLocaleString())
-                                             }
+                                             {currency} {amount.toLocaleString()}
                                            </TableCell>
                                            <TableCell className="text-right">
                                                <Badge variant="secondary" className={
@@ -1436,7 +1476,7 @@ export default function AgentDetailPage({ params }) {
                                                </Badge>
                                            </TableCell>
                                        </TableRow>
-                                   ));
+                                   )});
                                  })()}
                              </TableBody>
                          </Table>
