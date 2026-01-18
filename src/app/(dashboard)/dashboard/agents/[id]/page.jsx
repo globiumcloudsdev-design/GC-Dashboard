@@ -63,8 +63,13 @@ export default function AgentDetailPage({ params }) {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
+  // State for different sales data types
+  const [projects, setProjects] = useState([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
   const [bookings, setBookings] = useState([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
+  const [salesData, setSalesData] = useState([]);
+  const [salesLoading, setSalesLoading] = useState(false);
   
   const [payrolls, setPayrolls] = useState([]);
   const [payrollsLoading, setPayrollsLoading] = useState(false);
@@ -72,6 +77,7 @@ export default function AgentDetailPage({ params }) {
   // Stats State
   const [stats, setStats] = useState({
     totalSales: 0,
+    achievedDigits: 0,
     attendanceRate: 0,
     performance: 0
   });
@@ -88,14 +94,28 @@ export default function AgentDetailPage({ params }) {
     fetchAgentDetails();
     // Fetch initial data for stats (Current Month)
     fetchAttendance(true); 
-    fetchBookings(true);
-  }, [id]);
+    if (agent?.monthlyTargetType === 'digit') {
+      fetchBookings(true);
+    } else if (agent?.monthlyTargetType === 'amount') {
+      fetchProjects(true);
+    } else if (agent?.monthlyTargetType === 'both') {
+      fetchSalesData(true);
+    }
+  }, [id, agent?.monthlyTargetType]);
 
   useEffect(() => {
     if (activeTab === 'attendance') fetchAttendance();
-    if (activeTab === 'sales') fetchBookings();
+    if (activeTab === 'sales') {
+      if (agent?.monthlyTargetType === 'digit') {
+        fetchBookings();
+      } else if (agent?.monthlyTargetType === 'amount') {
+        fetchProjects();
+      } else if (agent?.monthlyTargetType === 'both') {
+        fetchSalesData();
+      }
+    }
     if (activeTab === 'payroll') fetchPayrolls();
-  }, [activeTab, selectedMonth, selectedYear]);
+  }, [activeTab, selectedMonth, selectedYear, agent?.monthlyTargetType]);
 
   async function fetchAgentDetails() {
     setLoading(true);
@@ -164,7 +184,7 @@ export default function AgentDetailPage({ params }) {
        const targetYear = isInitial ? new Date().getFullYear() : selectedYear;
 
        const start = new Date(targetYear, targetMonth - 1, 1).toISOString();
-       const end = new Date(targetYear, targetMonth, 0).toISOString();
+       const end = new Date(targetYear, targetMonth, 0, 23, 59, 59).toISOString();
        
        console.log(`Fetching bookings for agent: ${id}, start: ${start}, end: ${end}`);
        
@@ -178,10 +198,13 @@ export default function AgentDetailPage({ params }) {
          const bookingData = json.data?.bookings || json.data || [];
          if (!isInitial) setBookings(bookingData);
 
-         // Calculate Total Sales
-         const total = bookingData
-            .filter(b => b.status === 'completed' || b.status === 'confirmed')
-            .reduce((sum, b) => sum + (b.discountedPrice || b.totalPrice || 0), 0);
+         // Calculate Total Sales for digit target
+         const completedBookings = bookingData.filter(b => 
+           b.status === 'completed' || b.status === 'confirmed' || b.status === 'Completed'
+         );
+         const total = completedBookings.reduce((sum, b) => 
+           sum + (b.discountedPrice || b.totalPrice || b.amount || 0), 0
+         );
          
          if (isInitial || (targetMonth === new Date().getMonth() + 1 && targetYear === new Date().getFullYear())) {
             setStats(prev => ({ ...prev, totalSales: total }));
@@ -194,6 +217,169 @@ export default function AgentDetailPage({ params }) {
        if (!isInitial) toast.error('Failed to load bookings');
     } finally {
        if (!isInitial) setBookingsLoading(false);
+    }
+    }
+
+  async function fetchProjects(isInitial = false) {
+    if (!isInitial) setProjectsLoading(true);
+    try {
+       const targetMonth = isInitial ? new Date().getMonth() + 1 : selectedMonth;
+       const targetYear = isInitial ? new Date().getFullYear() : selectedYear;
+
+       const start = new Date(targetYear, targetMonth - 1, 1).toISOString();
+       const end = new Date(targetYear, targetMonth, 0).toISOString();
+       
+       console.log(`Fetching projects for agent: ${id}, start: ${start}, end: ${end}`);
+       
+       // Fetch projects assigned to this agent
+       const res = await fetch(`/api/projects?assignedAgent=${id}&startDate=${start}&endDate=${end}&limit=1000`);
+       const json = await res.json();
+       
+       console.log("Projects response:", json);
+       
+       if (json.success) {
+         const projectData = json.data || [];
+         if (!isInitial) setProjects(projectData);
+
+         // Calculate Total Revenue from Projects
+         const total = projectData
+            .filter(p => p.status === 'Completed' || p.status === 'Delivered')
+            .reduce((sum, p) => sum + (p.price || 0), 0);
+         
+         if (isInitial || (targetMonth === new Date().getMonth() + 1 && targetYear === new Date().getFullYear())) {
+            setStats(prev => ({ ...prev, totalSales: total }));
+         }
+       } else {
+         toast.error(json.message || 'Failed to load projects');
+       }
+    } catch (error) {
+       console.error("Projects fetch error:", error);
+       if (!isInitial) toast.error('Failed to load projects');
+    } finally {
+       if (!isInitial) setProjectsLoading(false);
+    }
+  }
+
+  async function fetchSalesData(isInitial = false) {
+    if (!isInitial) setSalesLoading(true);
+    try {
+       const targetMonth = isInitial ? new Date().getMonth() + 1 : selectedMonth;
+       const targetYear = isInitial ? new Date().getFullYear() : selectedYear;
+
+       const start = new Date(targetYear, targetMonth - 1, 1);
+       const end = new Date(targetYear, targetMonth, 0, 23, 59, 59);
+       
+       console.log(`Fetching combined sales data for agent: ${id}, month: ${targetMonth}, year: ${targetYear}`);
+       
+       // Fetch bookings with date filter
+       const bookingsRes = await fetch(`/api/promo-codes/agent/${id}/bookings?startDate=${start.toISOString()}&endDate=${end.toISOString()}&limit=1000`);
+       
+       // Fetch ALL projects for agent (we'll filter by date on frontend)
+       const projectsRes = await fetch(`/api/projects?assignedAgent=${id}&limit=1000`);
+       
+       const bookingsJson = await bookingsRes.json();
+       const projectsJson = await projectsRes.json();
+       
+       console.log("Combined sales response:", { bookingsJson, projectsJson });
+       
+       if (bookingsJson.success && projectsJson.success) {
+         const bookingData = bookingsJson.data?.bookings || bookingsJson.data || [];
+         let projectDataAll = projectsJson.data || [];
+         
+         // Filter projects by selected month using updatedAt or completedAt
+         const projectData = projectDataAll.filter(p => {
+           const relevantDate = p.completedAt ? new Date(p.completedAt) : new Date(p.updatedAt);
+           return relevantDate >= start && relevantDate <= end;
+         });
+         
+         console.log(`Projects filtered for ${targetMonth}/${targetYear}: ${projectData.length} out of ${projectDataAll.length}`);
+         
+         // Combine and sort by date
+         const combinedData = [
+           ...bookingData.map(b => ({ 
+             ...b, 
+             type: 'booking', 
+             date: b.createdAt,
+             amount: b.discountedPrice || b.totalPrice || b.amount || 0
+           })),
+           ...projectData.map(p => ({ 
+             ...p, 
+             type: 'project', 
+             date: p.completedAt || p.updatedAt || p.createdAt,
+             amount: p.price || 0
+           }))
+         ].sort((a, b) => new Date(b.date) - new Date(a.date));
+         
+         if (!isInitial) setSalesData(combinedData);
+
+         // Calculate Total Sales and Digits based on agent's target type
+         const agentTargetType = agent?.monthlyTargetType || 'none';
+         
+         let totalSales = 0;
+         let achievedDigits = 0;
+         
+         if (agentTargetType === 'digit') {
+           // For digit target: count completed bookings, sum their amounts for display
+           const completedBookings = bookingData.filter(b => 
+             b.status === 'completed' || b.status === 'confirmed' || b.status === 'Completed'
+           );
+           achievedDigits = completedBookings.length;
+           totalSales = completedBookings.reduce((sum, b) => 
+             sum + (b.discountedPrice || b.totalPrice || b.amount || 0), 0
+           );
+         } else if (agentTargetType === 'amount') {
+           // For amount target: sum from completed projects only
+           const completedProjects = projectData.filter(p => 
+             p.status === 'Completed' || p.status === 'Delivered'
+           );
+           totalSales = completedProjects.reduce((sum, p) => 
+             sum + (p.price || 0), 0
+           );
+         } else if (agentTargetType === 'both') {
+           // For both target: digits from bookings, revenue from projects only
+           const completedBookings = bookingData.filter(b => 
+             b.status === 'completed' || b.status === 'confirmed' || b.status === 'Completed'
+           );
+           achievedDigits = completedBookings.length;
+           
+           const completedProjects = projectData.filter(p => 
+             p.status === 'Completed' || p.status === 'Delivered'
+           );
+           totalSales = completedProjects.reduce((sum, p) => 
+             sum + (p.price || 0), 0
+           );
+         } else {
+           // Default: sum both bookings and projects
+           const completedBookings = bookingData.filter(b => 
+             b.status === 'completed' || b.status === 'confirmed' || b.status === 'Completed'
+           );
+           const totalBookings = completedBookings.reduce((sum, b) => 
+             sum + (b.discountedPrice || b.totalPrice || b.amount || 0), 0
+           );
+           
+           const completedProjects = projectData.filter(p => 
+             p.status === 'Completed' || p.status === 'Delivered'
+           );
+           const totalProjects = completedProjects.reduce((sum, p) => 
+             sum + (p.price || 0), 0
+           );
+           
+           totalSales = totalBookings + totalProjects;
+         }
+         
+         console.log(`📊 Stats calculated - Digits: ${achievedDigits}, Revenue: ${totalSales}`);
+         
+         if (isInitial || (targetMonth === new Date().getMonth() + 1 && targetYear === new Date().getFullYear())) {
+            setStats(prev => ({ ...prev, totalSales, achievedDigits }));
+         }
+       } else {
+         toast.error('Failed to load sales data');
+       }
+    } catch (error) {
+       console.error("Sales data fetch error:", error);
+       if (!isInitial) toast.error('Failed to load sales data');
+    } finally {
+       if (!isInitial) setSalesLoading(false);
     }
   }
 
@@ -293,7 +479,18 @@ export default function AgentDetailPage({ params }) {
 
   // Helper function to format currency
   const formatCurrency = (amount) => {
-    return `PKR ${amount?.toLocaleString('en-PK') || '0'}`;
+    let currencySymbol = agent?.targetCurrency || 'PKR';
+    
+    if (agent?.monthlyTargetType === 'digit') {
+      currencySymbol = 'USD'; // Will be formatted as $ by custom logic or Intl
+    }
+    
+    // Simple formatting if we just want symbol
+    if (currencySymbol === 'USD') return `$${amount?.toLocaleString() || '0'}`;
+    if (currencySymbol === 'EUR') return `€${amount?.toLocaleString() || '0'}`;
+    if (currencySymbol === 'GBP') return `£${amount?.toLocaleString() || '0'}`;
+    
+    return `${currencySymbol} ${amount?.toLocaleString('en-PK') || '0'}`;
   };
 
   // Helper function to get status badge color
@@ -442,6 +639,68 @@ export default function AgentDetailPage({ params }) {
                     <p className="text-xs opacity-80 mt-1">Salary Processing Date</p>
                 </CardHeader>
              </Card>
+        </div>
+
+        {/* Performance Progress Bar */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-slate-900">Monthly Performance</h3>
+            <Badge variant="outline" className="font-mono">
+              {new Date().toLocaleString('default', { month: 'long' })} {new Date().getFullYear()}
+            </Badge>
+          </div>
+          
+          {(() => {
+            let progress = 0;
+            let progressText = '';
+            let targetText = '';
+            
+            if (agent?.monthlyTargetType === 'digit') {
+              const completedBookings = stats.achievedDigits || 0;
+              const target = agent.monthlyDigitTarget || 0;
+              progress = target > 0 ? Math.min((completedBookings / target) * 100, 100) : 0;
+              progressText = `${completedBookings} / ${target} Sales`;
+              targetText = `Target: ${target} Sales`;
+            } else if (agent?.monthlyTargetType === 'amount') {
+              const target = agent.monthlyAmountTarget || 0;
+              progress = target > 0 ? Math.min((stats.totalSales / target) * 100, 100) : 0;
+              progressText = `${agent.targetCurrency || 'PKR'} ${stats.totalSales.toLocaleString()} / ${(agent.targetCurrency || 'PKR')} ${target.toLocaleString()}`;
+              targetText = `Target: ${agent.targetCurrency || 'PKR'} ${target.toLocaleString()}`;
+            } else if (agent?.monthlyTargetType === 'both') {
+              const completedBookings = stats.achievedDigits || 0;
+              const digitTarget = agent.monthlyDigitTarget || 0;
+              const amountTarget = agent.monthlyAmountTarget || 0;
+              const digitProgress = digitTarget > 0 ? (completedBookings / digitTarget) : 0;
+              const amountProgress = amountTarget > 0 ? (stats.totalSales / amountTarget) : 0;
+              progress = Math.min(((digitProgress + amountProgress) / 2) * 100, 100);
+              progressText = `${completedBookings} Sales & ${agent.targetCurrency || 'PKR'} ${stats.totalSales.toLocaleString()}`;
+              targetText = `Target: ${digitTarget} Sales & ${agent.targetCurrency || 'PKR'} ${amountTarget.toLocaleString()}`;
+            }
+            
+            return (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-slate-600">{targetText}</span>
+                  <span className="font-medium text-slate-900">{progressText}</span>
+                </div>
+                <div className="w-full bg-slate-200 rounded-full h-3">
+                  <div 
+                    className={`h-3 rounded-full transition-all duration-500 ${
+                      progress >= 100 ? 'bg-green-500' : 
+                      progress >= 75 ? 'bg-blue-500' : 
+                      progress >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                    }`}
+                    style={{ width: `${progress}%` }}
+                  ></div>
+                </div>
+                <div className="flex justify-between items-center text-xs text-slate-500">
+                  <span>0%</span>
+                  <span className="font-medium">{progress.toFixed(1)}% Complete</span>
+                  <span>100%</span>
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         {/* TABS */}
@@ -936,8 +1195,16 @@ export default function AgentDetailPage({ params }) {
                 <Card className="shadow-sm">
                     <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b bg-slate-50/50 pb-4">
                         <div className="space-y-1">
-                            <CardTitle className="text-xl text-slate-800">Sales & Bookings</CardTitle>
-                            <CardDescription>Track monthly sales performance and booking status.</CardDescription>
+                            <CardTitle className="text-xl text-slate-800">
+                              {agent?.monthlyTargetType === 'digit' ? 'Sales Bookings' : 
+                               agent?.monthlyTargetType === 'amount' ? 'Revenue Projects' : 
+                               'Sales & Revenue'}
+                            </CardTitle>
+                            <CardDescription>
+                              {agent?.monthlyTargetType === 'digit' ? 'Track monthly booking performance and customer details.' :
+                               agent?.monthlyTargetType === 'amount' ? 'Track monthly project revenue and completion status.' :
+                               'Track monthly sales performance across bookings and projects.'}
+                            </CardDescription>
                         </div>
                         <div className="flex flex-wrap items-center gap-2 print:hidden">
                             <div className="bg-white rounded-md border flex items-center p-1 shadow-sm">
@@ -968,18 +1235,47 @@ export default function AgentDetailPage({ params }) {
                               variant="outline" 
                               size="sm" 
                               className="h-10 bg-white" 
-                              onClick={() => downloadCSV(
-                                bookings.map(b => ({
+                              onClick={() => {
+                                let data = [];
+                                if (agent?.monthlyTargetType === 'digit') {
+                                  data = bookings.map(b => ({
                                     ID: b.bookingId || b._id,
                                     Customer: (b.formData?.firstName || '') + ' ' + (b.formData?.lastName || ''),
                                     Service: b.bookingType || b.serviceType || 'N/A',
                                     Amount: b.discountedPrice || b.totalPrice || 0,
                                     Status: b.status?.toUpperCase() || 'PENDING',
                                     Date: b.createdAt ? format(new Date(b.createdAt), 'dd MMM yyyy') : 'N/A'
-                                })),
-                                `Sales_${agent.agentName}_${selectedMonth}_${selectedYear}`
-                              )}
-                              disabled={bookings.length === 0}
+                                  }));
+                                } else if (agent?.monthlyTargetType === 'amount') {
+                                  data = projects.map(p => ({
+                                    ID: p.slug || p._id,
+                                    Title: p.title,
+                                    Client: p.client?.name || 'N/A',
+                                    Amount: p.price || 0,
+                                    Status: p.status?.toUpperCase() || 'PENDING',
+                                    Date: p.createdAt ? format(new Date(p.createdAt), 'dd MMM yyyy') : 'N/A'
+                                  }));
+                                } else if (agent?.monthlyTargetType === 'both') {
+                                  data = salesData.map(item => ({
+                                    Type: item.type.toUpperCase(),
+                                    ID: item.type === 'booking' ? (item.bookingId || item._id) : (item.slug || item._id),
+                                    Title: item.type === 'booking' ? 
+                                      `${item.formData?.firstName || ''} ${item.formData?.lastName || ''}` : 
+                                      item.title,
+                                    Amount: item.type === 'booking' ? 
+                                      (item.discountedPrice || item.totalPrice || 0) : 
+                                      (item.price || 0),
+                                    Status: item.status?.toUpperCase() || 'PENDING',
+                                    Date: item.date ? format(new Date(item.date), 'dd MMM yyyy') : 'N/A'
+                                  }));
+                                }
+                                downloadCSV(data, `Sales_${agent.agentName}_${selectedMonth}_${selectedYear}`);
+                              }}
+                              disabled={
+                                (agent?.monthlyTargetType === 'digit' && bookings.length === 0) ||
+                                (agent?.monthlyTargetType === 'amount' && projects.length === 0) ||
+                                (agent?.monthlyTargetType === 'both' && salesData.length === 0)
+                              }
                             >
                                 <Download className="h-4 w-4 mr-2"/> Export CSV
                             </Button>
@@ -990,58 +1286,119 @@ export default function AgentDetailPage({ params }) {
                          <Table>
                              <TableHeader className="bg-slate-50">
                                  <TableRow>
-                                     <TableHead className="w-[120px]">Booking ID</TableHead>
+                                     <TableHead className="w-[120px]">
+                                       {agent?.monthlyTargetType === 'digit' ? 'Booking ID' : 
+                                        agent?.monthlyTargetType === 'amount' ? 'Project ID' : 'ID'}
+                                     </TableHead>
                                      <TableHead>Date</TableHead>
-                                     <TableHead>Customer</TableHead>
-                                     <TableHead className="text-right">Amount (PKR)</TableHead>
+                                     <TableHead>
+                                       {agent?.monthlyTargetType === 'digit' ? 'Customer' : 
+                                        agent?.monthlyTargetType === 'amount' ? 'Project Title' : 'Title'}
+                                     </TableHead>
+                                     <TableHead className="text-right">Amount ({agent?.targetCurrency || 'PKR'})</TableHead>
                                      <TableHead className="text-right">Status</TableHead>
                                  </TableRow>
                              </TableHeader>
                              <TableBody>
-                                 {bookingsLoading ? (
-                                    <TableRow>
-                                      <TableCell colSpan={5} className="text-center h-40 text-slate-500">
-                                        <div className="flex flex-col items-center justify-center gap-2">
-                                             <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
-                                             Loading bookings...
-                                         </div>
-                                      </TableCell>
-                                    </TableRow>
-                                 ) : bookings.length === 0 ? (
-                                    <TableRow>
-                                      <TableCell colSpan={5} className="text-center h-40 text-slate-500">
-                                        No bookings found for this month.
-                                      </TableCell>
-                                    </TableRow>
-                                 ) : (
-                                    bookings.map((booking) => (
-                                        <TableRow key={booking._id} className="hover:bg-slate-50/50">
-                                            <TableCell className="font-mono text-xs font-medium text-slate-600 bg-slate-50/50 w-min whitespace-nowrap">
-                                              {booking.bookingId || booking._id?.slice(-6)}
-                                            </TableCell>
-                                            <TableCell className="text-slate-600">
-                                              {booking.createdAt ? format(new Date(booking.createdAt), 'dd MMM yyyy') : 'N/A'}
-                                            </TableCell>
-                                            <TableCell className="font-medium text-slate-800">
-                                              {booking.formData?.firstName} {booking.formData?.lastName}
-                                            </TableCell>
-                                            <TableCell className="text-right font-medium text-slate-700">
-                                              {((booking.discountedPrice || booking.totalPrice) || 0).toLocaleString()}
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <Badge variant="secondary" className={
-                                                    booking.status === 'completed' || booking.status === 'confirmed' ? 
-                                                    'bg-green-100 text-green-700 border-green-200' :
-                                                    booking.status === 'cancelled' ? 
-                                                    'bg-red-50 text-red-700 border-red-200' :
-                                                    'bg-blue-50 text-blue-700 border-blue-200'
-                                                }>
-                                                    {booking.status?.toUpperCase() || 'PENDING'}
-                                                </Badge>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                 )}
+                                 {(() => {
+                                   let isLoading = false;
+                                   let data = [];
+                                   let noDataText = '';
+                                   
+                                   if (agent?.monthlyTargetType === 'digit') {
+                                     isLoading = bookingsLoading;
+                                     data = bookings;
+                                     noDataText = 'No bookings found for this month.';
+                                   } else if (agent?.monthlyTargetType === 'amount') {
+                                     isLoading = projectsLoading;
+                                     data = projects;
+                                     noDataText = 'No projects found for this month.';
+                                   } else if (agent?.monthlyTargetType === 'both') {
+                                     isLoading = salesLoading;
+                                     data = salesData;
+                                     noDataText = 'No sales data found for this month.';
+                                   }
+                                   
+                                   if (isLoading) {
+                                     return (
+                                       <TableRow>
+                                         <TableCell colSpan={5} className="text-center h-40 text-slate-500">
+                                           <div className="flex flex-col items-center justify-center gap-2">
+                                               <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+                                               Loading sales data...
+                                           </div>
+                                         </TableCell>
+                                       </TableRow>
+                                     );
+                                   }
+                                   
+                                   if (data.length === 0) {
+                                     return (
+                                       <TableRow>
+                                         <TableCell colSpan={5} className="text-center h-40 text-slate-500">
+                                           {noDataText}
+                                         </TableCell>
+                                       </TableRow>
+                                     );
+                                   }
+                                   
+                                   return data.map((item) => (
+                                       <TableRow key={item._id} className="hover:bg-slate-50/50">
+                                           <TableCell className="font-mono text-xs font-medium text-slate-600 bg-slate-50/50 w-min whitespace-nowrap">
+                                             {agent?.monthlyTargetType === 'digit' ? 
+                                               (item.bookingId || item._id?.slice(-6)) :
+                                               agent?.monthlyTargetType === 'amount' ? 
+                                               (item.slug || item._id?.slice(-6)) :
+                                               (item.type === 'booking' ? (item.bookingId || item._id?.slice(-6)) : (item.slug || item._id?.slice(-6)))
+                                             }
+                                           </TableCell>
+                                           <TableCell className="text-slate-600">
+                                             {(() => {
+                                               let dateValue;
+                                               if (agent?.monthlyTargetType === 'digit') {
+                                                 dateValue = item.createdAt || item.date;
+                                               } else if (agent?.monthlyTargetType === 'amount') {
+                                                 dateValue = item.createdAt || item.date;
+                                               } else {
+                                                 dateValue = item.date || item.createdAt;
+                                               }
+                                               return dateValue ? format(new Date(dateValue), 'dd MMM yyyy') : 'N/A';
+                                             })()}
+                                           </TableCell>
+                                           <TableCell className="font-medium text-slate-800">
+                                             {agent?.monthlyTargetType === 'digit' ? 
+                                               `${item.formData?.firstName} ${item.formData?.lastName}` :
+                                               agent?.monthlyTargetType === 'amount' ? 
+                                               item.title :
+                                               (item.type === 'booking' ? 
+                                                 `${item.formData?.firstName || ''} ${item.formData?.lastName || ''}` : 
+                                                 item.title)
+                                             }
+                                           </TableCell>
+                                           <TableCell className="text-right font-medium text-slate-700">
+                                             {agent?.monthlyTargetType === 'digit' ? 
+                                               ((item.discountedPrice || item.totalPrice) || 0).toLocaleString() :
+                                               agent?.monthlyTargetType === 'amount' ? 
+                                               (item.price || 0).toLocaleString() :
+                                               (item.type === 'booking' ? 
+                                                 ((item.discountedPrice || item.totalPrice) || 0).toLocaleString() : 
+                                                 (item.price || 0).toLocaleString())
+                                             }
+                                           </TableCell>
+                                           <TableCell className="text-right">
+                                               <Badge variant="secondary" className={
+                                                   item.status === 'completed' || item.status === 'confirmed' || item.status === 'Completed' || item.status === 'Delivered' ? 
+                                                   'bg-green-100 text-green-700 border-green-200' :
+                                                   item.status === 'cancelled' || item.status === 'Cancelled' ? 
+                                                   'bg-red-50 text-red-700 border-red-200' :
+                                                   'bg-blue-50 text-blue-700 border-blue-200'
+                                               }>
+                                                   {item.status?.toUpperCase() || 'PENDING'}
+                                               </Badge>
+                                           </TableCell>
+                                       </TableRow>
+                                   ));
+                                 })()}
                              </TableBody>
                          </Table>
                          </div>

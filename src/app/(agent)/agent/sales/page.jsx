@@ -247,7 +247,7 @@ const SalesScreen = () => {
 
         console.log(`📦 Total bookings fetched: ${allBookings.length}`);
 
-        // Filter SELECTED month's bookings (not current month)
+        // Filter SELECTED month's bookings
         const selectedMonthBookings = allBookings.filter(booking => {
           if (!booking.createdAt) return false;
           const bookingDate = new Date(booking.createdAt);
@@ -258,11 +258,41 @@ const SalesScreen = () => {
 
         // Filter selected month's completed bookings
         const selectedMonthCompletedBookings = selectedMonthBookings.filter(booking => {
-          const status = booking.status?.toLowerCase() || '';
-          return status === 'completed' || status === 'approved' || status === 'success';
+          const status = (booking.status || '').toString().toLowerCase();
+          return status === 'completed' || status === 'approved' || status === 'success' || status === 'confirmed';
         });
 
         console.log(`✅ Selected month completed bookings: ${selectedMonthCompletedBookings.length}`);
+
+        // Also fetch projects for the selected month to include in amount targets
+        let projectData = [];
+        try {
+          // Fetch ALL projects for this agent (not filtered by date)
+          // We'll filter by completion status instead
+          console.log(`🔍 Fetching ALL projects for agent: ${agentId}`);
+          const projectsRes = await fetch(`/api/projects?assignedAgent=${agentId}&limit=1000`);
+          const projectsJson = await projectsRes.json();
+          console.log(`📦 Projects API response:`, projectsJson);
+          if (projectsJson && projectsJson.success) {
+            projectData = projectsJson.data || [];
+          } else if (projectsJson && Array.isArray(projectsJson)) {
+            projectData = projectsJson;
+          }
+          
+          // Now filter by selected month based on updatedAt or completedAt
+          projectData = projectData.filter(p => {
+            // Use completedAt if available, otherwise updatedAt
+            const relevantDate = p.completedAt ? new Date(p.completedAt) : new Date(p.updatedAt);
+            const isInSelectedMonth = relevantDate >= selectedMonthDates.start && relevantDate <= selectedMonthDates.end;
+            return isInSelectedMonth;
+          });
+          
+          console.log(`📦 Projects in selected month (${selectedMonth}): ${projectData.length} projects`);
+        } catch (projErr) {
+          console.error('❌ Failed to fetch projects for agent target calculations', projErr);
+        }
+
+        console.log(`📦 Projects fetched for month: ${projectData.length}`);
 
         // Calculate achieved values based on agent's target type
         let achievedDigits = 0;
@@ -285,17 +315,42 @@ const SalesScreen = () => {
           achievedDigits = selectedMonthCompletedBookings.length;
         }
 
-        if (agentTargetType === 'amount' || agentTargetType === 'both') {
-          // Calculate total amount from completed bookings
-          achievedAmount = selectedMonthCompletedBookings.reduce((sum, booking) => {
-            const amount = parseFloat(booking.amount) || 
-                          parseFloat(booking.totalAmount) || 
-                          parseFloat(booking.total) || 
-                          0;
-            return sum + amount;
+        if (agentTargetType === 'amount') {
+          // For 'amount' target: sum amounts from completed projects only
+          const completedProjects = Array.isArray(projectData)
+            ? projectData.filter(p => {
+                const status = (p.status || '').toString().toLowerCase();
+                return status === 'completed' || status === 'delivered';
+              })
+            : [];
+
+          achievedAmount = completedProjects.reduce((sum, p) => {
+            const amt = parseFloat(p.price) || parseFloat(p.amount) || 0;
+            return sum + (isNaN(amt) ? 0 : amt);
           }, 0);
 
-          console.log("💰 Achieved amount:", achievedAmount);
+          console.log("💰 Achieved amount (projects only):", achievedAmount);
+        } else if (agentTargetType === 'both') {
+          // For 'both' target: digits from bookings, revenue from projects ONLY
+          const completedProjects = Array.isArray(projectData)
+            ? projectData.filter(p => {
+                const status = (p.status || '').toString().toLowerCase();
+                return status === 'completed' || status === 'delivered';
+              })
+            : [];
+
+          achievedAmount = completedProjects.reduce((sum, p) => {
+            const amt = parseFloat(p.price) || parseFloat(p.amount) || 0;
+            return sum + (isNaN(amt) ? 0 : amt);
+          }, 0);
+
+          console.log("💰 Both target - Digits from bookings, Revenue from projects:", { 
+            achievedDigits, 
+            achievedAmount, 
+            totalProjects: projectData.length,
+            completedProjects: completedProjects.length,
+            completedProjectDetails: completedProjects.map(p => ({ title: p.title, price: p.price, status: p.status }))
+          });
         }
 
         console.log("📊 Achieved values for selected month:", {
@@ -362,22 +417,100 @@ const SalesScreen = () => {
           setPerformanceMetrics(null);
         }
 
-        // Process recent bookings response
+        // Process recent bookings response and also include recent projects
         if (recentBookingsResponse.status === 'fulfilled') {
           const recentData = recentBookingsResponse.value?.data?.bookings ||
             recentBookingsResponse.value?.bookings ||
             [];
-          setRecentBookings(recentData);
-          console.log("📦 Recent bookings set:", recentData.length);
+
+          // Fetch recent projects for the same date range and merge
+          let recentProjects = [];
+          try {
+            // Fetch ALL projects for agent, then filter by date on frontend
+            console.log(`🔍 Fetching ALL projects for recent sales, agent: ${agentId}`);
+            const projectsRes = await fetch(`/api/projects?assignedAgent=${agentId}&limit=1000`);
+            const projectsJson = await projectsRes.json();
+            console.log(`📦 Recent projects API response:`, projectsJson);
+            
+            if (projectsJson && projectsJson.success) {
+              recentProjects = projectsJson.data || [];
+            } else if (Array.isArray(projectsJson)) {
+              recentProjects = projectsJson;
+            }
+            
+            // Filter by date range using updatedAt or completedAt
+            const startDate = new Date(dateParams.startDate);
+            const endDate = new Date(dateParams.endDate);
+            recentProjects = recentProjects.filter(p => {
+              const relevantDate = p.completedAt ? new Date(p.completedAt) : new Date(p.updatedAt);
+              return relevantDate >= startDate && relevantDate <= endDate;
+            });
+            
+            console.log(`📦 Recent projects filtered: ${recentProjects.length} projects`);
+          } catch (projErr) {
+            console.error('❌ Failed to fetch recent projects', projErr);
+          }
+
+          // Normalize projects to booking-like objects for RecentBookings component
+          const mappedProjects = (recentProjects || []).map(p => ({
+            ...p,
+            _id: p._id || p.id,
+            createdAt: p.createdAt || p.updatedAt || p.completedAt || new Date().toISOString(),
+            formData: { firstName: p.title || 'Project' },
+            amount: p.price || p.amount || 0,
+            type: 'project'
+          }));
+
+          const combinedRecent = [...recentData.map(r => ({ ...r, type: r.type || 'booking' })), ...mappedProjects]
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            .slice(0, 10);
+
+          setRecentBookings(combinedRecent);
+          console.log("📦 Recent bookings (including projects) set:", combinedRecent.length);
         } else {
           console.warn("❌ Recent bookings API failed");
           setRecentBookings([]);
         }
 
-        // Process stats response
+        // Process stats response and merge project stats
         if (statsResponse.status === 'fulfilled' && statsResponse.value?.data) {
-          setBookingStats(statsResponse.value.data);
-          console.log("📋 Booking stats set");
+          const statsData = statsResponse.value.data;
+          const overview = statsData.overview || {};
+
+          // Combine project counts/amounts into overview
+          const projectsCount = Array.isArray(projectData) ? projectData.length : 0;
+          const completedProjectsList = Array.isArray(projectData)
+            ? projectData.filter(p => {
+                const s = (p.status || '').toString().toLowerCase();
+                return s === 'completed' || s === 'delivered';
+              })
+            : [];
+          const cancelledProjectsCount = Array.isArray(projectData)
+            ? projectData.filter(p => (p.status || '').toString().toLowerCase() === 'cancelled').length
+            : 0;
+          const pendingProjectsCount = Array.isArray(projectData)
+            ? projectData.filter(p => {
+                const s = (p.status || '').toString().toLowerCase();
+                return s === 'pending' || s === 'in progress' || s === 'on hold';
+              }).length
+            : 0;
+
+          const projectsAmount = completedProjectsList.reduce((sum, p) => {
+            const amt = parseFloat(p.price) || parseFloat(p.amount) || 0;
+            return sum + (isNaN(amt) ? 0 : amt);
+          }, 0);
+
+          const mergedOverview = {
+            ...overview,
+            totalBookings: (overview.totalBookings || 0) + projectsCount,
+            completedBookings: (overview.completedBookings || 0) + completedProjectsList.length,
+            pendingBookings: (overview.pendingBookings || 0) + pendingProjectsCount,
+            cancelledBookings: (overview.cancelledBookings || 0) + cancelledProjectsCount,
+            totalRevenue: (overview.totalRevenue || 0) + projectsAmount
+          };
+
+          setBookingStats({ ...statsData, overview: mergedOverview });
+          console.log("📋 Booking stats set (merged with projects)");
         } else {
           console.warn("❌ Stats API failed or returned no data");
           setBookingStats(null);
@@ -596,15 +729,17 @@ const SalesScreen = () => {
         </AnimatePresence>
 
         {/* Promo Codes & Recent Bookings Grid */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          {/* Promo Codes */}
-          <div>
-            <PromoCodesList promoCodes={promoCodes} theme={theme} />
-          </div>
+        <div className={`grid gap-6 ${!(targetProgress.targetType === 'digit' || targetProgress.targetType === 'both') ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1'}`}>
+          {/* Promo Codes (hidden when target is 'digit' or 'both') */}
+          {!(targetProgress.targetType === 'digit' || targetProgress.targetType === 'both') && (
+            <div>
+              <PromoCodesList promoCodes={promoCodes} theme={theme} />
+            </div>
+          )}
 
           {/* Recent Bookings */}
           <div>
-            <RecentBookings bookings={recentBookings} theme={theme} />
+            <RecentBookings bookings={recentBookings} theme={theme} agent={agent} />
           </div>
         </div>
 

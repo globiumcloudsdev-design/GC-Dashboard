@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Loader2, User, Car, Calendar, CreditCard, Database } from 'lucide-react';
 
-const SaleDetailsModal = ({ isOpen, onClose, saleData, loading = false }) => {
+const SaleDetailsModal = ({ isOpen, onClose, saleData, loading = false, currencySymbol = 'PKR' }) => {
   // Close on Escape key
   useEffect(() => {
     const handleEscape = (e) => {
@@ -29,8 +29,13 @@ const SaleDetailsModal = ({ isOpen, onClose, saleData, loading = false }) => {
   }, [isOpen]);
 
   const formatCurrency = (amount) => {
-    if (!amount && amount !== 0) return '₹0';
-    return `₹${Number(amount).toLocaleString('en-IN')}`;
+    if (!amount && amount !== 0) return '0';
+    
+    // Use passed currency symbol or fallback
+    let symbol = currencySymbol;
+    if (symbol === 'USD') symbol = '$';
+    
+    return `${symbol} ${Number(amount).toLocaleString('en-IN')}`;
   };
 
   const formatDate = (dateString) => {
@@ -89,6 +94,7 @@ const SaleDetailsModal = ({ isOpen, onClose, saleData, loading = false }) => {
   };
 
   const vehicleData = saleData?.formData?.vehicleBookings?.[0] || saleData?.formData?.bookingDetails || {};
+  const isProject = saleData?.type === 'project';
 
   if (!isOpen) return null;
 
@@ -112,10 +118,17 @@ const SaleDetailsModal = ({ isOpen, onClose, saleData, loading = false }) => {
           {/* Header */}
           <div className="flex items-center justify-between p-3 border-b border-gray-200 bg-gray-50">
             <div className="flex items-center gap-2">
-              <h2 className="text-base font-semibold text-gray-900">Sale Details</h2>
-              {saleData?.bookingId && (
+              <h2 className="text-base font-semibold text-gray-900">
+                {isProject ? 'Project Details' : 'Sale Details'}
+              </h2>
+              {!isProject && saleData?.bookingId && (
                 <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">
                   {saleData.bookingId}
+                </span>
+              )}
+              {isProject && (
+                <span className="text-xs text-white bg-purple-600 px-2 py-1 rounded">
+                  Project
                 </span>
               )}
             </div>
@@ -141,99 +154,195 @@ const SaleDetailsModal = ({ isOpen, onClose, saleData, loading = false }) => {
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-full">
-                {/* Left Column - Customer & Vehicle */}
+                {/* Left Column - Customer/Client & Vehicle/Project */}
                 <div className="space-y-3">
-                  {/* Customer Section */}
-                  <div className="bg-gray-50 rounded p-3 border border-gray-200">
-                    <div className="flex items-center gap-2 mb-2">
-                      <User className="h-4 w-4 text-blue-600" />
-                      <h3 className="text-sm font-medium text-gray-900">Customer Information</h3>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <p className="text-xs text-gray-500">Name</p>
-                        <p className="text-sm font-medium text-gray-900">
-                          {saleData.formData?.firstName || 'N/A'} {saleData.formData?.lastName || ''}
-                        </p>
+                  {isProject ? (
+                    /* Project Info Section */
+                    <div className="bg-gray-50 rounded p-3 border border-gray-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <User className="h-4 w-4 text-blue-600" />
+                        <h3 className="text-sm font-medium text-gray-900">Project Information</h3>
                       </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Phone</p>
-                        <p className="text-sm font-medium text-gray-900">{saleData.formData?.phone || 'N/A'}</p>
+                      <div className="space-y-2">
+                        <div>
+                          <p className="text-xs text-gray-500">Title</p>
+                          <p className="text-sm font-medium text-gray-900">{saleData.title || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">Category</p>
+                          <p className="text-sm font-medium text-gray-900">{saleData.category || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">Description</p>
+                          <p className="text-sm font-medium text-gray-900">{saleData.shortDescription || 'No description'}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  ) : (
+                    /* Customer Section */
+                    <div className="bg-gray-50 rounded p-3 border border-gray-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <User className="h-4 w-4 text-blue-600" />
+                        <h3 className="text-sm font-medium text-gray-900">Customer Information</h3>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <p className="text-xs text-gray-500">Name</p>
+                          <p className="text-sm font-medium text-gray-900">
+                            {saleData.formData?.firstName || 'N/A'} {saleData.formData?.lastName || ''}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">Phone</p>
+                          <p className="text-sm font-medium text-gray-900">{saleData.formData?.phone || 'N/A'}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
-                  {/* Vehicle Section */}
-                  <div className="bg-gray-50 rounded p-3 border border-gray-200">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Car className="h-4 w-4 text-green-600" />
-                      <h3 className="text-sm font-medium text-gray-900">Vehicle Details</h3>
+                  {isProject ? (
+                    /* Client Details Section */
+                    <div className="bg-gray-50 rounded p-3 border border-gray-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Car className="h-4 w-4 text-green-600" />
+                        <h3 className="text-sm font-medium text-gray-900">Client Details</h3>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <p className="text-xs text-gray-500">Client Name</p>
+                          <p className="text-sm font-medium text-gray-900">{saleData.client?.name || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">Country</p>
+                          <p className="text-sm font-medium text-gray-900">{saleData.client?.country || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">Project Type</p>
+                          <p className="text-sm font-medium text-gray-900">{saleData.projectType || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">Duration</p>
+                          <p className="text-sm font-medium text-gray-900">{saleData.duration || 'N/A'}</p>
+                        </div>
+                        {saleData.deadline && (
+                          <div className="col-span-2">
+                            <p className="text-xs text-gray-500">Deadline</p>
+                            <p className="text-sm font-medium text-gray-900">{formatDate(saleData.deadline)}</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <p className="text-xs text-gray-500">Make</p>
-                        <p className="text-sm font-medium text-gray-900">{vehicleData.vehicleMake || 'N/A'}</p>
+                  ) : (
+                    /* Vehicle Section */
+                    <div className="bg-gray-50 rounded p-3 border border-gray-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Car className="h-4 w-4 text-green-600" />
+                        <h3 className="text-sm font-medium text-gray-900">Vehicle Details</h3>
                       </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Model</p>
-                        <p className="text-sm font-medium text-gray-900">{vehicleData.vehicleModel || 'N/A'}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Year</p>
-                        <p className="text-sm font-medium text-gray-900">{vehicleData.vehicleYear || 'N/A'}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Color</p>
-                        <p className="text-sm font-medium text-gray-900">{vehicleData.vehicleColor || 'N/A'}</p>
-                      </div>
-                      <div className="col-span-2">
-                        <p className="text-xs text-gray-500">Plate Number</p>
-                        <p className="text-sm font-medium text-gray-900">{vehicleData.vehicleLength || 'N/A'}</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <p className="text-xs text-gray-500">Make</p>
+                          <p className="text-sm font-medium text-gray-900">{vehicleData.vehicleMake || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">Model</p>
+                          <p className="text-sm font-medium text-gray-900">{vehicleData.vehicleModel || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">Year</p>
+                          <p className="text-sm font-medium text-gray-900">{vehicleData.vehicleYear || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">Color</p>
+                          <p className="text-sm font-medium text-gray-900">{vehicleData.vehicleColor || 'N/A'}</p>
+                        </div>
+                        <div className="col-span-2">
+                          <p className="text-xs text-gray-500">Plate Number</p>
+                          <p className="text-sm font-medium text-gray-900">{vehicleData.vehicleLength || 'N/A'}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
 
-                {/* Right Column - Service, Payment & System */}
+                {/* Right Column - Service/Progress, Payment & System */}
                 <div className="space-y-3">
-                  {/* Service Section */}
-                  <div className="bg-gray-50 rounded p-3 border border-gray-200">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Calendar className="h-4 w-4 text-purple-600" />
-                      <h3 className="text-sm font-medium text-gray-900">Service Information</h3>
+                  {isProject ? (
+                    /* Project Progress Section */
+                    <div className="bg-gray-50 rounded p-3 border border-gray-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Calendar className="h-4 w-4 text-purple-600" />
+                        <h3 className="text-sm font-medium text-gray-900">Project Progress</h3>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <p className="text-xs text-gray-500">Progress</p>
+                          <p className="text-sm font-medium text-gray-900">{saleData.progress || 0}%</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">Status</p>
+                          <div className="mt-0.5">{getStatusBadge(saleData.status)}</div>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">Created</p>
+                          <p className="text-sm font-medium text-gray-900">{formatDate(saleData.createdAt)}</p>
+                        </div>
+                        {saleData.completedAt && (
+                          <div>
+                            <p className="text-xs text-gray-500">Completed</p>
+                            <p className="text-sm font-medium text-gray-900">{formatDate(saleData.completedAt)}</p>
+                          </div>
+                        )}
+                        <div className="col-span-2">
+                          <p className="text-xs text-gray-500">Full Description</p>
+                          <p className="text-sm font-medium text-gray-900 line-clamp-2" title={saleData.fullDescription || 'No description'}>
+                            {saleData.fullDescription || 'No description'}
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <p className="text-xs text-gray-500">Service Type</p>
-                        <p className="text-sm font-medium text-gray-900">{saleData.bookingType || vehicleData.serviceType || 'N/A'}</p>
+                  ) : (
+                    /* Service Section */
+                    <div className="bg-gray-50 rounded p-3 border border-gray-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Calendar className="h-4 w-4 text-purple-600" />
+                        <h3 className="text-sm font-medium text-gray-900">Service Information</h3>
                       </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Booking Date</p>
-                        <p className="text-sm font-medium text-gray-900">{formatDate(saleData.createdAt)}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Service Date</p>
-                        <p className="text-sm font-medium text-gray-900">{formatDate(saleData.formData?.date)}</p>
-                      </div>
-                      <div className="col-span-2">
-                        <p className="text-xs text-gray-500">Notes</p>
-                        <p className="text-sm font-medium text-gray-900 truncate" title={saleData.formData?.notes || saleData.notes || 'No notes'}>
-                          {saleData.formData?.notes || saleData.notes || 'No notes'}
-                        </p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <p className="text-xs text-gray-500">Service Type</p>
+                          <p className="text-sm font-medium text-gray-900">{saleData.bookingType || vehicleData.serviceType || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">Booking Date</p>
+                          <p className="text-sm font-medium text-gray-900">{formatDate(saleData.createdAt)}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">Service Date</p>
+                          <p className="text-sm font-medium text-gray-900">{formatDate(saleData.formData?.date)}</p>
+                        </div>
+                        <div className="col-span-2">
+                          <p className="text-xs text-gray-500">Notes</p>
+                          <p className="text-sm font-medium text-gray-900 truncate" title={saleData.formData?.notes || saleData.notes || 'No notes'}>
+                            {saleData.formData?.notes || saleData.notes || 'No notes'}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Payment & Status Section */}
                   <div className="bg-gray-50 rounded p-3 border border-gray-200">
                     <div className="flex items-center gap-2 mb-2">
                       <CreditCard className="h-4 w-4 text-indigo-600" />
-                      <h3 className="text-sm font-medium text-gray-900">Payment & Status</h3>
+                      <h3 className="text-sm font-medium text-gray-900">{isProject ? 'Project Price & Status' : 'Payment & Status'}</h3>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <p className="text-xs text-gray-500">Total Amount</p>
-                        <p className="text-sm font-semibold text-gray-900">{formatCurrency(saleData.totalPrice)}</p>
+                        <p className="text-xs text-gray-500">{isProject ? 'Project Price' : 'Total Amount'}</p>
+                        <p className="text-sm font-semibold text-gray-900">
+                          {formatCurrency(isProject ? (saleData.price || saleData.amount || 0) : saleData.totalPrice)}
+                        </p>
                       </div>
                       <div>
                         <p className="text-xs text-gray-500">Agent Commission</p>
@@ -241,14 +350,18 @@ const SaleDetailsModal = ({ isOpen, onClose, saleData, loading = false }) => {
                           {saleData.agentCommission ? formatCurrency(saleData.agentCommission) : 'N/A'}
                         </p>
                       </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Status</p>
-                        <div className="mt-0.5">{getStatusBadge(saleData.status)}</div>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Payment Status</p>
-                        <div className="mt-0.5">{getPaymentStatusBadge(saleData.status)}</div>
-                      </div>
+                      {!isProject && (
+                        <>
+                          <div>
+                            <p className="text-xs text-gray-500">Status</p>
+                            <div className="mt-0.5">{getStatusBadge(saleData.status)}</div>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500">Payment Status</p>
+                            <div className="mt-0.5">{getPaymentStatusBadge(saleData.status)}</div>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
 

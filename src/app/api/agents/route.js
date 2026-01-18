@@ -194,7 +194,12 @@ export async function GET(request) {
 
     // Filter by target type
     if (targetType && targetType !== 'all') {
-      searchQuery.monthlyTargetType = targetType;
+      if (targetType === 'amount') {
+          // Fetch agents who have Amount Target or Both
+          searchQuery.monthlyTargetType = { $in: ['amount', 'both'] };
+      } else {
+          searchQuery.monthlyTargetType = targetType;
+      }
     }
 
     // Filter by status

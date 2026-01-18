@@ -14,7 +14,8 @@ import {
   LogOut,  
   Menu, 
   X, 
-  User
+  User,
+  Layers
 } from "lucide-react";
 import { useMediaQuery } from "react-responsive";
 import { motion, AnimatePresence } from "framer-motion";
@@ -56,6 +57,7 @@ export default function AgentSidebar({ isOpen, setIsOpen, collapsed, setCollapse
 
   const navItems = [
     { label: "Dashboard", href: "/agent/dashboard", icon: BarChart3 },
+    { label: "Projects", href: "/agent/projects", icon: Layers }, 
     { label: "Attendance", href: "/agent/attendance", icon: Clock },
     { label: "Sales", href: "/agent/sales", icon: DollarSign },
     { label: "Salary", href: "/agent/salary", icon: Wallet },

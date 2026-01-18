@@ -136,6 +136,35 @@ const projectSchema = new mongoose.Schema(
       default: 1,
     },
 
+    // ✅ New Fields for Sales & Progress
+    price: {
+      type: Number,
+      required: [true, 'Project Price is required'],
+      min: [0, 'Price must be positive'],
+      default: 0
+    },
+    assignedAgent: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Agent',
+      default: null,
+      index: true
+    },
+    deadline: {
+      type: Date,
+      default: null
+    },
+    status: {
+      type: String,
+      enum: ['Pending', 'In Progress', 'Completed', 'Delivered', 'Cancelled', 'On Hold'],
+      default: 'In Progress'
+    },
+    progress: {
+      type: Number,
+      min: 0,
+      max: 100,
+      default: 0
+    },
+    
     // Features
     features: [{
       title: {
@@ -178,12 +207,23 @@ const projectSchema = new mongoose.Schema(
     // Metadata
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
       required: true,
+      refPath: 'creatorModel'
+    },
+    creatorModel: {
+      type: String,
+      required: true,
+      enum: ['User', 'Agent'],
+      default: 'User'
     },
     updatedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      refPath: 'updaterModel'
+    },
+    updaterModel: {
+      type: String,
+      enum: ['User', 'Agent'],
+      default: 'User'
     },
   },
   {

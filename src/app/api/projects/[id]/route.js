@@ -14,8 +14,9 @@ export async function GET(request, { params }) {
 
     // Find project by slug (since frontend passes slug, not ID)
     const project = await Project.findOne({ slug: id, isActive: true })
-      .populate('createdBy', 'firstName lastName email')
-      .populate('updatedBy', 'firstName lastName email');
+      .populate('createdBy', 'firstName lastName agentName email')
+      .populate('updatedBy', 'firstName lastName agentName email')
+      .populate('assignedAgent', 'agentName agentId email');
 
     if (!project) {
       return NextResponse.json(
@@ -100,7 +101,8 @@ export async function PUT(request, { params }) {
       'technologies', 'frameworks', 'databases', 'tools', 'thumbnail', 'images',
       'liveUrl', 'githubUrl', 'demoVideoUrl', 'documentationUrl', 'client',
       'duration', 'completedAt', 'teamSize', 'features', 'displayOrder',
-      'isFeatured', 'isActive', 'metaTitle', 'metaDescription', 'updatedBy'
+      'isFeatured', 'isActive', 'metaTitle', 'metaDescription', 'updatedBy', 'updaterModel',
+      'price', 'assignedAgent', 'deadline', 'status', 'progress'
     ];
 
     updateFields.forEach(field => {
@@ -110,8 +112,9 @@ export async function PUT(request, { params }) {
     });
 
     await project.save();
-    await project.populate('createdBy', 'firstName lastName email');
-    await project.populate('updatedBy', 'firstName lastName email');
+    await project.populate('createdBy', 'firstName lastName agentName email');
+    await project.populate('updatedBy', 'firstName lastName agentName email');
+    await project.populate('assignedAgent', 'agentName agentId email');
 
     return NextResponse.json(
       {

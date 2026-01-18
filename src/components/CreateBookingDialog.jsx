@@ -1,7 +1,7 @@
 // src/components/CreateBookingDialog.jsx
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -109,6 +109,29 @@ const CreateBookingDialog = ({ open, onClose, onSubmit }) => {
   const [isManualBookingType, setIsManualBookingType] = useState(false);
   const [isManualServiceType, setIsManualServiceType] = useState(false);
   const [isManualVariant, setIsManualVariant] = useState(false);
+
+  // Refs to focus manual inputs when toggled
+  const bookingTypeInputRef = useRef(null);
+  const serviceTypeInputRef = useRef(null);
+  const variantInputRef = useRef(null);
+
+  useEffect(() => {
+    if (isManualBookingType) {
+      setTimeout(() => bookingTypeInputRef.current?.focus?.(), 50);
+    }
+  }, [isManualBookingType]);
+
+  useEffect(() => {
+    if (isManualServiceType) {
+      setTimeout(() => serviceTypeInputRef.current?.focus?.(), 50);
+    }
+  }, [isManualServiceType]);
+
+  useEffect(() => {
+    if (isManualVariant) {
+      setTimeout(() => variantInputRef.current?.focus?.(), 50);
+    }
+  }, [isManualVariant]);
 
   // ✅ Detect Booking Category from Input String (Helper)
   const detectBookingCategory = (input) => {
@@ -961,6 +984,8 @@ const CreateBookingDialog = ({ open, onClose, onSubmit }) => {
                           {isManualBookingType ? (
                             <Input
                               id="bookingType"
+                              ref={bookingTypeInputRef}
+                              className="h-10 text-base"
                               value={formData.bookingType}
                               onChange={(e) => handleInputChange("bookingType", e.target.value)}
                               placeholder="Type booking type"
@@ -970,10 +995,10 @@ const CreateBookingDialog = ({ open, onClose, onSubmit }) => {
                               value={formData.bookingType}
                               onValueChange={(value) => handleInputChange("bookingType", value)}
                             >
-                              <SelectTrigger>
+                              <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Select booking type" />
                               </SelectTrigger>
-                              <SelectContent>
+                              <SelectContent className="min-w-[16rem] w-full z-[1200] max-h-72">
                                 {Object.values(BOOKING_TYPES).map((type) => {
                                   const category = ALL_SERVICES[type.toUpperCase()];
                                   const IconComponent = getIconComponent(category?.icon);
@@ -1090,10 +1115,10 @@ const CreateBookingDialog = ({ open, onClose, onSubmit }) => {
                             value={formData.timeSlot}
                             onValueChange={(value) => handleInputChange("timeSlot", value)}
                           >
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select time slot" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="min-w-[16rem] w-full z-[1200] max-h-72">
                               {TIME_SLOTS.map((slot) => (
                                 <SelectItem key={slot} value={slot}>
                                   {slot.replace('-', ' AM - ')} PM
@@ -1132,6 +1157,8 @@ const CreateBookingDialog = ({ open, onClose, onSubmit }) => {
                         </div>
                         {isManualServiceType ? (
                           <Input
+                            ref={serviceTypeInputRef}
+                            className="h-10 text-base"
                             value={bookingDetails.serviceType}
                             onChange={(e) => handleBookingDetailsChange("serviceType", e.target.value)}
                             placeholder={`Type ${getCurrentServiceCategory()?.name.toLowerCase() || 'service'} type`}
@@ -1141,10 +1168,10 @@ const CreateBookingDialog = ({ open, onClose, onSubmit }) => {
                             value={bookingDetails.serviceType}
                             onValueChange={(value) => handleBookingDetailsChange("serviceType", value)}
                           >
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder={`Select ${getCurrentServiceCategory()?.name.toLowerCase()} service`} />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="min-w-[16rem] w-full z-[1200] max-h-72">
                               {getServices().map((service) => (
                                 <SelectItem key={service.id} value={service.id}>
                                   {service.name}
@@ -1173,6 +1200,8 @@ const CreateBookingDialog = ({ open, onClose, onSubmit }) => {
                           </div>
                           {isManualVariant ? (
                             <Input
+                              ref={variantInputRef}
+                              className="h-10 text-base"
                               value={bookingDetails.variant}
                               onChange={(e) => handleBookingDetailsChange("variant", e.target.value)}
                               placeholder="Type vehicle type"
@@ -1182,10 +1211,10 @@ const CreateBookingDialog = ({ open, onClose, onSubmit }) => {
                               value={bookingDetails.variant}
                               onValueChange={(value) => handleBookingDetailsChange("variant", value)}
                             >
-                              <SelectTrigger>
+                              <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Select vehicle variant" />
                               </SelectTrigger>
-                              <SelectContent>
+                              <SelectContent className="min-w-[16rem] w-full z-[1200] max-h-72">
                                 {getVariants().map((variant) => (
                                   <SelectItem key={variant.id} value={variant.id}>
                                     {variant.name}
@@ -1211,10 +1240,10 @@ const CreateBookingDialog = ({ open, onClose, onSubmit }) => {
                             value={bookingDetails.package}
                             onValueChange={(value) => handleBookingDetailsChange("package", value)}
                           >
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select package" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="min-w-[20rem] w-full z-[1200] max-h-80">
                               {getPackages().map((pkg) => (
                                 <SelectItem key={pkg.id} value={pkg.id}>
                                   <div className="flex items-center justify-between gap-4">
@@ -1321,10 +1350,10 @@ const CreateBookingDialog = ({ open, onClose, onSubmit }) => {
                                     value={bookingDetails.chimneyType}
                                     onValueChange={(value) => handleBookingDetailsChange("chimneyType", value)}
                                   >
-                                    <SelectTrigger>
+                                    <SelectTrigger className="w-full">
                                       <SelectValue placeholder="Select chimney type" />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent className="min-w-[14rem] w-full z-[1200] max-h-64">
                                       {getSelectedService().chimneyTypes.map((type) => (
                                         <SelectItem key={type.id} value={type.id}>
                                           {type.name}
@@ -1342,10 +1371,10 @@ const CreateBookingDialog = ({ open, onClose, onSubmit }) => {
                                     value={bookingDetails.chimneySize}
                                     onValueChange={(value) => handleBookingDetailsChange("chimneySize", value)}
                                   >
-                                    <SelectTrigger>
+                                    <SelectTrigger className="w-full">
                                       <SelectValue placeholder="Select size" />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent className="min-w-[12rem] w-full z-[1200] max-h-64">
                                       {getSelectedService().chimneySizes.map((size) => (
                                         <SelectItem key={size.id} value={size.id}>
                                           {size.name}
@@ -1386,10 +1415,10 @@ const CreateBookingDialog = ({ open, onClose, onSubmit }) => {
                                     value={bookingDetails.areaSize}
                                     onValueChange={(value) => handleBookingDetailsChange("areaSize", value)}
                                   >
-                                    <SelectTrigger>
+                                    <SelectTrigger className="w-full">
                                       <SelectValue placeholder="Select area size" />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent className="min-w-[12rem] w-full z-[1200] max-h-64">
                                       {getSelectedService().areaSizes.map((size) => (
                                         <SelectItem key={size.id} value={size.id}>
                                           {size.name}
@@ -1497,10 +1526,10 @@ const CreateBookingDialog = ({ open, onClose, onSubmit }) => {
                           value={selectedPromoCode?._id || ""}
                           onValueChange={applyPromoCode}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select promo code" />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="min-w-[16rem] w-full z-[1200] max-h-60">
                             <SelectItem value="none">No Promo Code</SelectItem>
                             {promoCodes.map((promo) => (
                               <SelectItem key={promo._id} value={promo._id}>
