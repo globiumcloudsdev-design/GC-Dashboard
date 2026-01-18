@@ -16,6 +16,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Table,
   TableBody,
   TableCell,
@@ -558,6 +566,37 @@ export default function AgentDetailPage({ params }) {
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
+                     <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" className="gap-2 hover:bg-slate-100">
+                             <FileText className="h-4 w-4" /> Generate Letter
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56">
+                          <DropdownMenuLabel>Select Letter Type</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => router.push(`/dashboard/agents/${id}/letters/offer`)}>
+                            Offer Letter
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => router.push(`/dashboard/agents/${id}/letters/appointment`)}>
+                            Appointment Letter
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => router.push(`/dashboard/agents/${id}/letters/confirmation`)}>
+                            Confirmation Letter
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => router.push(`/dashboard/agents/${id}/letters/increment`)}>
+                            Increment Letter
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => router.push(`/dashboard/agents/${id}/letters/experience`)}>
+                            Experience Letter
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => router.push(`/dashboard/agents/${id}/letters/relieving`)} className="text-red-600 focus:text-red-700">
+                            Relieving Letter
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                     </DropdownMenu>
+
                      <Button onClick={handlePrint} variant="outline" className="gap-2 hover:bg-slate-100">
                         <Printer className="h-4 w-4" /> Print
                      </Button>
