@@ -54,6 +54,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
+import Image from 'next/image';
 
 export default function AgentDetailPage({ params }) {
   const router = useRouter();
@@ -786,8 +787,8 @@ export default function AgentDetailPage({ params }) {
                 <div className="w-full bg-slate-200 rounded-full h-3">
                   <div
                     className={`h-3 rounded-full transition-all duration-500 ${progress >= 100 ? 'bg-green-500' :
-                        progress >= 75 ? 'bg-blue-500' :
-                          progress >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                      progress >= 75 ? 'bg-blue-500' :
+                        progress >= 50 ? 'bg-yellow-500' : 'bg-red-500'
                       }`}
                     style={{ width: `${progress}%` }}
                   ></div>
@@ -1578,7 +1579,7 @@ export default function AgentDetailPage({ params }) {
         </Tabs>
 
         {/* PRINT VIEW SECTION - PROFESSIONAL SINGLE PAGE */}
-{/* <div className="hidden print:block p-6 max-w-[210mm] mx-auto space-y-5 print:mt-0 print:mb-0 text-[10pt] font-sans">
+        {/* <div className="hidden print:block p-6 max-w-[210mm] mx-auto space-y-5 print:mt-0 print:mb-0 text-[10pt] font-sans">
     <div className="flex justify-between items-start border-b-2 border-blue-800 pb-4 mb-4">
         <div className="flex items-center gap-3">
             <div className="h-14 w-14 bg-gradient-to-br from-blue-700 to-blue-900 rounded-xl flex items-center justify-center shadow-sm">
@@ -1808,372 +1809,307 @@ export default function AgentDetailPage({ params }) {
     </div>
 </div> */}
 
-<div className="hidden print:block p-4 max-w-[210mm] mx-auto space-y-4 print:mt-0 print:mb-0 text-[11pt] font-sans">
-    {/* <div className="flex justify-between items-start border-b-2 border-blue-800 pb-3 mb-3">
-        <div className="flex-1">
-            <div className="flex items-center gap-3">
-                <div className="h-12 w-12 bg-gradient-to-br from-blue-700 to-blue-900 rounded-xl flex items-center justify-center shadow-sm">
-                    <div className="text-white font-bold text-2xl">GC</div>
-                </div>
-                <div>
-                    <h1 className="text-xl font-bold text-slate-900 leading-tight">Globium Clouds Pvt. Ltd.</h1>
-                    <p className="text-[10pt] text-slate-600 font-medium">Employee Performance Report</p>
-                </div>
-            </div>
-        </div>
-        <div className="text-right">
-            <div className="text-xs font-bold text-blue-700 uppercase tracking-wider mb-1">Monthly Report</div>
-            <div className="text-lg font-bold text-slate-900">
-                {new Date(selectedYear, selectedMonth - 1).toLocaleString('default', { month: 'long', year: 'numeric' })}
-            </div>
-            <div className="text-[9pt] text-slate-500 font-medium">Generated: {format(new Date(), 'dd MMM yyyy')}</div>
-        </div>
-    </div>
-
-    <div className="bg-gradient-to-r from-blue-50 to-slate-50 border border-slate-300 rounded-lg p-4 mb-4">
-        <div className="flex items-center gap-4">
-            <div className="h-16 w-16 bg-gradient-to-br from-blue-600 to-blue-800 rounded-full flex items-center justify-center shadow-md">
-                <div className="text-white font-bold text-2xl">{agent.agentName?.charAt(0) || 'A'}</div>
-            </div>
+        <div className="hidden print:block p-4 max-w-[210mm] mx-auto space-y-4 print:mt-0 print:mb-0 text-[11pt] font-sans">
+          {/* HEADER SECTION */}
+          <div className="flex justify-between items-start border-b-2 border-blue-800 pb-3 mb-3">
             <div className="flex-1">
-                <div className="flex items-baseline flex-wrap gap-2 mb-2">
-                    <h2 className="text-lg font-bold text-slate-900">{agent.agentName}</h2>
-                    <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-slate-700 bg-white px-2 py-0.5 rounded-full border border-slate-300">
-                            ID: {agent.agentId}
-                        </span>
-                        <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-300">
-                            {agent.designation || 'Sales Agent'}
-                        </span>
-                        <span className={`ml-auto text-xs font-bold px-2 py-0.5 rounded-full ${
-                            agent.isActive 
-                                ? 'bg-green-100 text-green-800 border border-green-300' 
-                                : 'bg-red-100 text-red-800 border border-red-300'
-                        }`}>
-                            {agent.isActive ? 'ACTIVE' : 'INACTIVE'}
-                        </span>
-                    </div>
+              <div className="flex items-center gap-3">
+                <div className="w-20 h-20 relative">
+                  <Image src="/images/GCLogo.png" alt="Globium Clouds" fill className="object-contain" priority />
                 </div>
-                
-                <div className="flex items-center gap-4 text-sm">
-                    <div className="flex items-center gap-1.5">
-                        <Building className="h-3.5 w-3.5 text-blue-600" />
-                        <span className="text-slate-700">{agent.employeeType || 'Permanent'}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                        <Calendar className="h-3.5 w-3.5 text-blue-600" />
-                        <span className="text-slate-700">
-                            Joined: {agent.createdAt ? format(new Date(agent.createdAt), 'MMM yyyy') : 'N/A'}
-                        </span>
-                    </div>
+
+                <div>
+                  {/* COMPANY NAME */}
+                  <h1 className="text-xl font-bold text-slate-900 leading-tight">
+                    Globium Clouds Software Company.
+                  </h1>
+
+                  {/* AGENT INFO INLINE – NO DUPLICATION */}
+                  <div className="flex flex-wrap items-center gap-2 mt-0.5">
+                    <span className="text-[10pt] font-semibold text-slate-800">
+                      {agent.agentName}
+                    </span>
+
+                    <span className="text-[9pt] font-bold text-slate-700 bg-white px-2 py-0.5 rounded-full border border-slate-300">
+                      ID: {agent.agentId}
+                    </span>
+
+                    <span className="text-[9pt] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-300">
+                      {agent.designation || 'Sales Agent'}
+                    </span>
+
+                    <span
+                      className={`text-[8pt] font-bold px-2 py-0.5 rounded-full ${agent.isActive
+                        ? 'bg-green-100 text-green-800 border border-green-300'
+                        : 'bg-red-100 text-red-800 border border-red-300'
+                        }`}
+                    >
+                      {agent.isActive ? 'ACTIVE' : 'INACTIVE'}
+                    </span>
+                  </div>
+
+                  <p className="text-[9pt] text-slate-600 font-medium mt-0.5">
+                    Employee Performance Report
+                  </p>
                 </div>
+              </div>
             </div>
-        </div>
-    </div> */}
 
-    {/* HEADER SECTION */}
-<div className="flex justify-between items-start border-b-2 border-blue-800 pb-3 mb-3">
-  <div className="flex-1">
-    <div className="flex items-center gap-3">
-      <div className="h-12 w-12 bg-gradient-to-br from-blue-700 to-blue-900 rounded-xl flex items-center justify-center shadow-sm">
-        <div className="text-white font-bold text-2xl">GC</div>
-      </div>
+            {/* RIGHT SIDE DATE */}
+            <div className="text-right">
+              <div className="text-xs font-bold text-blue-700 uppercase tracking-wider mb-1">
+                Monthly Report
+              </div>
+              <div className="text-lg font-bold text-slate-900">
+                {new Date(selectedYear, selectedMonth - 1).toLocaleString('default', {
+                  month: 'long',
+                  year: 'numeric',
+                })}
+              </div>
+              <div className="text-[9pt] text-slate-500 font-medium">
+                Generated: {format(new Date(), 'dd MMM yyyy')}
+              </div>
+            </div>
+          </div>
 
-      <div>
-        {/* COMPANY NAME */}
-        <h1 className="text-xl font-bold text-slate-900 leading-tight">
-          Globium Clouds Pvt. Ltd.
-        </h1>
+          {/* PERFORMANCE METRICS - 4 COLUMN */}
+          <div className="grid grid-cols-4 gap-3 mb-4">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-300 rounded-lg p-3 text-center">
+              <div className="text-[9pt] font-bold text-blue-800 uppercase mb-1">Total Revenue</div>
+              <div className="text-base font-bold text-blue-900">{formatCurrency(stats.totalSales)}</div>
+              <div className="text-[9pt] text-blue-700">Current Month</div>
+            </div>
 
-        {/* AGENT INFO INLINE – NO DUPLICATION */}
-        <div className="flex flex-wrap items-center gap-2 mt-0.5">
-          <span className="text-[10pt] font-semibold text-slate-800">
-            {agent.agentName}
-          </span>
-
-          <span className="text-[9pt] font-bold text-slate-700 bg-white px-2 py-0.5 rounded-full border border-slate-300">
-            ID: {agent.agentId}
-          </span>
-
-          <span className="text-[9pt] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-300">
-            {agent.designation || 'Sales Agent'}
-          </span>
-
-          <span
-            className={`text-[8pt] font-bold px-2 py-0.5 rounded-full ${
-              agent.isActive
-                ? 'bg-green-100 text-green-800 border border-green-300'
-                : 'bg-red-100 text-red-800 border border-red-300'
-            }`}
-          >
-            {agent.isActive ? 'ACTIVE' : 'INACTIVE'}
-          </span>
-        </div>
-
-        <p className="text-[9pt] text-slate-600 font-medium mt-0.5">
-          Employee Performance Report
-        </p>
-      </div>
-    </div>
-  </div>
-
-  {/* RIGHT SIDE DATE */}
-  <div className="text-right">
-    <div className="text-xs font-bold text-blue-700 uppercase tracking-wider mb-1">
-      Monthly Report
-    </div>
-    <div className="text-lg font-bold text-slate-900">
-      {new Date(selectedYear, selectedMonth - 1).toLocaleString('default', {
-        month: 'long',
-        year: 'numeric',
-      })}
-    </div>
-    <div className="text-[9pt] text-slate-500 font-medium">
-      Generated: {format(new Date(), 'dd MMM yyyy')}
-    </div>
-  </div>
-</div>
-
-
-    {/* PERFORMANCE METRICS - 4 COLUMN */}
-    <div className="grid grid-cols-4 gap-3 mb-4">
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-300 rounded-lg p-3 text-center">
-            <div className="text-[9pt] font-bold text-blue-800 uppercase mb-1">Total Revenue</div>
-            <div className="text-base font-bold text-blue-900">{formatCurrency(stats.totalSales)}</div>
-            <div className="text-[9pt] text-blue-700">Current Month</div>
-        </div>
-
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-300 rounded-lg p-3 text-center">
-            <div className="text-[9pt] font-bold text-purple-800 uppercase mb-1">Target Progress</div>
-            <div className="text-base font-bold text-purple-900">
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-300 rounded-lg p-3 text-center">
+              <div className="text-[9pt] font-bold text-purple-800 uppercase mb-1">Target Progress</div>
+              <div className="text-base font-bold text-purple-900">
                 {(() => {
-                    let progress = 0;
-                    if (agent?.monthlyTargetType === 'digit') {
-                        const target = agent.monthlyDigitTarget || 1;
-                        progress = (stats.achievedDigits / target) * 100;
-                    } else if (agent?.monthlyTargetType === 'amount') {
-                        const target = agent.monthlyAmountTarget || 1;
-                        progress = (stats.totalSales / target) * 100;
-                    }
-                    return `${Math.min(progress, 100).toFixed(0)}%`;
+                  let progress = 0;
+                  if (agent?.monthlyTargetType === 'digit') {
+                    const target = agent.monthlyDigitTarget || 1;
+                    progress = (stats.achievedDigits / target) * 100;
+                  } else if (agent?.monthlyTargetType === 'amount') {
+                    const target = agent.monthlyAmountTarget || 1;
+                    progress = (stats.totalSales / target) * 100;
+                  }
+                  return `${Math.min(progress, 100).toFixed(0)}%`;
                 })()}
-            </div>
-            <div className="text-[9pt] text-purple-700">
+              </div>
+              <div className="text-[9pt] text-purple-700">
                 {agent.monthlyTargetType === 'digit' ? `${stats.achievedDigits} Sales` : 'Revenue Target'}
+              </div>
             </div>
-        </div>
 
-        <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-300 rounded-lg p-3 text-center">
-            <div className="text-[9pt] font-bold text-green-800 uppercase mb-1">Attendance</div>
-            <div className="text-base font-bold text-green-900">{stats.attendanceRate}%</div>
-            <div className="text-[9pt] text-green-700">
-                {attendance.length > 0 ? 
-                    `${attendance.filter(a => a.status === 'present' || a.status === 'late').length}/${attendance.length} Days` 
-                    : 'No Data'
+            <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-300 rounded-lg p-3 text-center">
+              <div className="text-[9pt] font-bold text-green-800 uppercase mb-1">Attendance</div>
+              <div className="text-base font-bold text-green-900">{stats.attendanceRate}%</div>
+              <div className="text-[9pt] text-green-700">
+                {attendance.length > 0 ?
+                  `${attendance.filter(a => a.status === 'present' || a.status === 'late').length}/${attendance.length} Days`
+                  : 'No Data'
                 }
+              </div>
             </div>
-        </div>
 
-        <div className="bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-300 rounded-lg p-3 text-center">
-            <div className="text-[9pt] font-bold text-amber-800 uppercase mb-1">Base Salary</div>
-            <div className="text-base font-bold text-amber-900">{formatCurrency(agent.basicSalary || 0)}</div>
-            <div className="text-[9pt] text-amber-700">Monthly Fixed</div>
-        </div>
-    </div>
+            <div className="bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-300 rounded-lg p-3 text-center">
+              <div className="text-[9pt] font-bold text-amber-800 uppercase mb-1">Base Salary</div>
+              <div className="text-base font-bold text-amber-900">{formatCurrency(agent.basicSalary || 0)}</div>
+              <div className="text-[9pt] text-amber-700">Monthly Fixed</div>
+            </div>
+          </div>
 
-    {/* MONTHLY PAYROLL SECTION */}
-    {(() => {
-        const currentMonthPayroll = payrolls.find(p => 
-            p.month === selectedMonth && 
-            p.year === selectedYear
-        );
-
-        if (currentMonthPayroll) {
-            return (
-                <div className="border border-blue-300 rounded-lg overflow-hidden mb-4 bg-gradient-to-r from-blue-50/30 to-blue-100/30">
-                    <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2">
-                        <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                            <CreditCard className="h-4 w-4" />
-                            Monthly Payroll - {new Date(selectedYear, selectedMonth - 1).toLocaleString('default', { month: 'long', year: 'numeric' })}
-                        </h3>
-                    </div>
-                    <div className="p-4">
-                        <div className="grid grid-cols-4 gap-4 mb-4">
-                            <div className="bg-white border border-blue-200 rounded-lg p-3 text-center">
-                                <div className="text-[9pt] font-bold text-blue-800 mb-1">Basic Salary</div>
-                                <div className="text-base font-bold text-blue-900">
-                                    {formatCurrency(currentMonthPayroll.financials?.basicSalary || 0)}
-                                </div>
-                            </div>
-                            
-                            <div className="bg-white border border-green-200 rounded-lg p-3 text-center">
-                                <div className="text-[9pt] font-bold text-green-800 mb-1">Allowances</div>
-                                <div className="text-base font-bold text-green-900">
-                                    {formatCurrency((currentMonthPayroll.financials?.totalAllowance || 0) + (currentMonthPayroll.financials?.incentive || 0))}
-                                </div>
-                            </div>
-                            
-                            <div className="bg-white border border-red-200 rounded-lg p-3 text-center">
-                                <div className="text-[9pt] font-bold text-red-800 mb-1">Deductions</div>
-                                <div className="text-base font-bold text-red-900">
-                                    {formatCurrency(currentMonthPayroll.financials?.totalDeduction || 0)}
-                                </div>
-                            </div>
-                            
-                            <div className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-400 rounded-lg p-3 text-center shadow-sm">
-                                <div className="text-[9pt] font-bold text-blue-800 mb-1">Net Salary</div>
-                                <div className="text-lg font-bold text-blue-900">
-                                    {formatCurrency(currentMonthPayroll.financials?.netSalary || 0)}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div className="flex justify-between items-center bg-white border border-slate-200 rounded-lg p-3">
-                            <div>
-                                <div className="text-[9pt] font-semibold text-slate-700 mb-1">Payment Status</div>
-                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${
-                                    currentMonthPayroll.status === 'paid' 
-                                        ? 'bg-green-100 text-green-800 border border-green-300' 
-                                        : currentMonthPayroll.status === 'pending'
-                                        ? 'bg-yellow-100 text-yellow-800 border border-yellow-300'
-                                        : 'bg-red-100 text-red-800 border border-red-300'
-                                }`}>
-                                    {currentMonthPayroll.status?.toUpperCase()}
-                                </span>
-                            </div>
-                            
-                            <div className="text-right">
-                                <div className="text-[9pt] font-semibold text-slate-700 mb-1">Payroll ID</div>
-                                <div className="text-xs font-mono text-slate-600">
-                                    PAY-{currentMonthPayroll._id?.slice(-8).toUpperCase()}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+          {/* MONTHLY PAYROLL SECTION */}
+          {(() => {
+            const currentMonthPayroll = payrolls.find(p =>
+              p.month === selectedMonth &&
+              p.year === selectedYear
             );
-        }
-        return null;
-    })()}
 
-    {/* ATTENDANCE BREAKDOWN SECTION */}
-    <div className="border border-slate-300 rounded-lg overflow-hidden mb-4">
-        <div className="bg-gradient-to-r from-slate-100 to-slate-200 px-4 py-2 border-b border-slate-300">
-            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+            if (currentMonthPayroll) {
+              return (
+                <div className="border border-blue-300 rounded-lg overflow-hidden mb-4 bg-gradient-to-r from-blue-50/30 to-blue-100/30">
+                  <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2">
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      <CreditCard className="h-4 w-4" />
+                      Monthly Payroll - {new Date(selectedYear, selectedMonth - 1).toLocaleString('default', { month: 'long', year: 'numeric' })}
+                    </h3>
+                  </div>
+                  <div className="p-4">
+                    <div className="grid grid-cols-4 gap-4 mb-4">
+                      <div className="bg-white border border-blue-200 rounded-lg p-3 text-center">
+                        <div className="text-[9pt] font-bold text-blue-800 mb-1">Basic Salary</div>
+                        <div className="text-base font-bold text-blue-900">
+                          {formatCurrency(currentMonthPayroll.financials?.basicSalary || 0)}
+                        </div>
+                      </div>
+
+                      <div className="bg-white border border-green-200 rounded-lg p-3 text-center">
+                        <div className="text-[9pt] font-bold text-green-800 mb-1">Allowances</div>
+                        <div className="text-base font-bold text-green-900">
+                          {formatCurrency((currentMonthPayroll.financials?.totalAllowance || 0) + (currentMonthPayroll.financials?.incentive || 0))}
+                        </div>
+                      </div>
+
+                      <div className="bg-white border border-red-200 rounded-lg p-3 text-center">
+                        <div className="text-[9pt] font-bold text-red-800 mb-1">Deductions</div>
+                        <div className="text-base font-bold text-red-900">
+                          {formatCurrency(currentMonthPayroll.financials?.totalDeduction || 0)}
+                        </div>
+                      </div>
+
+                      <div className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-400 rounded-lg p-3 text-center shadow-sm">
+                        <div className="text-[9pt] font-bold text-blue-800 mb-1">Net Salary</div>
+                        <div className="text-lg font-bold text-blue-900">
+                          {formatCurrency(currentMonthPayroll.financials?.netSalary || 0)}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center bg-white border border-slate-200 rounded-lg p-3">
+                      <div>
+                        <div className="text-[9pt] font-semibold text-slate-700 mb-1">Payment Status</div>
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${currentMonthPayroll.status === 'paid'
+                          ? 'bg-green-100 text-green-800 border border-green-300'
+                          : currentMonthPayroll.status === 'pending'
+                            ? 'bg-yellow-100 text-yellow-800 border border-yellow-300'
+                            : 'bg-red-100 text-red-800 border border-red-300'
+                          }`}>
+                          {currentMonthPayroll.status?.toUpperCase()}
+                        </span>
+                      </div>
+
+                      <div className="text-right">
+                        <div className="text-[9pt] font-semibold text-slate-700 mb-1">Payroll ID</div>
+                        <div className="text-xs font-mono text-slate-600">
+                          PAY-{currentMonthPayroll._id?.slice(-8).toUpperCase()}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+            return null;
+          })()}
+
+          {/* ATTENDANCE BREAKDOWN SECTION */}
+          <div className="border border-slate-300 rounded-lg overflow-hidden mb-4">
+            <div className="bg-gradient-to-r from-slate-100 to-slate-200 px-4 py-2 border-b border-slate-300">
+              <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
                 <Clock className="h-4 w-4 text-slate-700" />
                 Monthly Attendance Summary
-            </h3>
-        </div>
-        <div className="p-4">
-            <div className="grid grid-cols-4 gap-3">
+              </h3>
+            </div>
+            <div className="p-4">
+              <div className="grid grid-cols-4 gap-3">
                 <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-300 rounded-lg p-3 text-center">
-                    <div className="text-[9pt] font-bold text-green-800 mb-1">Present</div>
-                    <div className="text-xl font-bold text-green-900">
-                        {attendance.filter(a => a.status === 'present' || a.status === 'late').length}
-                    </div>
-                    <div className="text-[9pt] text-green-700">Days</div>
+                  <div className="text-[9pt] font-bold text-green-800 mb-1">Present</div>
+                  <div className="text-xl font-bold text-green-900">
+                    {attendance.filter(a => a.status === 'present' || a.status === 'late').length}
+                  </div>
+                  <div className="text-[9pt] text-green-700">Days</div>
                 </div>
 
                 <div className="bg-gradient-to-br from-red-50 to-red-100 border border-red-300 rounded-lg p-3 text-center">
-                    <div className="text-[9pt] font-bold text-red-800 mb-1">Absent</div>
-                    <div className="text-xl font-bold text-red-900">
-                        {attendance.filter(a => a.status === 'absent').length}
-                    </div>
-                    <div className="text-[9pt] text-red-700">Days</div>
+                  <div className="text-[9pt] font-bold text-red-800 mb-1">Absent</div>
+                  <div className="text-xl font-bold text-red-900">
+                    {attendance.filter(a => a.status === 'absent').length}
+                  </div>
+                  <div className="text-[9pt] text-red-700">Days</div>
                 </div>
 
                 <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-300 rounded-lg p-3 text-center">
-                    <div className="text-[9pt] font-bold text-blue-800 mb-1">Leave</div>
-                    <div className="text-xl font-bold text-blue-900">
-                        {attendance.filter(a => 
-                            a.status === 'approved_leave' || 
-                            a.status === 'leave' ||
-                            a.status === 'pending_leave'
-                        ).length}
-                    </div>
-                    <div className="text-[9pt] text-blue-700">Days</div>
+                  <div className="text-[9pt] font-bold text-blue-800 mb-1">Leave</div>
+                  <div className="text-xl font-bold text-blue-900">
+                    {attendance.filter(a =>
+                      a.status === 'approved_leave' ||
+                      a.status === 'leave' ||
+                      a.status === 'pending_leave'
+                    ).length}
+                  </div>
+                  <div className="text-[9pt] text-blue-700">Days</div>
                 </div>
 
                 <div className="bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-300 rounded-lg p-3 text-center">
-                    <div className="text-[9pt] font-bold text-slate-800 mb-1">Other</div>
-                    <div className="text-xl font-bold text-slate-900">
-                        {attendance.filter(a => 
-                            a.status === 'half_day' || 
-                            a.status === 'holiday' ||
-                            a.status === 'weekly_off'
-                        ).length}
-                    </div>
-                    <div className="text-[9pt] text-slate-700">Days</div>
+                  <div className="text-[9pt] font-bold text-slate-800 mb-1">Other</div>
+                  <div className="text-xl font-bold text-slate-900">
+                    {attendance.filter(a =>
+                      a.status === 'half_day' ||
+                      a.status === 'holiday' ||
+                      a.status === 'weekly_off'
+                    ).length}
+                  </div>
+                  <div className="text-[9pt] text-slate-700">Days</div>
                 </div>
+              </div>
             </div>
-        </div>
-    </div>
+          </div>
 
-    {/* SALES PERFORMANCE SECTION */}
-    <div className="border border-slate-300 rounded-lg overflow-hidden mb-4">
-        <div className="bg-gradient-to-r from-slate-100 to-slate-200 px-4 py-2 border-b border-slate-300">
-            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+          {/* SALES PERFORMANCE SECTION */}
+          <div className="border border-slate-300 rounded-lg overflow-hidden mb-4">
+            <div className="bg-gradient-to-r from-slate-100 to-slate-200 px-4 py-2 border-b border-slate-300">
+              <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-slate-700" />
                 Sales Performance
-            </h3>
-        </div>
-        <div className="p-4">
-            <div className="grid grid-cols-2 gap-3">
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-300 rounded-lg p-3">
-                    <div className="text-[9pt] font-bold text-blue-800 mb-1">Total Transactions</div>
-                    <div className="text-base font-bold text-blue-900">
-                        {(() => {
-                            if (agent?.monthlyTargetType === 'digit') return bookings.length;
-                            if (agent?.monthlyTargetType === 'amount') return projects.length;
-                            return salesData.length;
-                        })()}
-                    </div>
-                </div>
-                
-                <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-300 rounded-lg p-3">
-                    <div className="text-[9pt] font-bold text-green-800 mb-1">Completed Sales</div>
-                    <div className="text-base font-bold text-green-900">
-                        {(() => {
-                            if (agent?.monthlyTargetType === 'digit') {
-                                return bookings.filter(b => 
-                                    b.status === 'completed' || b.status === 'confirmed' || b.status === 'Completed'
-                                ).length;
-                            }
-                            if (agent?.monthlyTargetType === 'amount') {
-                                return projects.filter(p => 
-                                    p.status === 'Completed' || p.status === 'Delivered'
-                                ).length;
-                            }
-                            return salesData.filter(s => 
-                                s.status === 'completed' || s.status === 'confirmed' || 
-                                s.status === 'Completed' || s.status === 'Delivered'
-                            ).length;
-                        })()}
-                    </div>
-                </div>
+              </h3>
             </div>
-        </div>
-    </div>
+            <div className="p-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-300 rounded-lg p-3">
+                  <div className="text-[9pt] font-bold text-blue-800 mb-1">Total Transactions</div>
+                  <div className="text-base font-bold text-blue-900">
+                    {(() => {
+                      if (agent?.monthlyTargetType === 'digit') return bookings.length;
+                      if (agent?.monthlyTargetType === 'amount') return projects.length;
+                      return salesData.length;
+                    })()}
+                  </div>
+                </div>
 
-    {/* FOOTER */}
-    <div className="border-t border-slate-300 pt-3">
-        <div className="flex justify-between items-center text-[8pt] text-slate-600">
-            <div>
+                <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-300 rounded-lg p-3">
+                  <div className="text-[9pt] font-bold text-green-800 mb-1">Completed Sales</div>
+                  <div className="text-base font-bold text-green-900">
+                    {(() => {
+                      if (agent?.monthlyTargetType === 'digit') {
+                        return bookings.filter(b =>
+                          b.status === 'completed' || b.status === 'confirmed' || b.status === 'Completed'
+                        ).length;
+                      }
+                      if (agent?.monthlyTargetType === 'amount') {
+                        return projects.filter(p =>
+                          p.status === 'Completed' || p.status === 'Delivered'
+                        ).length;
+                      }
+                      return salesData.filter(s =>
+                        s.status === 'completed' || s.status === 'confirmed' ||
+                        s.status === 'Completed' || s.status === 'Delivered'
+                      ).length;
+                    })()}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* FOOTER */}
+          <div className="border-t border-slate-300 pt-3">
+            <div className="flex justify-between items-center text-[8pt] text-slate-600">
+              <div>
                 <div className="text-[9pt] font-bold text-slate-800 mb-1">HR Department</div>
                 <div>Contact: hr@globiumclouds.com | Phone: (021) 123-4567</div>
-            </div>
-            <div className="text-right">
+              </div>
+              <div className="text-right">
                 <div className="text-[9pt] font-bold text-slate-800 mb-1">Document Reference</div>
                 <div className="font-mono text-[8pt] bg-slate-100 px-2 py-1 rounded border">
-                    {agent.agentId}-{selectedMonth.toString().padStart(2, '0')}{selectedYear}-{format(new Date(), 'ddMMyy')}
+                  {agent.agentId}-{selectedMonth.toString().padStart(2, '0')}{selectedYear}-{format(new Date(), 'ddMMyy')}
                 </div>
                 <div className="mt-1 text-[7pt] italic">
-                    Computer generated document • Valid without signature
+                  Computer generated document • Valid without signature
                 </div>
+              </div>
             </div>
+          </div>
         </div>
-    </div>
-</div>
       </div>
     </div>
   );
