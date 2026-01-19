@@ -118,6 +118,9 @@ export default function Users() {
     role: { view: false, create: false, edit: false, delete: false, manage_roles: false },
     team: { view: false, create: false, edit: false, delete: false, export: false, approve: false },
     project: { view: false, create: false, edit: false, delete: false, export: false, approve: false }
+    ,
+    blog: { view: false, create: false, edit: false, delete: false, export: false, approve: false },
+    newsletter: { view: false, create: false, edit: false, delete: false, export: false, approve: false }
   };
 
   const [roleForm, setRoleForm] = useState({
@@ -728,6 +731,19 @@ export default function Users() {
       name: 'project',
       title: 'Project Management',
       description: 'Manage portfolio projects',
+      permissions: ['view', 'create', 'edit', 'delete', 'export', 'approve']
+    }
+    ,
+    {
+      name: 'blog',
+      title: 'Blog Management',
+      description: 'Manage blog posts and attachments',
+      permissions: ['view', 'create', 'edit', 'delete', 'export', 'approve']
+    },
+    {
+      name: 'newsletter',
+      title: 'Newsletter Management',
+      description: 'Manage newsletters and campaigns',
       permissions: ['view', 'create', 'edit', 'delete', 'export', 'approve']
     }
   ];
