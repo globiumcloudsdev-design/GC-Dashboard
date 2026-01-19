@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Menu, X, Home, User, Briefcase, FolderOpen, Users, Phone, Mail, Linkedin, Facebook, Instagram } from "lucide-react";
+import { Menu, X, Home, User, Briefcase, FolderOpen, Users, Phone, Mail, Linkedin, Facebook, Instagram, FileText } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 
@@ -38,6 +38,7 @@ export default function Header() {
     { href: "#about", label: "About", icon: User },
     { href: "#services", label: "Services", icon: Briefcase },
     { href: "#portfolio", label: "Portfolio", icon: FolderOpen },
+    { href: "/blogs", label: "Blog", icon: FileText },
     { href: "#team", label: "Team", icon: Users },
     { href: "#contact", label: "Contact", icon: Phone },
   ];
@@ -46,6 +47,9 @@ export default function Header() {
     if (href === "/") {
       // Home link: always navigate to home
       router.push("/");
+    } else if (href === "/blogs") {
+      // Blog link: direct navigation
+      router.push("/blogs");
     } else if (pathname === "/" && href.startsWith("#")) {
       // On home page, smooth scroll to section
       const element = document.querySelector(href);
