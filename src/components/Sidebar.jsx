@@ -19,6 +19,7 @@ import {
   UsersRound,
   FolderKanban,
   Book,
+  Mail,
 } from "lucide-react";
 
 import { useState, useEffect } from "react";
@@ -66,6 +67,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
     { label: "Projects", href: "/dashboard/projects", icon: FolderKanban, permission: { module: "project", action: "view" } },
     { label: "Blogs", href: "/dashboard/blogs", icon: Book, permission: { module: "blog", action: "view" } },
     { label: "News Letter", href: "/dashboard/news-letter", icon: UsersRound, permission: { module: "newsletter", action: "view" } },
+    { label: "Campaigns", href: "/dashboard/campaigns", icon: Mail, permission: { module: "newsletter", action: "view" } },
     { label: "Analytics", href: "/dashboard/analytics", icon: TrendingUp, permission: { module: "analytics", action: "view" } },
     { label: "Setting", href: "/dashboard/settings", icon: Settings, permission: { module: "settings", action: "view" } },
   ];

@@ -407,5 +407,72 @@ export const emailTemplates = {
       © ${new Date().getFullYear()} Globium Clouds. All rights reserved.
       www.globiumclouds.com
     `
+}),
+
+  campaignEmail: (subject, content, recipientEmail, campaignTitle) => ({
+    subject: subject,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+          .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
+          .header { background: linear-gradient(135deg, #10B5DB 0%, #0070f3 100%); color: white; padding: 40px 30px; text-align: center; border-radius: 8px 8px 0 0; }
+          .content { padding: 40px 30px; background: #f8f9fa; }
+          .message-box { background: white; padding: 30px; border-radius: 8px; border-left: 4px solid #10B5DB; margin: 20px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+          .footer { background: #333; color: white; padding: 20px 30px; text-align: center; font-size: 12px; border-radius: 0 0 8px 8px; }
+          .social-links { margin: 20px 0; }
+          .social-links a { margin: 0 10px; color: #10B5DB; text-decoration: none; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1 style="margin: 0; font-size: 28px;">Globium Clouds</h1>
+            <p style="margin: 10px 0 0 0; opacity: 0.9;">${campaignTitle}</p>
+          </div>
+
+          <div class="content">
+            <div class="message-box">
+              ${content}
+            </div>
+
+            <p style="text-align: center; color: #666; font-size: 14px;">
+              You're receiving this because you subscribed to our newsletter
+            </p>
+
+            <div class="social-links" style="text-align: center;">
+              <a href="https://www.linkedin.com/company/globiumclouds/" style="color: #0077b5;">LinkedIn</a> |
+              <a href="https://www.facebook.com/globiumclouds/" style="color: #1877f2;">Facebook</a> |
+              <a href="https://www.instagram.com/explore/locations/202412828462806/globium-clouds/" style="color: #e4405f;">Instagram</a>
+            </div>
+          </div>
+
+          <div class="footer">
+            <p style="margin: 0;">
+              © ${new Date().getFullYear()} Globium Clouds. All rights reserved.<br/>
+              <a href="https://globiumclouds.com" style="color: #10B5DB;">www.globiumclouds.com</a>
+            </p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+    text: `
+      ${campaignTitle}
+      
+      ${content.replace(/<[^>]+>/g, '')}
+
+      You're receiving this because you subscribed to our newsletter.
+
+      Stay connected:
+      LinkedIn: https://www.linkedin.com/company/globiumclouds/
+      Facebook: https://www.facebook.com/globiumclouds/
+      Instagram: https://www.instagram.com/explore/locations/202412828462806/globium-clouds/
+
+      © ${new Date().getFullYear()} Globium Clouds. All rights reserved.
+      www.globiumclouds.com
+    `
   })
 };

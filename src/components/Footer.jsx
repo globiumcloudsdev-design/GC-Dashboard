@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,9 +9,44 @@ import {
   FolderOpen, Users, Phone, User, Mail, Send, LogIn
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubscribe = async (e) => {
+    e.preventDefault();
+    
+    if (!email || !email.includes("@")) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        toast.success("Successfully subscribed to newsletter! Check your email.");
+        setEmail("");
+      } else {
+        toast.error(data.error || "Subscription failed");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to subscribe. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <footer className="bg-[#F8FAFC] text-gray-900 pt-20 border-t border-blue-100">
@@ -91,16 +127,23 @@ export default function Footer() {
           <div className="space-y-6">
             <h4 className="text-xs font-black uppercase tracking-[0.2em] text-[#10B5DB]">Newsletter</h4>
             <p className="text-sm text-gray-500 font-medium">Stay updated with cloud trends.</p>
-            <div className="flex flex-col gap-2">
+            <form onSubmit={handleSubscribe} className="flex flex-col gap-2">
               <input 
                 type="email" 
-                placeholder="your@email.com" 
+                placeholder="your@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
                 className="w-full bg-white border border-blue-100 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#10B5DB] outline-none transition-all shadow-sm"
               />
-              <button className="w-full bg-gray-900 text-white font-bold py-3 rounded-xl hover:bg-gray-800 transition-colors flex items-center justify-center gap-2">
-                Subscribe <Send className="w-4 h-4" />
+              <button 
+                type="submit"
+                disabled={loading}
+                className="w-full bg-gray-900 text-white font-bold py-3 rounded-xl hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? "Subscribing..." : "Subscribe"} <Send className="w-4 h-4" />
               </button>
-            </div>
+            </form>
           </div>
 
         </div>
