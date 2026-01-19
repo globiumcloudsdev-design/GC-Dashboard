@@ -669,8 +669,6 @@ import {
   Users,
   Calendar,
   Zap,
-  Award,
-  Star,
   TrendingUp,
   Target,
   ChevronRight,
@@ -680,10 +678,9 @@ import {
   CheckCircle2,
   Filter,
   Download,
-  Hash,
-  TrendingDown,
-  Percent
+  Hash
 } from 'lucide-react';
+import { ThemeContext } from '../../../../context/ThemeContext';
 import { AgentContext } from '../../../../context/AgentContext';
 import { useOfficeLocation } from '../../../../context/LocationContext';
 import { agentAttendanceService } from '../../../../services/agentAttendenceService';
@@ -705,16 +702,9 @@ const fadeUp = {
   })
 };
 
-// Target type configuration
-const TARGET_TYPES_CONFIG = {
-  none: { label: 'No Target', color: 'text-gray-600', bgColor: 'bg-gray-50', icon: Target },
-  digit: { label: 'Digit Target', color: 'text-blue-600', bgColor: 'bg-blue-50', icon: Hash },
-  amount: { label: 'Amount Target', color: 'text-green-600', bgColor: 'bg-green-50', icon: DollarSign },
-  both: { label: 'Both Targets', color: 'text-purple-600', bgColor: 'bg-purple-50', icon: TrendingUp }
-};
-
 const HomeScreen = () => {
   const router = useRouter();
+  const { theme } = useContext(ThemeContext);
   const { agent, isLoggedIn, isLoading: agentLoading } = useContext(AgentContext);
   const { officeLocation, checkRadius } = useOfficeLocation();
 
@@ -746,76 +736,8 @@ const HomeScreen = () => {
 
   const [recentActivity, setRecentActivity] = useState([]);
 
-  // Calculate progress based on target type
-  const calculateProgress = () => {
-    const { targetType, digitTarget, amountTarget, achievedDigits, achievedAmount } = targetStats;
-    
-    if (targetType === 'none') {
-      return {
-        percentage: 0,
-        isAchieved: false,
-        remainingText: 'No target set'
-      };
-    }
-    
-    if (targetType === 'digit') {
-      const progress = digitTarget > 0 ? achievedDigits / digitTarget : 0;
-      const percentage = Math.min(progress * 100, 100);
-      return {
-        percentage,
-        isAchieved: achievedDigits >= digitTarget,
-        remaining: Math.max(0, digitTarget - achievedDigits),
-        completed: achievedDigits,
-        target: digitTarget,
-        label: 'units',
-        type: 'digit'
-      };
-    }
-    
-    if (targetType === 'amount') {
-      const progress = amountTarget > 0 ? achievedAmount / amountTarget : 0;
-      const percentage = Math.min(progress * 100, 100);
-      return {
-        percentage,
-        isAchieved: achievedAmount >= amountTarget,
-        remaining: Math.max(0, amountTarget - achievedAmount),
-        completed: achievedAmount,
-        target: amountTarget,
-        label: targetStats.currency,
-        type: 'amount'
-      };
-    }
-    
-    if (targetType === 'both') {
-      // Calculate combined progress (average of both)
-      const digitProgress = digitTarget > 0 ? achievedDigits / digitTarget : 0;
-      const amountProgress = amountTarget > 0 ? achievedAmount / amountTarget : 0;
-      const combinedProgress = (digitProgress + amountProgress) / 2;
-      const percentage = Math.min(combinedProgress * 100, 100);
-      
-      const digitAchieved = achievedDigits >= digitTarget;
-      const amountAchieved = achievedAmount >= amountTarget;
-      
-      return {
-        percentage,
-        isAchieved: digitAchieved && amountAchieved,
-        remainingDigits: Math.max(0, digitTarget - achievedDigits),
-        remainingAmount: Math.max(0, amountTarget - achievedAmount),
-        completedDigits: achievedDigits,
-        completedAmount: achievedAmount,
-        targetDigits: digitTarget,
-        targetAmount: amountTarget,
-        currency: targetStats.currency,
-        type: 'both'
-      };
-    }
-    
-    return {
-      percentage: 0,
-      isAchieved: false,
-      remainingText: 'Invalid target type'
-    };
-  };
+  // Current month for target display
+  const [currentMonth, setCurrentMonth] = useState('');
 
   // Fetch attendance data
   const fetchAttendanceData = async () => {
@@ -894,15 +816,57 @@ const HomeScreen = () => {
       let achievedDigits = 0;
       let achievedAmount = 0;
       
+      // For digit or both target types, count completed bookings
       if (agentTargetType === 'digit' || agentTargetType === 'both') {
         achievedDigits = currentMonthCompletedBookings.length;
       }
       
+      // For amount target: sum from completed projects
+      // For both target: revenue from projects ONLY (not bookings)
       if (agentTargetType === 'amount' || agentTargetType === 'both') {
-        // Assuming each booking has an amount field, adjust as needed
-        achievedAmount = currentMonthCompletedBookings.reduce((sum, booking) => {
-          return sum + (parseFloat(booking.amount) || 0);
-        }, 0);
+        // Fetch projects for current month
+        try {
+          // Fetch ALL projects for this agent
+          console.log(`🔍 Dashboard: Fetching ALL projects for agent ${agentId}`);
+          const projectsRes = await fetch(`/api/projects?assignedAgent=${agentId}&limit=1000`);
+          const projectsJson = await projectsRes.json();
+          console.log(`📦 Dashboard: Projects API response:`, projectsJson);
+          
+          let projectData = [];
+          if (projectsJson && projectsJson.success) {
+            projectData = projectsJson.data || [];
+          } else if (Array.isArray(projectsJson)) {
+            projectData = projectsJson;
+          }
+          
+          // Filter by current month based on updatedAt or completedAt
+          projectData = projectData.filter(p => {
+            const relevantDate = p.completedAt ? new Date(p.completedAt) : new Date(p.updatedAt);
+            return relevantDate >= currentMonthStart && relevantDate <= currentMonthEnd;
+          });
+          
+          console.log(`📦 Dashboard: Projects in current month: ${projectData.length} projects`);
+          
+          // Calculate amount from completed projects only
+          const completedProjects = projectData.filter(p => {
+            const status = (p.status || '').toString().toLowerCase();
+            return status === 'completed' || status === 'delivered';
+          });
+          
+          achievedAmount = completedProjects.reduce((sum, p) => {
+            const amt = parseFloat(p.price) || parseFloat(p.amount) || 0;
+            return sum + (isNaN(amt) ? 0 : amt);
+          }, 0);
+          
+          console.log(`💰 Revenue from projects (${agentTargetType} target):`, {
+            achievedAmount,
+            totalProjects: projectData.length,
+            completedProjects: completedProjects.length,
+            completedProjectDetails: completedProjects.map(p => ({ title: p.title, price: p.price, status: p.status }))
+          });
+        } catch (projErr) {
+          console.error('❌ Failed to fetch projects for target calculation', projErr);
+        }
       }
       
       // Update target stats
@@ -913,20 +877,37 @@ const HomeScreen = () => {
         currency,
         achievedDigits,
         achievedAmount,
-        progressPercentage: 0, // Will be calculated
+        progressPercentage: 0, // Will be calculated in MonthlyTargetProgress component
         isTargetAchieved: false
       });
 
-      // Create recent activity from latest bookings
-      const activity = allBookings.slice(0, 5).map((booking, index) => ({
-        id: booking._id || index,
-        message: `New booking from ${booking?.formData?.firstName || booking?.customerName || 'Customer'}`,
-        amount: booking.amount ? `${booking.currency || currency} ${parseFloat(booking.amount).toLocaleString()}` : null,
-        time: new Date(booking.createdAt).toLocaleDateString('en-IN', {
-          month: 'short',
-          day: 'numeric'
-        })
-      }));
+      // Create recent activity from latest bookings with amounts
+      const activity = allBookings.slice(0, 5).map((booking, index) => {
+        const amount = parseFloat(booking.amount) || 
+                      parseFloat(booking.discountedPrice) || 
+                      parseFloat(booking.totalPrice) || 
+                      parseFloat(booking.price);
+        
+        let currencySymbol = currency || 'PKR';
+        if (agentTargetType === 'digit') {
+          currencySymbol = '$';
+        } else if (currencySymbol === 'USD') {
+          currencySymbol = '$';
+        }
+        
+        return {
+          id: booking._id || index,
+          message: `New booking from ${booking?.formData?.firstName || booking?.customerName || 'Customer'}`,
+          amount: amount ? `${currencySymbol} ${amount.toLocaleString()}` : null,
+          status: booking.status || 'Pending',
+          time: new Date(booking.createdAt).toLocaleDateString('en-IN', {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })
+        };
+      });
 
       setRecentActivity(activity);
 
@@ -1051,8 +1032,16 @@ const HomeScreen = () => {
     }
   }, [isLoggedIn, agentLoading, router]);
 
-  // Calculate progress whenever target stats change
-  const progressInfo = calculateProgress();
+  // Set current month on mount
+  useEffect(() => {
+    const now = new Date();
+    const months = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December",
+    ];
+    const currentMonthString = `${months[now.getMonth()]} ${now.getFullYear()}`;
+    setCurrentMonth(currentMonthString);
+  }, []);
 
   // Show loading
   if (agentLoading) {
@@ -1096,60 +1085,126 @@ const HomeScreen = () => {
   const goToAttendance = () => router.push('/agent/attendance');
   const goToSales = () => router.push('/agent/sales');
 
-  // Get target type config
-  const targetConfig = TARGET_TYPES_CONFIG[targetStats.targetType] || TARGET_TYPES_CONFIG.none;
-  const TargetIcon = targetConfig.icon;
-
-  // Stat cards data
-  const statCards = [
-    {
-      title: targetStats.targetType === 'digit' || targetStats.targetType === 'both' ? "Completed Units" : "Total Bookings",
+  // Stat cards data - dynamic based on target type
+  const getStatCards = () => {
+    const cards = [];
+    
+    // Card 1: Completed Units/Bookings (always show)
+    cards.push({
+      title: "Completed Sales",
       value: targetStats.achievedDigits.toString(),
-      subtitle: targetStats.targetType === 'digit' || targetStats.targetType === 'both' ? "This Month" : "Bookings",
-      icon: targetStats.targetType === 'digit' || targetStats.targetType === 'both' ? Hash : CheckCircle2,
+      subtitle: "This Month",
+      icon: CheckCircle2,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
       onClick: goToSales
-    },
-    {
+    });
+    
+    // Card 2: Present Days (always show)
+    cards.push({
       title: "Present Days",
       value: (attendanceData.monthlyStats?.present || 0).toString(),
+      subtitle: "This Month",
       icon: Users,
       color: 'text-green-600',
       bgColor: 'bg-green-50',
       onClick: goToAttendance
-    },
-    {
-      title: targetStats.targetType === 'amount' || targetStats.targetType === 'both' ? "Revenue Achieved" : "Target Type",
-      value: targetStats.targetType === 'amount' || targetStats.targetType === 'both' 
-        ? `${targetStats.currency} ${targetStats.achievedAmount.toLocaleString()}`
-        : targetConfig.label,
-      subtitle: targetStats.targetType === 'amount' || targetStats.targetType === 'both' ? "This Month" : "",
-      icon: targetStats.targetType === 'amount' || targetStats.targetType === 'both' ? DollarSign : TargetIcon,
-      color: targetStats.targetType === 'amount' || targetStats.targetType === 'both' ? 'text-green-600' : targetConfig.color,
-      bgColor: targetStats.targetType === 'amount' || targetStats.targetType === 'both' ? 'bg-green-50' : targetConfig.bgColor,
-      onClick: goToSales
-    },
-    {
-      title: "Progress",
-      value: `${progressInfo.percentage.toFixed(1)}%`,
-      subtitle: "Target Completion",
-      icon: Percent,
-      color: progressInfo.isAchieved ? 'text-green-600' : progressInfo.percentage >= 70 ? 'text-yellow-600' : 'text-red-600',
-      bgColor: progressInfo.isAchieved ? 'bg-green-50' : progressInfo.percentage >= 70 ? 'bg-yellow-50' : 'bg-red-50',
-      onClick: goToSales
+    });
+    
+    // Card 3 & 4: Based on target type
+    if (targetStats.targetType === 'digit') {
+      cards.push({
+        title: "Digit Target",
+        value: targetStats.digitTarget.toString(),
+        subtitle: "Units Goal",
+        icon: Hash,
+        color: 'text-purple-600',
+        bgColor: 'bg-purple-50',
+        onClick: goToSales
+      });
+      cards.push({
+        title: "Remaining",
+        value: Math.max(0, targetStats.digitTarget - targetStats.achievedDigits).toString(),
+        subtitle: "Units Needed",
+        icon: Target,
+        color: 'text-orange-600',
+        bgColor: 'bg-orange-50',
+        onClick: goToSales
+      });
+    } else if (targetStats.targetType === 'amount') {
+      cards.push({
+        title: "Revenue Target",
+        value: `${targetStats.currency} ${targetStats.amountTarget.toLocaleString()}`,
+        subtitle: "Monthly Goal",
+        icon: DollarSign,
+        color: 'text-purple-600',
+        bgColor: 'bg-purple-50',
+        onClick: goToSales
+      });
+      cards.push({
+        title: "Revenue Achieved",
+        value: `${targetStats.currency} ${targetStats.achievedAmount.toLocaleString()}`,
+        subtitle: "This Month",
+        icon: TrendingUp,
+        color: 'text-green-600',
+        bgColor: 'bg-green-50',
+        onClick: goToSales
+      });
+    } else if (targetStats.targetType === 'both') {
+      cards.push({
+        title: "Digit Target",
+        value: `${targetStats.achievedDigits}/${targetStats.digitTarget}`,
+        subtitle: "Units Progress",
+        icon: Hash,
+        color: 'text-purple-600',
+        bgColor: 'bg-purple-50',
+        onClick: goToSales
+      });
+      cards.push({
+        title: "Revenue Progress",
+        value: `${targetStats.currency} ${targetStats.achievedAmount.toLocaleString()}`,
+        subtitle: `of ${targetStats.currency} ${targetStats.amountTarget.toLocaleString()}`,
+        icon: DollarSign,
+        color: 'text-green-600',
+        bgColor: 'bg-green-50',
+        onClick: goToSales
+      });
+    } else {
+      // No target type
+      cards.push({
+        title: "Total Bookings",
+        value: targetStats.achievedDigits.toString(),
+        subtitle: "This Month",
+        icon: Target,
+        color: 'text-purple-600',
+        bgColor: 'bg-purple-50',
+        onClick: goToSales
+      });
+      cards.push({
+        title: "Performance",
+        value: "N/A",
+        subtitle: "No Target Set",
+        icon: TrendingUp,
+        color: 'text-gray-600',
+        bgColor: 'bg-gray-50',
+        onClick: goToSales
+      });
     }
-  ];
+    
+    return cards;
+  };
+  
+  const statCards = getStatCards();
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-8">
       {/* Header */}
-      <div className="mb-8 p-16">
+      <div className="mb-6 px-4 sm:px-6 lg:px-8 pt-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
           Welcome back, {agent?.agentName || agent?.name || "Agent"}!
         </h1>
         <p className="text-gray-600 mt-2">
-          Here's your performance overview
+          Here's your performance overview for {currentMonth}
         </p>
       </div>
 
@@ -1160,7 +1215,7 @@ const HomeScreen = () => {
           animate="visible"
           variants={fadeUp}
           custom={1}
-          className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-lg border border-white/50 mb-6 lg:mb-8"
+          className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-lg border border-white/50 mb-6 mx-4 sm:mx-6 lg:mx-8"
         >
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-start sm:items-center gap-4 flex-1">
@@ -1214,7 +1269,7 @@ const HomeScreen = () => {
       )}
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8 px-4 sm:px-6 lg:px-8">
         {statCards.map((stat, index) => (
           <motion.div
             key={index}
@@ -1244,7 +1299,7 @@ const HomeScreen = () => {
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-7 gap-6 lg:gap-8">
+      <div className="grid grid-cols-1 xl:grid-cols-7 gap-6 lg:gap-8 px-4 sm:px-6 lg:px-8">
         {/* Recent Activity - 4/7 width */}
         <motion.div
           initial="hidden"
@@ -1284,18 +1339,30 @@ const HomeScreen = () => {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                    onClick={goToSales}
                   >
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">{activity.message}</p>
-                      <div className="flex items-center justify-between mt-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="text-sm font-medium text-gray-900">{activity.message}</p>
+                        {activity.status && (
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${
+                            activity.status.toLowerCase() === 'completed' ? 'bg-green-100 text-green-700' :
+                            activity.status.toLowerCase() === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                            'bg-blue-100 text-blue-700'
+                          }`}>
+                            {activity.status}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between mt-1 gap-2">
                         {activity.amount && (
                           <p className="text-xs font-semibold text-green-600">{activity.amount}</p>
                         )}
                         <p className="text-xs text-gray-500">{activity.time}</p>
                       </div>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-gray-400" />
+                    <ChevronRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
                   </motion.div>
                 )) : (
                   <div className="text-center py-8 text-gray-500">
@@ -1327,148 +1394,17 @@ const HomeScreen = () => {
           {/* Shift Schedule Component */}
           <ShiftSchedule />
 
-          {/* Target Progress Card */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="p-4 border-b border-gray-200 flex items-center gap-3">
-              <div className={`p-2 ${targetConfig.bgColor} rounded-lg`}>
-                <TargetIcon className={`h-5 w-5 ${targetConfig.color}`} />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">
-                  {targetConfig.label} Progress
-                </h3>
-                <p className="text-xs text-gray-500">
-                  {targetStats.targetType === 'none' 
-                    ? 'No target set' 
-                    : `Track your ${targetStats.targetType} progress`}
-                </p>
-              </div>
-            </div>
-            <div className="p-4">
-              {/* Progress Bar */}
-              <div className="mb-6">
-                <div className="flex justify-between items-center text-sm mb-2">
-                  <span className="text-gray-600 font-medium">Completion</span>
-                  <span className={`text-lg font-bold ${
-                    progressInfo.isAchieved ? 'text-green-600' : 
-                    progressInfo.percentage >= 70 ? 'text-yellow-600' : 'text-red-600'
-                  }`}>
-                    {progressInfo.percentage.toFixed(1)}%
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                  <div 
-                    className={`h-3 rounded-full transition-all duration-500 relative ${
-                      progressInfo.isAchieved ? 'bg-gradient-to-r from-green-500 to-emerald-500' :
-                      progressInfo.percentage >= 70 ? 'bg-gradient-to-r from-yellow-500 to-orange-500' :
-                      'bg-gradient-to-r from-red-500 to-pink-500'
-                    }`}
-                    style={{ width: `${progressInfo.percentage}%` }}
-                  >
-                    {progressInfo.percentage > 10 && !progressInfo.isAchieved && (
-                      <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
-                    )}
-                  </div>
-                </div>
-              </div>
-              
-              {/* Target Details */}
-              {targetStats.targetType !== 'none' && (
-                <div className="space-y-4">
-                  {/* Digit Target Section */}
-                  {(targetStats.targetType === 'digit' || targetStats.targetType === 'both') && (
-                    <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-3 rounded-lg border border-blue-100">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Hash className="h-4 w-4 text-blue-600" />
-                        <p className="text-xs text-gray-600 font-medium">Digit Target</p>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <p className="font-bold text-gray-900 text-lg">
-                            {progressInfo.completed || 0} / {progressInfo.target || 0}
-                          </p>
-                          <p className="text-xs text-gray-500">Completed units</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-gray-900">
-                            {progressInfo.remaining || 0} units
-                          </p>
-                          <p className="text-xs text-gray-500">Remaining</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Amount Target Section */}
-                  {(targetStats.targetType === 'amount' || targetStats.targetType === 'both') && (
-                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-3 rounded-lg border border-green-100">
-                      <div className="flex items-center gap-2 mb-2">
-                        <DollarSign className="h-4 w-4 text-green-600" />
-                        <p className="text-xs text-gray-600 font-medium">Amount Target</p>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <p className="font-bold text-gray-900 text-lg">
-                            {targetStats.currency} {progressInfo.completed?.toLocaleString() || 0} / {targetStats.currency} {(progressInfo.target || progressInfo.targetAmount || 0).toLocaleString()}
-                          </p>
-                          <p className="text-xs text-gray-500">Revenue achieved</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-gray-900">
-                            {targetStats.currency} {(progressInfo.remaining || progressInfo.remainingAmount || 0).toLocaleString()}
-                          </p>
-                          <p className="text-xs text-gray-500">Remaining</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Combined Progress for "both" type */}
-                  {targetStats.targetType === 'both' && (
-                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-3 rounded-lg border border-purple-100">
-                      <div className="flex items-center gap-2 mb-2">
-                        <TrendingUp className="h-4 w-4 text-purple-600" />
-                        <p className="text-xs text-gray-600 font-medium">Combined Progress</p>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <p className="font-bold text-gray-900 text-lg">
-                            {progressInfo.completedDigits || 0}/{progressInfo.targetDigits || 0}
-                          </p>
-                          <p className="text-xs text-gray-500">Units</p>
-                        </div>
-                        <div>
-                          <p className="font-bold text-gray-900 text-lg">
-                            {targetStats.currency} {(progressInfo.completedAmount || 0).toLocaleString()}
-                          </p>
-                          <p className="text-xs text-gray-500">Revenue</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Target Achieved Message */}
-                  {progressInfo.isAchieved && (
-                    <div className="bg-gradient-to-br from-emerald-50 to-green-50 p-3 rounded-lg border border-emerald-100">
-                      <div className="flex items-center justify-center gap-2">
-                        <Award className="h-5 w-5 text-emerald-600" />
-                        <span className="font-bold text-emerald-700">🎉 Monthly Target Achieved!</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-              
-              {/* No Target Set Message */}
-              {targetStats.targetType === 'none' && (
-                <div className="text-center py-4">
-                  <Target className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                  <p className="text-gray-500">No monthly target has been set for you</p>
-                  <p className="text-xs text-gray-400 mt-1">Contact your manager to set targets</p>
-                </div>
-              )}
-            </div>
-          </div>
+          {/* Monthly Target Progress */}
+          <MonthlyTargetProgress
+            theme={theme}
+            currentMonth={currentMonth}
+            achievedDigits={targetStats.achievedDigits}
+            achievedAmount={targetStats.achievedAmount}
+            digitTarget={targetStats.digitTarget}
+            amountTarget={targetStats.amountTarget}
+            targetType={targetStats.targetType}
+            currency={targetStats.currency}
+          />
 
           {/* Quick Actions */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">

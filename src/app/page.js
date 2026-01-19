@@ -9,6 +9,7 @@ import ServicesSection from "@/components/ServicesSection";
 import TechnologyStack from "@/components/TechnologyStack";
 import TrustSection from "@/components/TrustSection";
 import AboutSection from "@/components/AboutSection";
+import BlogSection from "@/components/BlogSection";
 import ContactSection from "@/components/ContactSection";
 import Footer from "@/components/Footer";
 
@@ -38,6 +39,7 @@ export default function Home() {
       <PortfolioSection />
       <TeamSection />
       <AboutSection />
+      <BlogSection />
       <ContactSection />
       <Footer />
     </div>

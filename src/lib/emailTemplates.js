@@ -82,7 +82,7 @@ export function getWebsiteConfig(webName) {
 // 2. BASE EMAIL TEMPLATE & UTILITIES
 // =========================================
 
-function createBaseEmailTemplate(options) {
+export function createBaseEmailTemplate(options) {
   const {
     brandColor,
     bgColor,

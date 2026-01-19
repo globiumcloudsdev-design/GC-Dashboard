@@ -154,6 +154,8 @@ import Shift from '@/Models/Shift';
 import { sendEmail, emailTemplates } from '@/lib/email';
 import connectDB from '@/lib/mongodb';
 import Agent from '@/Models/Agent';
+import { cloudinaryService } from '@/lib/cloudinary';
+import QRCode from 'qrcode';
 
 // GET - Get all agents with pagination and search
 export async function GET(request) {
@@ -194,7 +196,12 @@ export async function GET(request) {
 
     // Filter by target type
     if (targetType && targetType !== 'all') {
-      searchQuery.monthlyTargetType = targetType;
+      if (targetType === 'amount') {
+          // Fetch agents who have Amount Target or Both
+          searchQuery.monthlyTargetType = { $in: ['amount', 'both'] };
+      } else {
+          searchQuery.monthlyTargetType = targetType;
+      }
     }
 
     // Filter by status
@@ -323,6 +330,25 @@ export async function POST(request) {
       );
     }
 
+    // Generate QR Code and upload to Cloudinary
+    let qrCodeUrl = '';
+    try {
+      const qrData = JSON.stringify({
+        id: agentId.toUpperCase(),
+        name: agentName.trim(),
+        designation: designation || 'Sales Agent',
+        company: 'Globium Clouds'
+      });
+      const dataUrl = await QRCode.toDataURL(qrData);
+      // Convert data URL to Buffer and upload
+      const base64Data = dataUrl.replace(/^data:image\/.+;base64,/, '');
+      const buffer = Buffer.from(base64Data, 'base64');
+      const uploadResult = await cloudinaryService.uploadImage(buffer, 'agents/qr-codes');
+      qrCodeUrl = uploadResult?.secure_url || uploadResult?.url || dataUrl;
+    } catch (qrError) {
+      console.error('QR Code Generation/Error Uploading to Cloudinary:', qrError);
+    }
+
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
@@ -343,6 +369,9 @@ export async function POST(request) {
       basicSalary: basicSalary ? parseFloat(basicSalary) : 0,
       attendanceAllowance: attendanceAllowance ? parseFloat(attendanceAllowance) : 0,
       
+      // QR Code
+      qrCodeUrl,
+
       // Map new incentive fields
       commissionType,
       perSaleIncentiveInTarget: strToNum(perSaleIncentiveInTarget),

@@ -254,6 +254,11 @@ const agentSchema = new mongoose.Schema({
     uploadedAt: { type: Date, default: Date.now }
   }],
 
+  // ✅ Auto Generated QR Code
+  qrCodeUrl: {
+    type: String
+  },
+
   // Naye fields
   employeeType: {
     type: String,

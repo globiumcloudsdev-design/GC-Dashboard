@@ -33,6 +33,35 @@ export function ProjectFormDialog({ open, onOpenChange, onSubmit, isLoading, ini
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
 
+  const categories = projectService.getCategories();
+  const projectTypes = projectService.getProjectTypes();
+
+  // New states for sales
+  const [revenueAgents, setRevenueAgents] = useState([]);
+  const [agentsLoading, setAgentsLoading] = useState(false);
+
+  // Fetch revenue agents
+  useEffect(() => {
+    async function fetchRevenueAgents() {
+      setAgentsLoading(true);
+      try {
+        const res = await fetch('/api/agents?targetType=amount&limit=100');
+        const json = await res.json();
+        if (json.success) {
+          setRevenueAgents(json.agents || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch revenue agents", error);
+      } finally {
+        setAgentsLoading(false);
+      }
+    }
+    
+    if (open) {
+      fetchRevenueAgents();
+    }
+  }, [open]);
+
   // Form state
   const [formData, setFormData] = useState({
     title: '',
@@ -99,6 +128,12 @@ export function ProjectFormDialog({ open, onOpenChange, onSubmit, isLoading, ini
           isFeatured: initialData.isFeatured || false,
           metaTitle: initialData.metaTitle || '',
           metaDescription: initialData.metaDescription || '',
+          // New fields
+          price: initialData.price || '',
+          assignedAgent: initialData.assignedAgent?._id || '',
+          deadline: initialData.deadline ? new Date(initialData.deadline).toISOString().split('T')[0] : '',
+          status: initialData.status || 'Pending',
+          progress: initialData.progress || 0
         });
         setThumbnail(initialData.thumbnail || null);
         setImages(initialData.images || []);
@@ -131,6 +166,12 @@ export function ProjectFormDialog({ open, onOpenChange, onSubmit, isLoading, ini
       isFeatured: false,
       metaTitle: '',
       metaDescription: '',
+      // New fields
+      price: '',
+      assignedAgent: '',
+      deadline: '',
+      status: 'Pending',
+      progress: 0
     });
     setThumbnail(null);
     setImages([]);
@@ -349,6 +390,7 @@ export function ProjectFormDialog({ open, onOpenChange, onSubmit, isLoading, ini
       // Prepare final data
       const finalData = {
         ...formData,
+        assignedAgent: (formData.assignedAgent === 'unassigned' || formData.assignedAgent === '') ? null : formData.assignedAgent,
         thumbnail: finalThumbnail,
         images: allImages,
       };
@@ -360,9 +402,6 @@ export function ProjectFormDialog({ open, onOpenChange, onSubmit, isLoading, ini
       console.error('Submit error:', error);
     }
   };
-
-  const categories = projectService.getCategories();
-  const projectTypes = projectService.getProjectTypes();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -456,6 +495,73 @@ export function ProjectFormDialog({ open, onOpenChange, onSubmit, isLoading, ini
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+                </div>
+
+                {/* Sales & Assignment Section */}
+                <div className="p-4 bg-slate-50 border rounded-lg space-y-4">
+                  <h3 className="font-semibold text-sm text-slate-900 border-b pb-2 mb-2">Sales & Assignment</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="price">Project Price (Revenue)</Label>
+                        <Input
+                            id="price"
+                            name="price"
+                            type="number"
+                            value={formData.price}
+                            onChange={handleInputChange}
+                            placeholder="0.00"
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="assignedAgent">Assign Agent (Revenue Target)</Label>
+                        <Select
+                            value={formData.assignedAgent}
+                            onValueChange={(value) => setFormData(prev => ({ ...prev, assignedAgent: value }))}
+                            disabled={agentsLoading}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder={agentsLoading ? "Loading..." : "Select Agent"} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="unassigned">Unassigned</SelectItem>
+                                {revenueAgents.map((agent) => (
+                                    <SelectItem key={agent._id} value={agent._id}>
+                                        {agent.agentName} ({agent.agentId})
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="status">Project Status</Label>
+                         <Select
+                            value={formData.status}
+                            onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select Status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {['Pending', 'In Progress', 'Completed', 'Delivered', 'Cancelled', 'On Hold'].map((st) => (
+                                    <SelectItem key={st} value={st}>{st}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                     
+                     <div className="space-y-2">
+                        <Label htmlFor="deadline">Deadline</Label>
+                        <Input
+                            id="deadline"
+                            name="deadline"
+                            type="date"
+                            value={formData.deadline}
+                            onChange={handleInputChange}
+                        />
+                    </div>
                   </div>
                 </div>
 

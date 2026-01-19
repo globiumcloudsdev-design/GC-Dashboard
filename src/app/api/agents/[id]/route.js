@@ -3,7 +3,9 @@ import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Agent from '@/Models/Agent';
 import Shift from '@/Models/Shift';
+import { cloudinaryService } from '@/lib/cloudinary';
 import bcrypt from 'bcryptjs';
+import QRCode from 'qrcode';
 
 // GET single agent
 export async function GET(request, { params }) {
@@ -158,6 +160,25 @@ export async function PUT(request, { params }) {
     // Update Bank Details & Documents
     if (bankDetails) updateData.bankDetails = bankDetails;
     if (documents) updateData.documents = documents;
+
+    // Check if QR Code exists, if not generate it and upload to Cloudinary
+    if (!agent.qrCodeUrl) {
+      try {
+        const qrContent = {
+           id: (agentId || agent.agentId).toUpperCase(),
+           name: (agentName || agent.agentName).trim(),
+           designation: (designation || agent.designation || 'Sales Agent'),
+           company: 'Globium Clouds'
+        };
+        const dataUrl = await QRCode.toDataURL(JSON.stringify(qrContent));
+        const base64Data = dataUrl.replace(/^data:image\/.+;base64,/, '');
+        const buffer = Buffer.from(base64Data, 'base64');
+        const uploadResult = await cloudinaryService.uploadImage(buffer, 'agents/qr-codes');
+        updateData.qrCodeUrl = uploadResult?.secure_url || uploadResult?.url || dataUrl;
+      } catch (qrError) {
+        console.error('QR Code Generation/Error Uploading to Cloudinary during Update:', qrError);
+      }
+    }
 
     // Remove old field if present in body 
     // if (perSaleIncentive !== undefined) updateData.perSaleIncentive = parseFloat(perSaleIncentive) || 0;

@@ -130,6 +130,12 @@ const roleSchema = new mongoose.Schema({
     // 👥 Team Management
     team: permissionGroupSchema,
 
+    // 📰 Blog Management
+    blog: permissionGroupSchema,
+
+    // ✉️ Newsletter Management
+    newsletter: permissionGroupSchema,
+
     // 📁 Project Management
     project: permissionGroupSchema
   },

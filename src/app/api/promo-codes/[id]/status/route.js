@@ -146,7 +146,7 @@ export async function GET(request, { params }) {
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
     
     // Validate ID
     if (!id || id === 'undefined' || id === 'null') {

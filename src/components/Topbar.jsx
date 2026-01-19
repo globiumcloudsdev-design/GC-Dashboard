@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useId } from "react";
+import { useState } from "react";
 import { useAuth } from '@/context/AuthContext';
 import {
   Bell,
@@ -29,7 +29,6 @@ import { AnimatePresence, motion } from "framer-motion";
 export default function Topbar({ collapsed }) {
   const { user, logout } = useAuth();
   const [showNoti, setShowNoti] = useState(false);
-  const profileMenuId = useId();
 
   const notifications = [
     {
@@ -140,7 +139,7 @@ export default function Topbar({ collapsed }) {
 
         {/* Profile Dropdown */}
         <DropdownMenu>
-          <DropdownMenuTrigger asChild id={profileMenuId}>
+          <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
               className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 rounded-lg px-2 py-1"

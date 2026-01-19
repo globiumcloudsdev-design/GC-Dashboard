@@ -18,6 +18,8 @@ import {
   X,
   UsersRound,
   FolderKanban,
+  Book,
+  Mail,
 } from "lucide-react";
 
 import { useState, useEffect } from "react";
@@ -59,10 +61,13 @@ export default function Sidebar({ collapsed, setCollapsed }) {
     { label: "Promo Code", href: "/dashboard/promo-codes", icon: Code2Icon, permission: { module: "promoCode", action: "view" } },
     { label: "Sales", href: "/dashboard/sales", icon: DollarSign, permission: { module: "sales", action: "view" } },
     { label: "Attendance", href: "/dashboard/view-attendance", icon: ClipboardList, permission: { module: "attendance", action: "view" } },
-        { label: "Payroll", href: "/dashboard/payroll", icon: ClipboardList, permission: { module: "payroll", action: "view" } },
+    { label: "Payroll", href: "/dashboard/payroll", icon: ClipboardList, permission: { module: "payroll", action: "view" } },
     { label: "Notifications", href: "/dashboard/notifications", icon: Bell, permission: { module: "notification", action: "view" } },
     { label: "Teams", href: "/dashboard/teams", icon: UsersRound, permission: { module: "team", action: "view" } },
     { label: "Projects", href: "/dashboard/projects", icon: FolderKanban, permission: { module: "project", action: "view" } },
+    { label: "Blogs", href: "/dashboard/blogs", icon: Book, permission: { module: "blog", action: "view" } },
+    { label: "News Letter", href: "/dashboard/news-letter", icon: UsersRound, permission: { module: "newsletter", action: "view" } },
+    { label: "Campaigns", href: "/dashboard/campaigns", icon: Mail, permission: { module: "newsletter", action: "view" } },
     { label: "Analytics", href: "/dashboard/analytics", icon: TrendingUp, permission: { module: "analytics", action: "view" } },
     { label: "Setting", href: "/dashboard/settings", icon: Settings, permission: { module: "settings", action: "view" } },
   ];
@@ -99,8 +104,8 @@ export default function Sidebar({ collapsed, setCollapsed }) {
       <motion.aside
         initial={false}
         animate={{
-          width: isMobile 
-            ? (openMobile ? "100vw" : 0) 
+          width: isMobile
+            ? (openMobile ? "100vw" : 0)
             : (collapsed ? 80 : 260),
           x: isMobile && !openMobile ? "-100%" : 0
         }}
@@ -184,8 +189,8 @@ export default function Sidebar({ collapsed, setCollapsed }) {
                       size={22}
                       className={cn(
                         "transition-all duration-200 flex-shrink-0",
-                        isActive 
-                          ? "text-[#10B5DB]" 
+                        isActive
+                          ? "text-[#10B5DB]"
                           : "text-gray-600 dark:text-gray-400 group-hover:text-[#10B5DB]"
                       )}
                     />

@@ -3,6 +3,21 @@ const nextConfig = {
   turbopack: {},  // 👈 Add this to silence the error
 
   serverExternalPackages: ['nodemailer'],  // updated field
+  
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        pathname: '**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'res.cloudinary.com',
+        pathname: '**',
+      },
+    ],
+  },
 
   // 🚀 Performance Optimizations
   images: {
