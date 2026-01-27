@@ -201,10 +201,10 @@ export default function DataTable({
           {/* TABLE CONTAINER WITH FIXED HEIGHT AND SCROLL */}
           <div
             ref={tableContainerRef}
-            className="overflow-auto"
+            className={`overflow-auto ${tableHeight === 'auto' ? '' : ''}`}
             style={{
-              height: tableHeight, // Dynamic height to contain scroll
-              minHeight: '400px',
+              height: tableHeight === 'auto' ? 'auto' : tableHeight,
+              minHeight: tableHeight === 'auto' ? 'auto' : '400px',
               overscrollBehavior: 'contain'
             }}
           >
