@@ -245,6 +245,8 @@ export default function AgentProjectsPage() {
             onOpenChange={setFormOpen}
             initialData={editingProject}
             onSubmit={handleSubmit}
+            userType="agent"
+            currentAgentId={agent?.id}
         />
       </div>
     </div>

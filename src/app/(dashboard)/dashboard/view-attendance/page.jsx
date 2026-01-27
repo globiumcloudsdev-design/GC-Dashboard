@@ -1,4 +1,3 @@
-
 // src/app/(dashboard)/dashboard/view-attendance/page.jsx
 "use client";
 import React, { useCallback, useEffect, useState } from "react";
@@ -6,6 +5,7 @@ import { adminService } from "@/services/adminService";
 import { shiftService } from "@/services/shiftService";
 import { attendanceService } from "@/services/attendanceService";
 import { weeklyOffService } from "@/services/weeklyOffService";
+import { formatTime, formatDate, formatDateTime, calculateWorkingHours } from "@/utils/timezone";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -79,8 +79,9 @@ export default function AdminAttendancePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [agentSummaryStats, setAgentSummaryStats] = useState(null);
   const [filters, setFilters] = useState({
-    userType: "all",
+    userType: "agent",
     status: "all",
+    shift: "all",
     date: "",
     month: "",
     fromDate: "",
@@ -632,20 +633,20 @@ export default function AdminAttendancePage() {
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      present: "bg-green-100 text-green-700 border-green-200",
-      late: "bg-orange-100 text-orange-700 border-orange-200",
-      half_day: "bg-yellow-100 text-yellow-700 border-yellow-200",
-      absent: "bg-red-100 text-red-700 border-red-200",
-      early_checkout: "bg-pink-100 text-pink-700 border-pink-200",
-      overtime: "bg-indigo-100 text-indigo-700 border-indigo-200",
-      leave: "bg-amber-100 text-amber-700 border-amber-200",
-      approved_leave: "bg-blue-100 text-blue-700 border-blue-200",
-      pending_leave: "bg-slate-100 text-slate-700 border-slate-200",
-      holiday: "bg-purple-100 text-purple-700 border-purple-200",
-      weekly_off: "bg-gray-100 text-gray-700 border-gray-200"
+      present: "bg-green-500 text-white border-green-600",
+      late: "bg-orange-500 text-white border-orange-600",
+      half_day: "bg-yellow-500 text-white border-yellow-600",
+      absent: "bg-red-500 text-white border-red-600",
+      early_checkout: "bg-pink-500 text-white border-pink-600",
+      overtime: "bg-indigo-500 text-white border-indigo-600",
+      leave: "bg-amber-500 text-white border-amber-600",
+      approved_leave: "bg-blue-500 text-white border-blue-600",
+      pending_leave: "bg-slate-500 text-white border-slate-600",
+      holiday: "bg-purple-500 text-white border-purple-600",
+      weekly_off: "bg-gray-500 text-white border-gray-600"
     };
     return (
-      <Badge variant="outline" className={`${statusConfig[status] || "bg-gray-100 text-gray-700 border-gray-200"} text-xs px-2 py-1`}>
+      <Badge variant="outline" className={`${statusConfig[status] || "bg-gray-500 text-white border-gray-600"} text-xs px-2 py-1`}>
         {status?.replace(/_/g, ' ')}
       </Badge>
     );
@@ -828,6 +829,16 @@ export default function AdminAttendancePage() {
     const allPresent = stats.present + stats.late + stats.halfDay + stats.earlyCheckout + stats.overtime;
     const totalWorkingDays = stats.total - stats.holiday - stats.weeklyOff;
 
+    // Calculate total days in the selected month
+    let totalMonthDays = 31;
+    if (filters.month) {
+      const [year, month] = filters.month.split('-');
+      totalMonthDays = new Date(parseInt(year), parseInt(month), 0).getDate();
+    } else if (filters.fromDate) {
+      const fromDate = new Date(filters.fromDate);
+      totalMonthDays = new Date(fromDate.getFullYear(), fromDate.getMonth() + 1, 0).getDate();
+    }
+
     return (
       <div className="mb-6 space-y-4">
         <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-800">
@@ -836,7 +847,7 @@ export default function AdminAttendancePage() {
         </h3>
         
         {/* Main Summary Cards - Highlighted */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           {/* All Present */}
           <Card className="bg-gradient-to-br from-green-500 to-green-600 border-0 shadow-lg">
             <CardContent className="p-4 text-center">
@@ -852,6 +863,15 @@ export default function AdminAttendancePage() {
               <div className="text-sm font-semibold text-white/90 uppercase tracking-wide mb-2">Total Working Days</div>
               <div className="text-4xl font-bold text-white">{totalWorkingDays}</div>
               <div className="text-xs text-white/80 mt-1">Excluding Holidays & Weekly Offs</div>
+            </CardContent>
+          </Card>
+
+          {/* Total Month Days */}
+          <Card className="bg-gradient-to-br from-cyan-500 to-cyan-600 border-0 shadow-lg">
+            <CardContent className="p-4 text-center">
+              <div className="text-sm font-semibold text-white/90 uppercase tracking-wide mb-2">Total Month Days</div>
+              <div className="text-4xl font-bold text-white">{totalMonthDays}</div>
+              <div className="text-xs text-white/80 mt-1">Days in Selected Month</div>
             </CardContent>
           </Card>
         </div>
@@ -980,8 +1000,9 @@ export default function AdminAttendancePage() {
     // Clear all filters function
     const handleClearAllFilters = () => {
       setFilters({
-        userType: "all",
+        userType: "agent",
         status: "all",
+        shift: "all",
         date: "",
         month: "",
         fromDate: "",
@@ -1032,20 +1053,21 @@ export default function AdminAttendancePage() {
 
         {/* Quick Filters - Always Visible */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          {/* User Type Filter */}
+          {/* Shift Filter */}
           <div className="space-y-1">
-            <Label htmlFor="userType" className="text-xs">User Type</Label>
+            <Label htmlFor="shift" className="text-xs">Shift</Label>
             <Select
-              value={filters.userType}
-              onValueChange={(value) => handleFilterChange('userType', value)}
+              value={filters.shift}
+              onValueChange={(value) => handleFilterChange('shift', value)}
             >
-              <SelectTrigger id="userType" className="w-full text-sm h-9">
-                <SelectValue placeholder="All Users" />
+              <SelectTrigger id="shift" className="w-full text-sm h-9">
+                <SelectValue placeholder="All Shifts" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Users</SelectItem>
-                <SelectItem value="agent">Agents</SelectItem>
-                <SelectItem value="user">Users</SelectItem>
+                <SelectItem value="all">All Shifts</SelectItem>
+                {shifts.map(shift => (
+                  <SelectItem key={shift._id} value={shift._id}>{shift.name}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -1266,8 +1288,9 @@ export default function AdminAttendancePage() {
                   size="sm"
                   onClick={() => {
                     setFilters({
-                      userType: "all",
+                      userType: "agent",
                       status: "all",
+                      shift: "all",
                       date: "",
                       month: "",
                       fromDate: "",

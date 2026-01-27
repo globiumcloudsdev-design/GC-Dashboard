@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { formatTime, formatDate } from "@/utils/timezone";
 import {
   Dialog,
   DialogContent,
@@ -84,17 +85,9 @@ const ViewAttendanceModal = ({ isOpen, onClose, attendance, getStatusBadge }) =>
     ? `${attendance.user?.firstName || ""} ${attendance.user?.lastName || ""}`
     : attendance?.agent?.agentName || "—";
 
-  const checkInTime = attendance?.checkInTime
-    ? new Date(attendance.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    : "—";
-
-  const checkOutTime = attendance?.checkOutTime
-    ? new Date(attendance.checkOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    : "—";
-
-  const attendanceDate = attendance?.createdAt
-    ? new Date(attendance.createdAt).toLocaleDateString()
-    : "—";
+  const checkInTime = formatTime(attendance?.checkInTime);
+  const checkOutTime = formatTime(attendance?.checkOutTime);
+  const attendanceDate = formatDate(attendance?.createdAt);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>

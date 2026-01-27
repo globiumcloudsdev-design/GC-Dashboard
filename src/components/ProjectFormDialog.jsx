@@ -28,7 +28,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import { projectService } from '@/services/projectService';
 
-export function ProjectFormDialog({ open, onOpenChange, onSubmit, isLoading, initialData = null }) {
+export function ProjectFormDialog({ open, onOpenChange, onSubmit, isLoading, initialData = null, userType = 'admin', currentAgentId = null }) {
   const [activeTab, setActiveTab] = useState('basic');
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
@@ -39,6 +39,7 @@ export function ProjectFormDialog({ open, onOpenChange, onSubmit, isLoading, ini
   // New states for sales
   const [revenueAgents, setRevenueAgents] = useState([]);
   const [agentsLoading, setAgentsLoading] = useState(false);
+  const isAgentUser = userType === 'agent';
 
   // Fetch revenue agents
   useEffect(() => {
@@ -130,7 +131,7 @@ export function ProjectFormDialog({ open, onOpenChange, onSubmit, isLoading, ini
           metaDescription: initialData.metaDescription || '',
           // New fields
           price: initialData.price || '',
-          assignedAgent: initialData.assignedAgent?._id || '',
+          assignedAgent: initialData.assignedAgent?._id || (isAgentUser ? currentAgentId : ''),
           deadline: initialData.deadline ? new Date(initialData.deadline).toISOString().split('T')[0] : '',
           status: initialData.status || 'Pending',
           progress: initialData.progress || 0
@@ -141,7 +142,7 @@ export function ProjectFormDialog({ open, onOpenChange, onSubmit, isLoading, ini
         resetForm();
       }
     }
-  }, [open, initialData]);
+  }, [open, initialData, isAgentUser, currentAgentId]);
 
   const resetForm = () => {
     setFormData({
@@ -168,7 +169,7 @@ export function ProjectFormDialog({ open, onOpenChange, onSubmit, isLoading, ini
       metaDescription: '',
       // New fields
       price: '',
-      assignedAgent: '',
+      assignedAgent: isAgentUser ? currentAgentId : '',
       deadline: '',
       status: 'Pending',
       progress: 0
@@ -501,7 +502,7 @@ export function ProjectFormDialog({ open, onOpenChange, onSubmit, isLoading, ini
                 {/* Sales & Assignment Section */}
                 <div className="p-4 bg-slate-50 border rounded-lg space-y-4">
                   <h3 className="font-semibold text-sm text-slate-900 border-b pb-2 mb-2">Sales & Assignment</h3>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className={`grid ${isAgentUser ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
                     <div className="space-y-2">
                         <Label htmlFor="price">Project Price (Revenue)</Label>
                         <Input
@@ -514,7 +515,8 @@ export function ProjectFormDialog({ open, onOpenChange, onSubmit, isLoading, ini
                         />
                     </div>
 
-                    <div className="space-y-2">
+                    {!isAgentUser && (
+                      <div className="space-y-2">
                         <Label htmlFor="assignedAgent">Assign Agent (Revenue Target)</Label>
                         <Select
                             value={formData.assignedAgent}
@@ -533,7 +535,8 @@ export function ProjectFormDialog({ open, onOpenChange, onSubmit, isLoading, ini
                                 ))}
                             </SelectContent>
                         </Select>
-                    </div>
+                      </div>
+                    )}
 
                     <div className="space-y-2">
                         <Label htmlFor="status">Project Status</Label>

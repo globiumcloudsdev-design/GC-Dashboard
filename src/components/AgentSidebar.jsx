@@ -55,14 +55,23 @@ export default function AgentSidebar({ isOpen, setIsOpen, collapsed, setCollapse
     router.push("/agent/login");
   };
 
-  const navItems = [
+  const baseNavItems = [
     { label: "Dashboard", href: "/agent/dashboard", icon: BarChart3 },
-    { label: "Projects", href: "/agent/projects", icon: Layers }, 
+    { label: "Upload Sales", href: "/agent/projects", icon: Layers, requiresRevenue: true }, 
     { label: "Attendance", href: "/agent/attendance", icon: Clock },
     { label: "Sales", href: "/agent/sales", icon: DollarSign },
     { label: "Salary", href: "/agent/salary", icon: Wallet },
     { label: "Settings", href: "/agent/settings", icon: Settings },
   ];
+
+  // Filter navItems based on agent's target type
+  const navItems = baseNavItems.filter(item => {
+    if (item.requiresRevenue) {
+      // Show only if agent has revenue target (amount or both)
+      return agent?.monthlyTargetType === 'amount' || agent?.monthlyTargetType === 'both';
+    }
+    return true;
+  });
 
   return (
     <TooltipProvider>

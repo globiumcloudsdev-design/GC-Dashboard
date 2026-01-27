@@ -124,17 +124,10 @@
 
 import React, { useContext } from 'react';
 import { ThemeContext } from '../context/ThemeContext';
+import { formatTime } from '@/utils/timezone';
 
 const TodayDetailsCard = ({ todayAttendance }) => {
   const { theme } = useContext(ThemeContext);
-
-  const formatTime = (dateString) => {
-    if (!dateString) return '--:--';
-    return new Date(dateString).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
 
   return (
     <div style={{
