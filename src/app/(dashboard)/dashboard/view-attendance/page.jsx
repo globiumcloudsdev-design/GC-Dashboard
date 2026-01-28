@@ -124,6 +124,52 @@ export default function AdminAttendancePage() {
   const [viewingAttendance, setViewingAttendance] = useState(null);
   const [viewingLeave, setViewingLeave] = useState(null);
 
+  // Helper state for filters (Moved from ResponsiveFilters)
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+
+  useEffect(() => {
+    const checkScreen = () => {
+      setIsSmallScreen(window.innerWidth < 640);
+    };
+    if (typeof window !== 'undefined') {
+        checkScreen();
+        window.addEventListener('resize', checkScreen);
+        return () => window.removeEventListener('resize', checkScreen);
+    }
+  }, []);
+
+  // Filter Helper Functions (Moved from ResponsiveFilters)
+  const handleApplyFilters = () => {
+      fetchAttendance();
+      toast.success("Filters applied successfully");
+  };
+
+  const handleFilterChange = (key, value) => {
+      setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleClearAllFilters = () => {
+      setFilters({
+        userType: "agent",
+        status: "all",
+        shift: "all",
+        date: "",
+        month: "",
+        fromDate: "",
+        toDate: ""
+      });
+      setSearchQuery("");
+      toast.success("All filters cleared");
+    };
+
+  const hasActiveFilters = filters.status !== 'all' || 
+                            filters.date || 
+                            filters.month || 
+                            filters.fromDate || 
+                            filters.toDate || 
+                            searchQuery;
+
   const [manualForm, setManualForm] = useState({
     userType: "agent",
     userId: "",
@@ -1833,7 +1879,283 @@ export default function AdminAttendancePage() {
 
                     {/* Filters - Always show on large screens, toggle on mobile */}
                     <div className={showFilters ? 'block' : 'hidden lg:block'}>
-                      <ResponsiveFilters />
+                    <div className="space-y-4">
+                      {/* Main Search Bar */}
+                      <div className="relative w-full">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          placeholder="Search by agent name..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              handleApplyFilters();
+                            }
+                          }}
+                          className="pl-10 w-full"
+                        />
+                        {searchQuery && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSearchQuery("");
+                              handleApplyFilters();
+                            }}
+                            className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+
+                      {/* Quick Filters - Always Visible */}
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                        {/* Shift Filter */}
+                        <div className="space-y-1">
+                          <Label htmlFor="shift" className="text-xs">Shift</Label>
+                          <Select
+                            value={filters.shift}
+                            onValueChange={(value) => handleFilterChange('shift', value)}
+                          >
+                            <SelectTrigger id="shift" className="w-full text-sm h-9">
+                              <SelectValue placeholder="All Shifts" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Shifts</SelectItem>
+                              {shifts.map(shift => (
+                                <SelectItem key={shift._id} value={shift._id}>{shift.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Status Filter */}
+                        <div className="space-y-1">
+                          <Label htmlFor="status" className="text-xs">Status</Label>
+                          <Select
+                            value={filters.status}
+                            onValueChange={(value) => handleFilterChange('status', value)}
+                          >
+                            <SelectTrigger id="status" className="w-full text-sm h-9">
+                              <SelectValue placeholder="All Status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Status</SelectItem>
+                              <SelectItem value="present">Present</SelectItem>
+                              <SelectItem value="late">Late</SelectItem>
+                              <SelectItem value="half_day">Half Day</SelectItem>
+                              <SelectItem value="absent">Absent</SelectItem>
+                              <SelectItem value="leave">Leave</SelectItem>
+                              <SelectItem value="holiday">Holiday</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Month Filter */}
+                        <div className="space-y-1">
+                          <Label htmlFor="month" className="text-xs">Month</Label>
+                          <Select
+                            value={filters.month}
+                            onValueChange={(value) => handleFilterChange('month', value)}
+                          >
+                            <SelectTrigger id="month" className="w-full text-sm h-9">
+                              <SelectValue placeholder="Select Month" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Array.from({ length: 12 }, (_, i) => {
+                                const date = new Date();
+                                date.setMonth(date.getMonth() - i);
+                                const value = date.toISOString().slice(0, 7);
+                                const label = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+                                return <SelectItem key={value} value={value}>{label}</SelectItem>;
+                              })}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Date Range - For larger screens */}
+                        {!isSmallScreen && (
+                          <>
+                            <div className="space-y-1">
+                              <Label htmlFor="fromDate" className="text-xs">From Date</Label>
+                              <Input
+                                id="fromDate"
+                                type="date"
+                                value={filters.fromDate || ''}
+                                onChange={(e) => handleFilterChange('fromDate', e.target.value)}
+                                className="text-sm h-9"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label htmlFor="toDate" className="text-xs">To Date</Label>
+                              <Input
+                                id="toDate"
+                                type="date"
+                                value={filters.toDate || ''}
+                                onChange={(e) => handleFilterChange('toDate', e.target.value)}
+                                className="text-sm h-9"
+                              />
+                            </div>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Advanced Filters Toggle and Actions */}
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                            className="text-xs"
+                          >
+                            <Filter className="h-3 w-3 mr-1" />
+                            {showAdvancedFilters ? 'Hide Advanced Filters' : 'Show Advanced Filters'}
+                          </Button>
+
+                          {hasActiveFilters && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={handleClearAllFilters}
+                              className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <X className="h-3 w-3 mr-1" />
+                              Clear All
+                            </Button>
+                          )}
+                        </div>
+
+                        {/* Apply Filters Button - Always visible */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleApplyFilters}
+                          className="text-xs"
+                        >
+                          <RefreshCw className="h-3 w-3 mr-1" />
+                          Apply Filters
+                        </Button>
+                      </div>
+
+                      {/* Advanced Filters Panel */}
+                      {showAdvancedFilters && (
+                        <div className="border rounded-lg p-4 space-y-4 bg-gray-50/50 animate-in fade-in duration-300">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {/* Date Range (for small screens) */}
+                            {isSmallScreen && (
+                              <div className="space-y-2 col-span-full">
+                                <Label className="text-xs font-medium">Date Range</Label>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="space-y-1">
+                                    <Label className="text-xs text-muted-foreground">From</Label>
+                                    <Input
+                                      type="date"
+                                      value={filters.fromDate || ''}
+                                      onChange={(e) => handleFilterChange('fromDate', e.target.value)}
+                                      className="text-sm"
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs text-muted-foreground">To</Label>
+                                    <Input
+                                      type="date"
+                                      value={filters.toDate || ''}
+                                      onChange={(e) => handleFilterChange('toDate', e.target.value)}
+                                      className="text-sm"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Specific Date */}
+                            <div className="space-y-2">
+                              <Label htmlFor="specificDate" className="text-xs font-medium">Specific Date</Label>
+                              <Input
+                                id="specificDate"
+                                type="date"
+                                value={filters.date || ''}
+                                onChange={(e) => handleFilterChange('date', e.target.value)}
+                                className="text-sm"
+                              />
+                            </div>
+
+                            {/* More Status Options */}
+                            <div className="space-y-2">
+                              <Label htmlFor="detailedStatus" className="text-xs font-medium">Detailed Status</Label>
+                              <Select
+                                value={filters.status}
+                                onValueChange={(value) => handleFilterChange('status', value)}
+                              >
+                                <SelectTrigger id="detailedStatus" className="text-sm">
+                                  <SelectValue placeholder="All Status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="all">All Status</SelectItem>
+                                  <SelectItem value="present">Present</SelectItem>
+                                  <SelectItem value="late">Late</SelectItem>
+                                  <SelectItem value="half_day">Half Day</SelectItem>
+                                  <SelectItem value="absent">Absent</SelectItem>
+                                  <SelectItem value="early_checkout">Early Checkout</SelectItem>
+                                  <SelectItem value="overtime">Overtime</SelectItem>
+                                  <SelectItem value="leave">Leave</SelectItem>
+                                  <SelectItem value="approved_leave">Approved Leave</SelectItem>
+                                  <SelectItem value="pending_leave">Pending Leave</SelectItem>
+                                  <SelectItem value="holiday">Holiday</SelectItem>
+                                  <SelectItem value="weekly_off">Weekly Off</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {/* Quick Action Buttons */}
+                            <div className="col-span-full flex gap-2 justify-end items-center pt-2 border-t">
+                                <Button
+                                  variant="ghost"
+                                  size="sm" 
+                                  onClick={() => {
+                                      setFilters({
+                                        userType: "agent",
+                                        status: "all",
+                                        shift: "all",
+                                        date: "",
+                                        month: "",
+                                        fromDate: "",
+                                        toDate: ""
+                                      });
+                                      setSearchQuery("");
+                                      toast.success("Reset to default filters");
+                                  }}
+                                  className="text-xs w-full"
+                                >
+                                Reset to Default
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Action Buttons at Bottom */}
+                          <div className="flex flex-wrap items-center justify-between gap-2 pt-4 border-t">
+                            <div className="text-xs text-muted-foreground">
+                              Active Filters: {hasActiveFilters ? Object.values(filters).filter(f => f && f !== 'all').length : 0}
+                            </div>
+                            
+                            <div className="flex flex-wrap gap-2">
+                              {filters.month && searchQuery && attendance.length > 0 && attendance[0]?.agent && (
+                                <Button
+                                  onClick={() => handleCalculatePayroll()}
+                                  size="sm"
+                                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs"
+                                >
+                                  <CalculatorIcon className="h-3 w-3 mr-1" />
+                                  Calculate Salary
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                     </div>
                   </div>
                 </CardHeader>

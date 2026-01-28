@@ -798,9 +798,11 @@ export async function GET(request) {
       // Find the agent/user first
       let targetEntity = null;
       if (targetEntityType === 'agent') {
-        targetEntity = await Agent.findById(targetId).populate('shift');
+        const doc = await Agent.findById(targetId).populate('shift');
+        targetEntity = doc ? doc.toObject() : null;
       } else {
-        targetEntity = await User.findById(targetId).populate('shift');
+        const doc = await User.findById(targetId).populate('shift');
+        targetEntity = doc ? doc.toObject() : null;
       }
       
       if (!targetEntity) {
@@ -949,6 +951,11 @@ export async function GET(request) {
                generated: false,
                status: normalizeStatus(record.status)
              };
+
+             // Restore populated entity (because record.toObject() overwrites agent/user with ObjectId)
+             if (targetEntityType === 'agent') item.agent = targetEntity;
+             else item.user = targetEntity;
+             
         } else {
              // Generate status for missing dates
              if (isHoliday) {

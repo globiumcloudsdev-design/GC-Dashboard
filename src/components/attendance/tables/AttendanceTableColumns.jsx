@@ -354,7 +354,7 @@ export const getAttendanceColumns = ({
                   )}
                   
                   {/* Delete Attendance */}
-                  {canDeleteAttendance && (
+                  {/* {canDeleteAttendance && (
                     <DropdownMenuItem 
                       onClick={() => handleDeleteAttendance(a._id)}
                       className="cursor-pointer text-red-600"
@@ -362,7 +362,7 @@ export const getAttendanceColumns = ({
                       <Trash2 className="h-4 w-4 mr-2" />
                       Delete Attendance
                     </DropdownMenuItem>
-                  )}
+                  )} */}
                 </>
               )}
               
