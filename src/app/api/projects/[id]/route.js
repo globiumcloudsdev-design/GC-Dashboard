@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Project from '@/Models/Project';
 import { cloudinaryService } from '@/lib/cloudinary';
-
+import User from '@/Models/User';
+import Agent from '@/Models/Agent';
 
 
 // GET - Fetch single project

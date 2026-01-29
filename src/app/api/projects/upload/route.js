@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cloudinaryService } from '@/lib/cloudinary';
+import connectDB from '@/lib/mongodb';
 
 // POST - Upload multiple images for project
 export async function POST(request) {

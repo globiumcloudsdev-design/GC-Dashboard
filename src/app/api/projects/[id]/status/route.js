@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Project from '@/Models/Project';
+import User from '@/Models/User';
+import Agent from '@/Models/Agent';
 
 // PATCH - Toggle project status or featured
 export async function PATCH(request, { params }) {
