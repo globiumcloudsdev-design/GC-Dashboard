@@ -184,6 +184,12 @@ const BookingSchema = new mongoose.Schema(
       default: BookingStatus.PENDING,
     },
     
+    // Date when booking was marked as completed (for payroll calculation)
+    completedAt: {
+      type: Date,
+      default: null,
+    },
+    
     cancellationReason: {
       type: String,
       default: null,

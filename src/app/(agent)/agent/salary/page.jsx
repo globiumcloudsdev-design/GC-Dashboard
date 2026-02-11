@@ -1,3 +1,4 @@
+//app/(agent)/agent/salary/page.jsx
 "use client";
 
 import { useState, useEffect, useCallback } from "react";

@@ -3,6 +3,11 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Payroll from "@/Models/Payroll";
 import { verifyToken, getUserIdFromToken } from "@/lib/jwt";
+import Shift from "@/Models/Shift";
+import Agent from "@/Models/Agent";
+import Attendance from "@/Models/Attendance";
+import Holiday from "@/Models/Holiday";
+import WeeklyOff from "@/Models/WeeklyOff";
 
 export async function GET(request) {
   try {
