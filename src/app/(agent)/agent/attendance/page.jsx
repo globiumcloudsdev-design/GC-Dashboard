@@ -707,14 +707,4 @@ const AttendanceScreen = () => {
   );
 };
 
-const formatTime = (dateString) => {
-  if (!dateString) return "--:--";
-  return new Date(dateString).toLocaleTimeString("en-PK", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-    timeZone: "Asia/Karachi",
-  });
-};
-
 export default AttendanceScreen;

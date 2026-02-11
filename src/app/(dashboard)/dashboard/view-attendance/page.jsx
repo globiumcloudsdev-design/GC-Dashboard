@@ -1,4 +1,3 @@
-
 // src/app/(dashboard)/dashboard/view-attendance/page.jsx
 "use client";
 import React, { useCallback, useEffect, useState } from "react";
@@ -6,6 +5,7 @@ import { adminService } from "@/services/adminService";
 import { shiftService } from "@/services/shiftService";
 import { attendanceService } from "@/services/attendanceService";
 import { weeklyOffService } from "@/services/weeklyOffService";
+import { formatTime, formatDate, formatDateTime, calculateWorkingHours } from "@/utils/timezone";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -79,8 +79,9 @@ export default function AdminAttendancePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [agentSummaryStats, setAgentSummaryStats] = useState(null);
   const [filters, setFilters] = useState({
-    userType: "all",
+    userType: "agent",
     status: "all",
+    shift: "all",
     date: "",
     month: "",
     fromDate: "",
@@ -122,6 +123,52 @@ export default function AdminAttendancePage() {
   const [editingAttendance, setEditingAttendance] = useState(null);
   const [viewingAttendance, setViewingAttendance] = useState(null);
   const [viewingLeave, setViewingLeave] = useState(null);
+
+  // Helper state for filters (Moved from ResponsiveFilters)
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+
+  useEffect(() => {
+    const checkScreen = () => {
+      setIsSmallScreen(window.innerWidth < 640);
+    };
+    if (typeof window !== 'undefined') {
+        checkScreen();
+        window.addEventListener('resize', checkScreen);
+        return () => window.removeEventListener('resize', checkScreen);
+    }
+  }, []);
+
+  // Filter Helper Functions (Moved from ResponsiveFilters)
+  const handleApplyFilters = () => {
+      fetchAttendance();
+      toast.success("Filters applied successfully");
+  };
+
+  const handleFilterChange = (key, value) => {
+      setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleClearAllFilters = () => {
+      setFilters({
+        userType: "agent",
+        status: "all",
+        shift: "all",
+        date: "",
+        month: "",
+        fromDate: "",
+        toDate: ""
+      });
+      setSearchQuery("");
+      toast.success("All filters cleared");
+    };
+
+  const hasActiveFilters = filters.status !== 'all' || 
+                            filters.date || 
+                            filters.month || 
+                            filters.fromDate || 
+                            filters.toDate || 
+                            searchQuery;
 
   const [manualForm, setManualForm] = useState({
     userType: "agent",
@@ -632,20 +679,20 @@ export default function AdminAttendancePage() {
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      present: "bg-green-100 text-green-700 border-green-200",
-      late: "bg-orange-100 text-orange-700 border-orange-200",
-      half_day: "bg-yellow-100 text-yellow-700 border-yellow-200",
-      absent: "bg-red-100 text-red-700 border-red-200",
-      early_checkout: "bg-pink-100 text-pink-700 border-pink-200",
-      overtime: "bg-indigo-100 text-indigo-700 border-indigo-200",
-      leave: "bg-amber-100 text-amber-700 border-amber-200",
-      approved_leave: "bg-blue-100 text-blue-700 border-blue-200",
-      pending_leave: "bg-slate-100 text-slate-700 border-slate-200",
-      holiday: "bg-purple-100 text-purple-700 border-purple-200",
-      weekly_off: "bg-gray-100 text-gray-700 border-gray-200"
+      present: "bg-green-500 text-white border-green-600",
+      late: "bg-orange-500 text-white border-orange-600",
+      half_day: "bg-yellow-500 text-white border-yellow-600",
+      absent: "bg-red-500 text-white border-red-600",
+      early_checkout: "bg-pink-500 text-white border-pink-600",
+      overtime: "bg-indigo-500 text-white border-indigo-600",
+      leave: "bg-amber-500 text-white border-amber-600",
+      approved_leave: "bg-blue-500 text-white border-blue-600",
+      pending_leave: "bg-slate-500 text-white border-slate-600",
+      holiday: "bg-purple-500 text-white border-purple-600",
+      weekly_off: "bg-gray-500 text-white border-gray-600"
     };
     return (
-      <Badge variant="outline" className={`${statusConfig[status] || "bg-gray-100 text-gray-700 border-gray-200"} text-xs px-2 py-1`}>
+      <Badge variant="outline" className={`${statusConfig[status] || "bg-gray-500 text-white border-gray-600"} text-xs px-2 py-1`}>
         {status?.replace(/_/g, ' ')}
       </Badge>
     );
@@ -828,6 +875,16 @@ export default function AdminAttendancePage() {
     const allPresent = stats.present + stats.late + stats.halfDay + stats.earlyCheckout + stats.overtime;
     const totalWorkingDays = stats.total - stats.holiday - stats.weeklyOff;
 
+    // Calculate total days in the selected month
+    let totalMonthDays = 31;
+    if (filters.month) {
+      const [year, month] = filters.month.split('-');
+      totalMonthDays = new Date(parseInt(year), parseInt(month), 0).getDate();
+    } else if (filters.fromDate) {
+      const fromDate = new Date(filters.fromDate);
+      totalMonthDays = new Date(fromDate.getFullYear(), fromDate.getMonth() + 1, 0).getDate();
+    }
+
     return (
       <div className="mb-6 space-y-4">
         <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-800">
@@ -836,7 +893,7 @@ export default function AdminAttendancePage() {
         </h3>
         
         {/* Main Summary Cards - Highlighted */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           {/* All Present */}
           <Card className="bg-gradient-to-br from-green-500 to-green-600 border-0 shadow-lg">
             <CardContent className="p-4 text-center">
@@ -852,6 +909,15 @@ export default function AdminAttendancePage() {
               <div className="text-sm font-semibold text-white/90 uppercase tracking-wide mb-2">Total Working Days</div>
               <div className="text-4xl font-bold text-white">{totalWorkingDays}</div>
               <div className="text-xs text-white/80 mt-1">Excluding Holidays & Weekly Offs</div>
+            </CardContent>
+          </Card>
+
+          {/* Total Month Days */}
+          <Card className="bg-gradient-to-br from-cyan-500 to-cyan-600 border-0 shadow-lg">
+            <CardContent className="p-4 text-center">
+              <div className="text-sm font-semibold text-white/90 uppercase tracking-wide mb-2">Total Month Days</div>
+              <div className="text-4xl font-bold text-white">{totalMonthDays}</div>
+              <div className="text-xs text-white/80 mt-1">Days in Selected Month</div>
             </CardContent>
           </Card>
         </div>
@@ -980,8 +1046,9 @@ export default function AdminAttendancePage() {
     // Clear all filters function
     const handleClearAllFilters = () => {
       setFilters({
-        userType: "all",
+        userType: "agent",
         status: "all",
+        shift: "all",
         date: "",
         month: "",
         fromDate: "",
@@ -1032,20 +1099,21 @@ export default function AdminAttendancePage() {
 
         {/* Quick Filters - Always Visible */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          {/* User Type Filter */}
+          {/* Shift Filter */}
           <div className="space-y-1">
-            <Label htmlFor="userType" className="text-xs">User Type</Label>
+            <Label htmlFor="shift" className="text-xs">Shift</Label>
             <Select
-              value={filters.userType}
-              onValueChange={(value) => handleFilterChange('userType', value)}
+              value={filters.shift}
+              onValueChange={(value) => handleFilterChange('shift', value)}
             >
-              <SelectTrigger id="userType" className="w-full text-sm h-9">
-                <SelectValue placeholder="All Users" />
+              <SelectTrigger id="shift" className="w-full text-sm h-9">
+                <SelectValue placeholder="All Shifts" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Users</SelectItem>
-                <SelectItem value="agent">Agents</SelectItem>
-                <SelectItem value="user">Users</SelectItem>
+                <SelectItem value="all">All Shifts</SelectItem>
+                {shifts.map(shift => (
+                  <SelectItem key={shift._id} value={shift._id}>{shift.name}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -1266,8 +1334,9 @@ export default function AdminAttendancePage() {
                   size="sm"
                   onClick={() => {
                     setFilters({
-                      userType: "all",
+                      userType: "agent",
                       status: "all",
+                      shift: "all",
                       date: "",
                       month: "",
                       fromDate: "",
@@ -1810,7 +1879,283 @@ export default function AdminAttendancePage() {
 
                     {/* Filters - Always show on large screens, toggle on mobile */}
                     <div className={showFilters ? 'block' : 'hidden lg:block'}>
-                      <ResponsiveFilters />
+                    <div className="space-y-4">
+                      {/* Main Search Bar */}
+                      <div className="relative w-full">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          placeholder="Search by agent name..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              handleApplyFilters();
+                            }
+                          }}
+                          className="pl-10 w-full"
+                        />
+                        {searchQuery && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSearchQuery("");
+                              handleApplyFilters();
+                            }}
+                            className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+
+                      {/* Quick Filters - Always Visible */}
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                        {/* Shift Filter */}
+                        <div className="space-y-1">
+                          <Label htmlFor="shift" className="text-xs">Shift</Label>
+                          <Select
+                            value={filters.shift}
+                            onValueChange={(value) => handleFilterChange('shift', value)}
+                          >
+                            <SelectTrigger id="shift" className="w-full text-sm h-9">
+                              <SelectValue placeholder="All Shifts" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Shifts</SelectItem>
+                              {shifts.map(shift => (
+                                <SelectItem key={shift._id} value={shift._id}>{shift.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Status Filter */}
+                        <div className="space-y-1">
+                          <Label htmlFor="status" className="text-xs">Status</Label>
+                          <Select
+                            value={filters.status}
+                            onValueChange={(value) => handleFilterChange('status', value)}
+                          >
+                            <SelectTrigger id="status" className="w-full text-sm h-9">
+                              <SelectValue placeholder="All Status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Status</SelectItem>
+                              <SelectItem value="present">Present</SelectItem>
+                              <SelectItem value="late">Late</SelectItem>
+                              <SelectItem value="half_day">Half Day</SelectItem>
+                              <SelectItem value="absent">Absent</SelectItem>
+                              <SelectItem value="leave">Leave</SelectItem>
+                              <SelectItem value="holiday">Holiday</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Month Filter */}
+                        <div className="space-y-1">
+                          <Label htmlFor="month" className="text-xs">Month</Label>
+                          <Select
+                            value={filters.month}
+                            onValueChange={(value) => handleFilterChange('month', value)}
+                          >
+                            <SelectTrigger id="month" className="w-full text-sm h-9">
+                              <SelectValue placeholder="Select Month" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Array.from({ length: 12 }, (_, i) => {
+                                const date = new Date();
+                                date.setMonth(date.getMonth() - i);
+                                const value = date.toISOString().slice(0, 7);
+                                const label = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+                                return <SelectItem key={value} value={value}>{label}</SelectItem>;
+                              })}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Date Range - For larger screens */}
+                        {!isSmallScreen && (
+                          <>
+                            <div className="space-y-1">
+                              <Label htmlFor="fromDate" className="text-xs">From Date</Label>
+                              <Input
+                                id="fromDate"
+                                type="date"
+                                value={filters.fromDate || ''}
+                                onChange={(e) => handleFilterChange('fromDate', e.target.value)}
+                                className="text-sm h-9"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label htmlFor="toDate" className="text-xs">To Date</Label>
+                              <Input
+                                id="toDate"
+                                type="date"
+                                value={filters.toDate || ''}
+                                onChange={(e) => handleFilterChange('toDate', e.target.value)}
+                                className="text-sm h-9"
+                              />
+                            </div>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Advanced Filters Toggle and Actions */}
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                            className="text-xs"
+                          >
+                            <Filter className="h-3 w-3 mr-1" />
+                            {showAdvancedFilters ? 'Hide Advanced Filters' : 'Show Advanced Filters'}
+                          </Button>
+
+                          {hasActiveFilters && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={handleClearAllFilters}
+                              className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <X className="h-3 w-3 mr-1" />
+                              Clear All
+                            </Button>
+                          )}
+                        </div>
+
+                        {/* Apply Filters Button - Always visible */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleApplyFilters}
+                          className="text-xs"
+                        >
+                          <RefreshCw className="h-3 w-3 mr-1" />
+                          Apply Filters
+                        </Button>
+                      </div>
+
+                      {/* Advanced Filters Panel */}
+                      {showAdvancedFilters && (
+                        <div className="border rounded-lg p-4 space-y-4 bg-gray-50/50 animate-in fade-in duration-300">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {/* Date Range (for small screens) */}
+                            {isSmallScreen && (
+                              <div className="space-y-2 col-span-full">
+                                <Label className="text-xs font-medium">Date Range</Label>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="space-y-1">
+                                    <Label className="text-xs text-muted-foreground">From</Label>
+                                    <Input
+                                      type="date"
+                                      value={filters.fromDate || ''}
+                                      onChange={(e) => handleFilterChange('fromDate', e.target.value)}
+                                      className="text-sm"
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs text-muted-foreground">To</Label>
+                                    <Input
+                                      type="date"
+                                      value={filters.toDate || ''}
+                                      onChange={(e) => handleFilterChange('toDate', e.target.value)}
+                                      className="text-sm"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Specific Date */}
+                            <div className="space-y-2">
+                              <Label htmlFor="specificDate" className="text-xs font-medium">Specific Date</Label>
+                              <Input
+                                id="specificDate"
+                                type="date"
+                                value={filters.date || ''}
+                                onChange={(e) => handleFilterChange('date', e.target.value)}
+                                className="text-sm"
+                              />
+                            </div>
+
+                            {/* More Status Options */}
+                            <div className="space-y-2">
+                              <Label htmlFor="detailedStatus" className="text-xs font-medium">Detailed Status</Label>
+                              <Select
+                                value={filters.status}
+                                onValueChange={(value) => handleFilterChange('status', value)}
+                              >
+                                <SelectTrigger id="detailedStatus" className="text-sm">
+                                  <SelectValue placeholder="All Status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="all">All Status</SelectItem>
+                                  <SelectItem value="present">Present</SelectItem>
+                                  <SelectItem value="late">Late</SelectItem>
+                                  <SelectItem value="half_day">Half Day</SelectItem>
+                                  <SelectItem value="absent">Absent</SelectItem>
+                                  <SelectItem value="early_checkout">Early Checkout</SelectItem>
+                                  <SelectItem value="overtime">Overtime</SelectItem>
+                                  <SelectItem value="leave">Leave</SelectItem>
+                                  <SelectItem value="approved_leave">Approved Leave</SelectItem>
+                                  <SelectItem value="pending_leave">Pending Leave</SelectItem>
+                                  <SelectItem value="holiday">Holiday</SelectItem>
+                                  <SelectItem value="weekly_off">Weekly Off</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {/* Quick Action Buttons */}
+                            <div className="col-span-full flex gap-2 justify-end items-center pt-2 border-t">
+                                <Button
+                                  variant="ghost"
+                                  size="sm" 
+                                  onClick={() => {
+                                      setFilters({
+                                        userType: "agent",
+                                        status: "all",
+                                        shift: "all",
+                                        date: "",
+                                        month: "",
+                                        fromDate: "",
+                                        toDate: ""
+                                      });
+                                      setSearchQuery("");
+                                      toast.success("Reset to default filters");
+                                  }}
+                                  className="text-xs w-full"
+                                >
+                                Reset to Default
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Action Buttons at Bottom */}
+                          <div className="flex flex-wrap items-center justify-between gap-2 pt-4 border-t">
+                            <div className="text-xs text-muted-foreground">
+                              Active Filters: {hasActiveFilters ? Object.values(filters).filter(f => f && f !== 'all').length : 0}
+                            </div>
+                            
+                            <div className="flex flex-wrap gap-2">
+                              {filters.month && searchQuery && attendance.length > 0 && attendance[0]?.agent && (
+                                <Button
+                                  onClick={() => handleCalculatePayroll()}
+                                  size="sm"
+                                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs"
+                                >
+                                  <CalculatorIcon className="h-3 w-3 mr-1" />
+                                  Calculate Salary
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                     </div>
                   </div>
                 </CardHeader>

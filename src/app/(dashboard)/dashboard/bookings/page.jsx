@@ -1,553 +1,3 @@
-// // src/app/(dashboard)/dashboard/bookings/page.jsx
-// "use client";
-
-// import { useEffect, useState } from "react";
-// import { useAuth } from '@/context/AuthContext';
-// import DataTable from "@/components/common/DataTable";
-// import GlobalData from "@/components/common/GlobalData";
-// import PageHeader from "@/components/common/PageHeader";
-// import BookingSearchBar from "@/components/SearchBar";
-// import SearchResultCard from "@/components/common/SearchResultCard";
-// import BookingDetailsDialog from "@/components/BookingDetailsDialog";
-// import CreateBookingDialog from "@/components/CreateBookingDialog";
-// import { motion } from "framer-motion";
-// import { Button } from "@/components/ui/button";
-// import { Separator } from "@/components/ui/separator";
-// import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
-// import { fetchBookings, addBooking } from "@/action/bookingActions";
-// import { Input } from "@/components/ui/input";
-// import * as XLSX from "xlsx";
-// import {
-//   CalendarDays,
-//   CheckCircle,
-//   Clock,
-//   XCircle,
-//   RefreshCcw,
-//   CheckSquare,
-//   Plus,
-//   FileSpreadsheet,
-//   Calendar,
-//   DollarSign,
-//   TrendingUp,
-//   Filter,
-//   Users,
-//   Mail
-// } from "lucide-react";
-// import { toast } from "sonner";
-// import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-
-// // Status configuration lookup map
-// const STATUS_CONFIG = {
-//   confirmed: { colorClass: "bg-green-100 text-green-700", Icon: CheckCircle },
-//   pending: { colorClass: "bg-yellow-100 text-yellow-700", Icon: Clock },
-//   cancelled: { colorClass: "bg-red-100 text-red-700", Icon: XCircle },
-//   rescheduled: { colorClass: "bg-blue-100 text-blue-700", Icon: RefreshCcw },
-//   completed: { colorClass: "bg-purple-100 text-purple-700", Icon: CheckSquare },
-//   default: { colorClass: "bg-gray-100 text-gray-700", Icon: null },
-// };
-
-// export default function BookingsPage() {
-//   const [bookings, setBookings] = useState([]);
-//   const [mobileFilter, setMobileFilter] = useState("all");
-//   const [loading, setLoading] = useState(true);
-//   const [search, setSearch] = useState("");
-//   const [selectedBooking, setSelectedBooking] = useState(null);
-//   const [dialogOpen, setDialogOpen] = useState(false);
-//   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  
-//   // 🟢 Filter & Stats State
-//   const [fromDate, setFromDate] = useState("");
-//   const [toDate, setToDate] = useState("");
-//   const [importing, setImporting] = useState(false);
-
-//   const { hasPermission } = useAuth();
-//   const canCreateBooking = hasPermission('booking', 'create');
-//   const canViewBooking = hasPermission('booking', 'view');
-
-//   const fadeUp = {
-//     hidden: { opacity: 0, y: 20 },
-//     visible: (i = 1) => ({ opacity: 1, y: 0, transition: { delay: i * 0.1, duration: 0.4, ease: "easeOut" } }),
-//   };
-
-//   // ✅ Excel Import Handler
-//   const handleFileUpload = (e) => {
-//     const file = e.target.files[0];
-//     if (!file) return;
-
-//     setImporting(true);
-//     const reader = new FileReader();
-//     reader.onload = async (evt) => {
-//       try {
-//         const bstr = evt.target.result;
-//         const workbook = XLSX.read(bstr, { type: "binary" });
-        
-//         let allBookings = [];
-        
-//         // Loop through all sheets
-//         workbook.SheetNames.forEach(sheetName => {
-//             const worksheet = workbook.Sheets[sheetName];
-//             const jsonData = XLSX.utils.sheet_to_json(worksheet);
-//             allBookings = [...allBookings, ...jsonData];
-//         });
-
-//         console.log("Parsed Excel Data:", allBookings);
-
-//         if (allBookings.length === 0) {
-//             toast.error("No data found in Excel file");
-//             setImporting(false);
-//             return;
-//         }
-
-//         let successCount = 0;
-//         let failCount = 0;
-
-//         // Process each row
-//         // Columns: "Booking ID", "Booking Type", "First Name", "Last Name", "Email", "Phone", "Total Price", "Booking Date", etc.
-//         for (const row of allBookings) {
-//              const bookingData = {
-//                  bookingId: row["Booking ID"] || `IMP${Date.now()}${Math.random().toString(36).substr(2, 4)}`,
-//                  webName: row["Website"] || row["Web Name"] || "N/A",
-//                  vendorName: row["Vendor"] || row["Company"] || "Direct Customer",
-//                  bookingType: row["Booking Type"] || row["Service Type"] || "other", 
-//                  totalPrice: parseFloat(row["Total Price"] || row["Discounted Price"] || row["Price"] || 0),
-//                  status: (row["Status"] || "pending").toLowerCase(),
-//                  submittedAt: new Date().toISOString(),
-//                  formData: {
-//                      firstName: row["First Name"] || "Unknown",
-//                      lastName: row["Last Name"] || "",
-//                      email: row["Email"] || "no-email@import.com",
-//                      phone: row["Phone"] || "",
-//                      address: row["Address"] || "",
-//                      city: row["City"] || "",
-//                      state: row["State"] || "",
-//                      zip: row["Zip"] || "",
-//                      date: row["Booking Date"] || row["Date"] ? new Date(row["Booking Date"] || row["Date"]).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-//                      timeSlot: row["Time Slot"] || row["Time"] || "09:00 AM",
-//                      package: row["Package"] || "",
-//                      additionalServices: row["Additional Services"] || "",
-//                      notes: `Imported from Excel. Service: ${row["Service Type"] || "N/A"}`
-//                  }
-//              };
-
-//              // Call API to create
-//              const res = await addBooking(bookingData);
-//              if (res.success) successCount++;
-//              else {
-//                  console.error("Failed to add booking:", row["Booking ID"], res.message);
-//                  failCount++;
-//              }
-//         }
-
-//         toast.success(`Import Complete: ${successCount} added, ${failCount} failed.`);
-//         fetchBookings().then(res => setBookings(res.data || []));
-        
-//       } catch (err) {
-//         console.error("Excel Import Error:", err);
-//         toast.error("Failed to parse Excel file");
-//       } finally {
-//         setImporting(false);
-//         // Reset file input
-//         e.target.value = null;
-//       }
-//     };
-//     reader.readAsBinaryString(file);
-//   };
-
-//   // ✅ Filter Logic
-//   const filteredBookings = bookings.filter((b) => {
-//     // 1. Text Search
-//     if (search.trim() && !b.formData?.firstName?.toLowerCase().includes(search.toLowerCase())) {
-//         return false;
-//     }
-//     // 2. Date Range Filter
-//     if (fromDate || toDate) {
-//         const bookingDate = new Date(b.formData?.date || b.createdAt);
-//         // Reset times for accurate comparison
-//         bookingDate.setHours(0,0,0,0);
-        
-//         if (fromDate) {
-//             const start = new Date(fromDate);
-//             start.setHours(0,0,0,0);
-//             if (bookingDate < start) return false;
-//         }
-//         if (toDate) {
-//             const end = new Date(toDate);
-//             end.setHours(23,59,59,999);
-//             if (bookingDate > end) return false;
-//         }
-//     }
-//     return true;
-//   });
-
-//   // ✅ Revenue Stats Calculation
-//   const stats = filteredBookings.reduce((acc, curr) => {
-//       acc.totalCount++;
-//       acc.totalRevenue += (curr.totalPrice || 0); // Use totalPrice field
-//       return acc;
-//   }, { totalCount: 0, totalRevenue: 0 });
-
-//   const isSearching = search.trim().length > 0;
-
-//   // Fetch bookings on mount
-//   useEffect(() => {
-//     const loadBookings = async () => {
-//       setLoading(true);
-//       const result = await fetchBookings();
-//       if (result.success) {
-//         setBookings(result.data || []);
-//       }
-//       setLoading(false);
-//     };
-//     loadBookings();
-//   }, []);
-
-//   // Handle create booking
-//   const handleCreateBooking = async (bookingData) => {
-//     const result = await addBooking(bookingData);
-//     if (result.success) {
-//       toast.success('Booking created successfully');
-//       setBookings(prev => [...prev, result.data]);
-//       setCreateDialogOpen(false);
-//     } else {
-//       toast.error(result.message || 'Failed to create booking');
-//     }
-//   };
-
-//   if (loading) {
-//     return (
-//       <div className="flex items-center justify-center h-screen">
-//         <div className="text-center">
-//           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-//           <p className="mt-4 text-gray-600">Loading bookings...</p>
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="space-y-8 p-4 md:p-6">
-//       {/* Import Loader Overlay */}
-//       {importing && (
-//         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center">
-//           <div className="bg-white rounded-xl shadow-2xl p-8 max-w-sm w-full mx-4">
-//             <div className="flex flex-col items-center space-y-4">
-//               <div className="relative">
-//                 <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200"></div>
-//                 <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 border-t-transparent absolute inset-0"></div>
-//               </div>
-//               <div className="text-center">
-//                 <h3 className="text-lg font-semibold text-gray-900 mb-1">Importing Bookings</h3>
-//                 <p className="text-sm text-gray-600">Please wait while we process your Excel file...</p>
-//               </div>
-//               <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-//                 <div className="bg-blue-600 h-full rounded-full animate-pulse" style={{ width: '70%' }}></div>
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-
-//       {/* Header */}
-//       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
-//         <PageHeader
-//             title="Bookings Overview"
-//             description="Manage, track, and monitor all bookings in one place."
-//             icon={CalendarDays}
-//             className="mb-0"
-//         />
-        
-//         {/* Actions: Import & Create */}
-//         <div className="flex gap-2 w-full md:w-auto">
-//             {canCreateBooking && (
-//             <>
-//                 {/* Excel Import Button */}
-//                 <div className="relative">
-//                     <input
-//                         type="file"
-//                         accept=".xlsx, .xls, .csv"
-//                         onChange={handleFileUpload}
-//                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-//                         disabled={importing}
-//                     />
-//                     <Button variant="outline" className="w-full gap-2 border-green-600 text-green-700 hover:bg-green-50" disabled={importing}>
-//                         <FileSpreadsheet className="w-4 h-4" />
-//                         {importing ? "Importing..." : "Import Excel"}
-//                     </Button>
-//                 </div>
-//                 <Button
-//                     onClick={() => setCreateDialogOpen(true)}
-//                     className="blue-button flex items-center gap-2 w-full sm:w-auto"
-//                 >
-//                     <Plus className="w-4 h-4" />
-//                     Create
-//                 </Button>
-//             </>
-//             )}
-//         </div>
-//       </div>
-
-//       {/* 📊 STATS CARDS & FILTERS */}
-//       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-//          {/* Stats */}
-//          <div className="col-span-1 md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
-//             <Card className="bg-gradient-to-br from-indigo-500 to-indigo-600 border-0 shadow-md text-white">
-//                 <CardContent className="p-4 flex items-center justify-between">
-//                     <div>
-//                         <p className="text-indigo-100 text-sm font-medium mb-1">Total Revenue</p>
-//                         <h3 className="text-2xl font-bold flex items-center gap-2">
-//                             <DollarSign className="w-5 h-5" /> 
-//                             {stats.totalRevenue.toLocaleString()}
-//                         </h3>
-//                         <p className="text-xs text-indigo-200 mt-1">Based on {fromDate && toDate ? "filtered range" : "all time"}</p>
-//                     </div>
-//                     <div className="p-3 bg-white/10 rounded-full">
-//                         <TrendingUp className="w-6 h-6 text-white" />
-//                     </div>
-//                 </CardContent>
-//             </Card>
-
-//             <Card className="bg-white border shadow-sm">
-//                 <CardContent className="p-4 flex items-center justify-between">
-//                     <div>
-//                         <p className="text-slate-500 text-sm font-medium mb-1">Total Bookings</p>
-//                         <h3 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-//                            <Users className="w-5 h-5 text-blue-500" />
-//                            {stats.totalCount}
-//                         </h3>
-//                          <p className="text-xs text-slate-400 mt-1">{filteredBookings.length} filtered</p>
-//                     </div>
-//                     <div className="p-3 bg-blue-50 rounded-full">
-//                         <Calendar className="w-6 h-6 text-blue-500" />
-//                     </div>
-//                 </CardContent>
-//             </Card>
-//          </div>
-
-//          {/* Filters */}
-//          <Card className="col-span-1 md:col-span-4 border shadow-sm">
-//             <CardHeader className="pb-2 pt-4 px-4">
-//                 <CardTitle className="text-sm font-semibold flex items-center gap-2">
-//                     <Filter className="w-4 h-4" /> Filter by Date Range
-//                 </CardTitle>
-//             </CardHeader>
-//             <CardContent className="px-4 pb-4 space-y-3">
-//                 <div className="space-y-1">
-//                     <label className="text-xs text-slate-500 font-medium">From Date</label>
-//                     <Input 
-//                         type="date" 
-//                         value={fromDate} 
-//                         onChange={(e) => setFromDate(e.target.value)} 
-//                         className="h-9"
-//                     />
-//                 </div>
-//                 <div className="space-y-1">
-//                     <label className="text-xs text-slate-500 font-medium">To Date</label>
-//                     <Input 
-//                         type="date" 
-//                         value={toDate} 
-//                         onChange={(e) => setToDate(e.target.value)} 
-//                         className="h-9"
-//                     />
-//                 </div>
-//                 {(fromDate || toDate) && (
-//                     <Button 
-//                         variant="ghost" 
-//                         size="sm" 
-//                         onClick={() => { setFromDate(""); setToDate(""); }}
-//                         className="w-full text-xs h-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-//                     >
-//                         Clear Filters
-//                     </Button>
-//                 )}
-//             </CardContent>
-//          </Card>
-//       </div>
-
-//       <Separator />
-
-//       {/* Search & Filter Section (Optional Search Bar) */}
-//       {/* <BookingSearchBar onSearch={handleSearch} /> */}
-
-//       {/* If searching → show search results */}
-//       {isSearching && (
-//         <motion.div
-//           initial="hidden"
-//           animate="visible"
-//           variants={fadeUp}
-//           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 py-6"
-//         >
-//           {filteredBookings.length === 0 ? (
-//             <p className="text-center text-gray-500 col-span-full">
-//               No results found for <strong>{search}</strong>.
-//             </p>
-//           ) : (
-//             filteredBookings.map((booking, index) => (
-//               <SearchResultCard
-//                 key={booking._id}
-//                 item={booking}
-//                 index={index}
-//                 fadeUp={fadeUp}
-//                 type="booking"
-//                 onViewDetails={(b) => {
-//                   setSelectedBooking(b);
-//                   setDialogOpen(true);
-//                 }}
-//               />
-//             ))
-//           )}
-//         </motion.div>
-//       )}
-
-//       {/* Default Data Table view */}
-//       {!isSearching && (
-//         <Card className="border-none shadow-md mt-6">
-//           <CardHeader className="border-b px-6 py-4 bg-muted/20">
-//              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-//                <div>
-//                   <CardTitle>All Bookings</CardTitle>
-//                   <CardDescription>
-//                      Showing {filteredBookings.length} {filteredBookings.length === 1 ? 'booking' : 'bookings'} 
-//                      {fromDate && toDate ? " in selected range" : ""}
-//                   </CardDescription>
-//                </div>
-//              </div>
-//           </CardHeader>
-//           <CardContent className="p-0">
-//              <DataTable
-//                 data={filteredBookings}
-//                 columns={[
-//                     { key: "bookingId", label: "Booking ID" },
-//                     { label: "Customer", render: b => `${b.formData?.firstName || ""} ${b.formData?.lastName || ""}` },
-//                     { label: "Email", render: b => b.formData?.email || "N/A" },
-//                     { label: "Price", render: b => `$${(b.totalPrice || 0).toLocaleString()}` },
-//                     { label: "Date", render: b => new Date(b.formData?.date || b.createdAt).toLocaleDateString() },
-//                     { label: "Status", render: b => {
-//                         const config = STATUS_CONFIG[b.status] || STATUS_CONFIG.default;
-//                         const { colorClass, Icon } = config;
-//                         return (
-//                           <span className={`px-2 py-1 text-xs rounded-full flex items-center gap-1 w-fit ${colorClass}`}>
-//                             {Icon && <Icon className="w-3.5 h-3.5" />}
-//                             <span className="capitalize">{b.status}</span>
-//                           </span>
-//                         );
-//                       }
-//                     },
-//                     { label: "Action", align: "right", render: b => (
-//                         canViewBooking ? (
-//                           <Button variant="ghost" size="sm" onClick={() => { setSelectedBooking(b); setDialogOpen(true); }}>
-//                             View Details
-//                           </Button>
-//                         ) : null
-//                     )}
-//                 ]}
-//              />
-//           </CardContent>
-//         </Card>
-//       )}
-
-//       {/* Mobile Cards */}
-//       <div className="sm:hidden mt-4">
-//         <div className="flex items-center justify-between mb-3 px-1">
-//             <div className="text-sm font-medium">Bookings List ({filteredBookings.length})</div>
-//         </div>
-
-//         <div className="space-y-3">
-//             {filteredBookings.map((b, index) => {
-//               const config = STATUS_CONFIG[b.status] || STATUS_CONFIG.default;
-//               const { colorClass, Icon } = config;
-              
-//               return (
-//                 <Card key={b._id} className="border-l-4 hover:shadow-lg transition-all duration-200" style={{ borderLeftColor: config.Icon ? 'currentColor' : '#gray' }}>
-//                   <CardHeader className="pb-2">
-//                     <div className="flex items-start justify-between">
-//                       <div className="flex-1">
-//                         <div className="flex items-center gap-2 mb-1">
-//                           <div className="font-semibold text-base text-gray-900">
-//                             {b.formData?.firstName} {b.formData?.lastName}
-//                           </div>
-//                           <span className={`px-2.5 py-0.5 text-xs rounded-full font-medium ${colorClass} flex items-center gap-1`}>
-//                             {Icon && <Icon className="w-3 h-3" />}
-//                             <span className="capitalize">{b.status}</span>
-//                           </span>
-//                         </div>
-//                         <div className="text-xs text-muted-foreground">{b.bookingId}</div>
-//                       </div>
-//                     </div>
-//                   </CardHeader>
-                  
-//                   <CardContent className="space-y-3">
-//                     {/* Details Grid */}
-//                     <div className="grid grid-cols-2 gap-3 text-sm">
-//                       <div className="space-y-1">
-//                         <p className="text-xs text-muted-foreground flex items-center gap-1">
-//                           <Calendar className="w-3 h-3" />
-//                           Date
-//                         </p>
-//                         <p className="font-medium text-gray-900">{new Date(b.formData?.date || b.createdAt).toLocaleDateString()}</p>
-//                       </div>
-//                       <div className="space-y-1">
-//                         <p className="text-xs text-muted-foreground flex items-center gap-1">
-//                           <Clock className="w-3 h-3" />
-//                           Time
-//                         </p>
-//                         <p className="font-medium text-gray-900">{b.formData?.timeSlot || 'N/A'}</p>
-//                       </div>
-//                       <div className="space-y-1">
-//                         <p className="text-xs text-muted-foreground flex items-center gap-1">
-//                           <Mail className="w-3 h-3" />
-//                           Email
-//                         </p>
-//                         <p className="font-medium text-gray-900 truncate">{b.formData?.email}</p>
-//                       </div>
-//                       <div className="space-y-1">
-//                         <p className="text-xs text-muted-foreground flex items-center gap-1">
-//                           <DollarSign className="w-3 h-3" />
-//                           Amount
-//                         </p>
-//                         <p className="font-bold text-lg text-blue-600">${(b.totalPrice || 0).toLocaleString()}</p>
-//                       </div>
-//                     </div>
-                    
-//                     {/* Action Button */}
-//                     {canViewBooking && (
-//                       <Button 
-//                         variant="outline" 
-//                         size="sm" 
-//                         onClick={() => { setSelectedBooking(b); setDialogOpen(true); }}
-//                         className="w-full mt-2 border-blue-200 text-blue-700 hover:bg-blue-50"
-//                       >
-//                         View Full Details
-//                       </Button>
-//                     )}
-//                   </CardContent>
-//                 </Card>
-//               );
-//             })}
-//         </div>
-//       </div>
-      
-//       {/* Detail Dialogs */}
-//       <BookingDetailsDialog 
-//         booking={selectedBooking} 
-//         open={dialogOpen} 
-//         onClose={() => setDialogOpen(false)}
-//         onStatusChange={(updatedBooking) => {
-//           setBookings(prev => prev.map(b => b._id === updatedBooking._id ? updatedBooking : b));
-//           setSelectedBooking(updatedBooking);
-//         }}
-//       />
-      
-//       <CreateBookingDialog 
-//         open={createDialogOpen} 
-//         onClose={() => setCreateDialogOpen(false)}
-//         onSubmit={handleCreateBooking}
-//       />
-//     </div>
-//   );
-// }
-
-
-
 // src/app/(dashboard)/dashboard/bookings/page.jsx
 "use client";
 
@@ -558,6 +8,7 @@ import PageHeader from "@/components/common/PageHeader";
 import BookingDetailsDialog from "@/components/BookingDetailsDialog";
 import CreateBookingDialog from "@/components/CreateBookingDialog";
 import EditBookingDialog from "@/components/EditBookingDialog"; // New Edit Dialog
+import { RescheduleBooking } from "@/components/RescheduleBooking"; // Import Reschedule Modal
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -599,7 +50,8 @@ import {
   ChevronRight as RightChevron,
   ChevronsLeft,
   ChevronsRight,
-  Loader2
+  Loader2,
+  Checkbox
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -686,6 +138,14 @@ export default function BookingsPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [bookingToDelete, setBookingToDelete] = useState(null);
   const [updatingStatus, setUpdatingStatus] = useState({});
+  const [importPreviewOpen, setImportPreviewOpen] = useState(false);
+  const [importedData, setImportedData] = useState([]);
+  const [importingMessage, setImportingMessage] = useState("");
+  const [allSheetData, setAllSheetData] = useState({}); // Store data from all sheets
+  const [selectedSheet, setSelectedSheet] = useState(null); // Track selected sheet
+  const [selectedForDelete, setSelectedForDelete] = useState(new Set()); // Bulk delete selection
+  const [rescheduleOpen, setRescheduleOpen] = useState(false); // Reschedule modal
+  const [bookingToReschedule, setBookingToReschedule] = useState(null); // Booking for reschedule
 
   const { hasPermission } = useAuth();
   const canCreateBooking = hasPermission('booking', 'create');
@@ -727,47 +187,55 @@ export default function BookingsPage() {
       try {
         const bstr = evt.target.result;
         const workbook = XLSX.read(bstr, { type: "binary" });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+        
+        // Process all sheets
+        const sheetsData = {};
+        let totalBookings = 0;
+        
+        for (const sheetName of workbook.SheetNames) {
+          const worksheet = workbook.Sheets[sheetName];
+          const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-        let successCount = 0;
-        let failCount = 0;
+          // Convert to booking format for preview
+          const bookingsToImport = jsonData.map(row => ({
+            bookingId: row["Booking ID"] || `IMP-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+            webName: row["Website"] || "Direct",
+            vendorName: row["Vendor"] || "N/A",
+            bookingType: row["Type"] || "service",
+            totalPrice: parseFloat(row["Total Price"] || row["Price"] || 0),
+            status: (row["Status"] || "pending").toLowerCase(),
+            formData: {
+              firstName: row["First Name"] || row["Customer Name"]?.split(' ')[0] || "Customer",
+              lastName: row["Last Name"] || row["Customer Name"]?.split(' ')[1] || "",
+              email: row["Email"] || "no-email@example.com",
+              phone: row["Phone"] || row["Contact"] || "",
+              date: row["Date"] ? new Date(row["Date"]).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+              timeSlot: row["Time"] || row["Time Slot"] || "09:00 AM",
+              package: row["Package"] || row["Service"] || "Standard",
+              address: row["Address"] || "",
+              city: row["City"] || "",
+              state: row["State"] || "",
+              notes: row["Notes"] || `Imported: ${row["Service Type"] || "Booking"}`
+            }
+          }));
 
-        for (const row of jsonData) {
-          try {
-            const bookingData = {
-              bookingId: row["Booking ID"] || `IMP-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
-              webName: row["Website"] || "Direct",
-              vendorName: row["Vendor"] || "N/A",
-              bookingType: row["Type"] || "service",
-              totalPrice: parseFloat(row["Total Price"] || row["Price"] || 0),
-              status: (row["Status"] || "pending").toLowerCase(),
-              formData: {
-                firstName: row["First Name"] || row["Customer Name"]?.split(' ')[0] || "Customer",
-                lastName: row["Last Name"] || row["Customer Name"]?.split(' ')[1] || "",
-                email: row["Email"] || "no-email@example.com",
-                phone: row["Phone"] || row["Contact"] || "",
-                date: row["Date"] ? new Date(row["Date"]).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-                timeSlot: row["Time"] || row["Time Slot"] || "09:00 AM",
-                package: row["Package"] || row["Service"] || "Standard",
-                address: row["Address"] || "",
-                city: row["City"] || "",
-                state: row["State"] || "",
-                notes: row["Notes"] || `Imported: ${row["Service Type"] || "Booking"}`
-              }
-            };
-
-            const res = await addBooking(bookingData);
-            if (res.success) successCount++;
-            else failCount++;
-          } catch (err) {
-            failCount++;
-          }
+          sheetsData[sheetName] = bookingsToImport;
+          totalBookings += bookingsToImport.length;
         }
 
-        toast.success(`Import Complete: ${successCount} successful, ${failCount} failed`);
-        await loadBookings();
+        // Set the data
+        setAllSheetData(sheetsData);
+        const firstSheet = workbook.SheetNames[0];
+        setSelectedSheet(firstSheet);
+        setImportedData(sheetsData[firstSheet] || []);
+        
+        const sheetCount = workbook.SheetNames.length;
+        setImportingMessage(
+          sheetCount > 1 
+            ? `Ready to import from ${sheetCount} sheets - Total ${totalBookings} booking(s)`
+            : `Ready to import ${totalBookings} booking(s)`
+        );
+        setImportPreviewOpen(true);
         
       } catch (err) {
         toast.error("Failed to parse Excel file");
@@ -778,6 +246,57 @@ export default function BookingsPage() {
     };
     
     reader.readAsBinaryString(file);
+  };
+
+  // Handle sheet change
+  const handleSheetChange = (sheetName) => {
+    setSelectedSheet(sheetName);
+    setImportedData(allSheetData[sheetName] || []);
+  };
+
+  // Delete a row from preview
+  const handleDeleteRow = (index) => {
+    const updatedData = importedData.filter((_, i) => i !== index);
+    setImportedData(updatedData);
+    setAllSheetData(prev => ({
+      ...prev,
+      [selectedSheet]: updatedData
+    }));
+  };
+
+  // Confirm and save imported bookings
+  const handleConfirmImport = async () => {
+    setImporting(true);
+    try {
+      let successCount = 0;
+      let failCount = 0;
+
+      // Import from all sheets
+      for (const sheetName in allSheetData) {
+        for (const bookingData of allSheetData[sheetName]) {
+          try {
+            const res = await addBooking(bookingData);
+            if (res.success) successCount++;
+            else failCount++;
+          } catch (err) {
+            failCount++;
+          }
+        }
+      }
+
+      toast.success(`Import Complete: ${successCount} successful, ${failCount} failed`);
+      await loadBookings();
+      setImportPreviewOpen(false);
+      setImportedData([]);
+      setAllSheetData({});
+      setSelectedSheet(null);
+      
+    } catch (err) {
+      toast.error("Error importing bookings");
+      console.error(err);
+    } finally {
+      setImporting(false);
+    }
   };
 
   // Calculate filtered bookings and stats
@@ -930,6 +449,58 @@ export default function BookingsPage() {
     }
   };
 
+  // Handle bulk delete
+  const handleBulkDelete = async () => {
+    try {
+      const bookingIds = Array.from(selectedForDelete);
+      let successCount = 0;
+      let failCount = 0;
+
+      for (const bookingId of bookingIds) {
+        try {
+          const result = await deleteBooking(bookingId);
+          if (result.success) {
+            successCount++;
+          } else {
+            failCount++;
+          }
+        } catch (err) {
+          failCount++;
+        }
+      }
+
+      setBookings(prev => prev.filter(b => !selectedForDelete.has(b._id)));
+      setSelectedForDelete(new Set());
+      toast.success(`Deleted ${successCount} booking(s)${failCount > 0 ? `, ${failCount} failed` : ''}`);
+      setDeleteDialogOpen(false);
+      setBookingToDelete(null);
+    } catch (error) {
+      toast.error('Error deleting bookings');
+    }
+  };
+
+  // Toggle booking selection
+  const toggleBookingSelection = (bookingId) => {
+    const newSelection = new Set(selectedForDelete);
+    if (newSelection.has(bookingId)) {
+      newSelection.delete(bookingId);
+    } else {
+      newSelection.add(bookingId);
+    }
+    setSelectedForDelete(newSelection);
+  };
+
+  // Select/Deselect all visible bookings
+  const toggleSelectAll = () => {
+    if (selectedForDelete.size === paginatedBookings.length) {
+      setSelectedForDelete(new Set());
+    } else {
+      const newSelection = new Set(selectedForDelete);
+      paginatedBookings.forEach(b => newSelection.add(b._id));
+      setSelectedForDelete(newSelection);
+    }
+  };
+
   // Loading skeleton
   if (loading) {
     return <LoadingSkeleton />;
@@ -958,6 +529,19 @@ export default function BookingsPage() {
               {importing ? "Importing..." : "Import"}
             </Button>
           </div>
+          {selectedForDelete.size > 0 && canDeleteBooking && (
+            <Button 
+              onClick={() => {
+                setDeleteDialogOpen(true);
+                setBookingToDelete(null);
+              }} 
+              variant="destructive" 
+              className="gap-2 flex-1 sm:flex-initial"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete ({selectedForDelete.size})
+            </Button>
+          )}
           {canCreateBooking && (
             <Button onClick={() => setCreateDialogOpen(true)} className="gap-2 flex-1 sm:flex-initial">
               <Plus className="w-4 h-4" />
@@ -1137,6 +721,22 @@ export default function BookingsPage() {
               />
             ) : (
               <>
+                {/* Show select all checkbox when cards view */}
+                {selectedForDelete.size > 0 && canDeleteBooking && (
+                  <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200 mb-4">
+                    <input
+                      type="checkbox"
+                      checked={selectedForDelete.size === paginatedBookings.length && paginatedBookings.length > 0}
+                      onChange={toggleSelectAll}
+                      className="w-4 h-4 cursor-pointer"
+                    />
+                    <span className="text-sm font-medium text-blue-900">
+                      {selectedForDelete.size === paginatedBookings.length && paginatedBookings.length > 0
+                        ? 'All visible bookings selected'
+                        : `${selectedForDelete.size} booking(s) selected`}
+                    </span>
+                  </div>
+                )}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {paginatedBookings.map((booking) => (
                     <BookingCard
@@ -1154,7 +754,13 @@ export default function BookingsPage() {
                         setBookingToDelete(booking);
                         setDeleteDialogOpen(true);
                       }}
+                      onReschedule={() => {
+                        setBookingToReschedule(booking);
+                        setRescheduleOpen(true);
+                      }}
                       onStatusUpdate={handleQuickStatusUpdate}
+                      isSelected={selectedForDelete.has(booking._id)}
+                      onSelect={() => toggleBookingSelection(booking._id)}
                       canEdit={canEditBooking}
                       canDelete={canDeleteBooking}
                       canView={canViewBooking}
@@ -1190,11 +796,24 @@ export default function BookingsPage() {
               <>
                 {/* Desktop Table */}
                 <div className="hidden lg:block">
-                  <Card>
-                    <CardContent className="p-0">
-                      <DataTable
+                                       <DataTable
                         data={paginatedBookings}
                         columns={[
+                          {
+                            label: "",
+                            minWidth: "50px",
+                            align: "center",
+                            render: (b) => (
+                              canDeleteBooking && (
+                                <input
+                                  type="checkbox"
+                                  checked={selectedForDelete.has(b._id)}
+                                  onChange={() => toggleBookingSelection(b._id)}
+                                  className="w-4 h-4 cursor-pointer"
+                                />
+                              )
+                            )
+                          },
                           { 
                             key: "bookingId", 
                             label: "Booking ID",
@@ -1278,6 +897,16 @@ export default function BookingsPage() {
                                             </DropdownMenuItem>
                                           )
                                         ))}
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                          onClick={() => {
+                                            setBookingToReschedule(b);
+                                            setRescheduleOpen(true);
+                                          }}
+                                        >
+                                          <RefreshCcw className="w-3 h-3 mr-2 text-blue-600" />
+                                          Reschedule Booking
+                                        </DropdownMenuItem>
                                       </DropdownMenuContent>
                                     </DropdownMenu>
                                   )}
@@ -1342,10 +971,12 @@ export default function BookingsPage() {
                             )
                           }
                         ]}
-                        tableHeight="calc(100vh - 550px)"
+                        tableHeight="auto"
+                        rowsPerPage={TABLE_ITEMS_PER_PAGE}
+                        currentPage={currentPage}
+                        totalPages={Math.ceil(filteredBookings.length / TABLE_ITEMS_PER_PAGE)}
+                        onPageChange={setCurrentPage}
                       />
-                    </CardContent>
-                  </Card>
                 </div>
 
                 {/* Mobile/Tablet Cards */}
@@ -1394,13 +1025,13 @@ export default function BookingsPage() {
                           </div>
 
                           {/* Actions */}
-                          <div className="flex gap-2 pt-3 border-t">
+                          <div className="flex gap-2 pt-3 border-t flex-wrap">
                             {canViewBooking && (
                               <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => { setSelectedBooking(b); setDialogOpen(true); }}
-                                className="flex-1"
+                                className="flex-1 min-w-20"
                               >
                                 <Eye className="w-4 h-4 mr-2" />
                                 View
@@ -1411,10 +1042,24 @@ export default function BookingsPage() {
                                 variant="outline" 
                                 size="sm" 
                                 onClick={() => { setSelectedBooking(b); setEditDialogOpen(true); }}
-                                className="flex-1"
+                                className="flex-1 min-w-20"
                               >
                                 <Edit className="w-4 h-4 mr-2" />
                                 Edit
+                              </Button>
+                            )}
+                            {canEditBooking && (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => {
+                                  setBookingToReschedule(b);
+                                  setRescheduleOpen(true);
+                                }}
+                                className="flex-1 min-w-[100px]"
+                              >
+                                <RefreshCcw className="w-4 h-4 mr-2" />
+                                Reschedule
                               </Button>
                             )}
                             {canDeleteBooking && (
@@ -1496,26 +1141,213 @@ export default function BookingsPage() {
         onSubmit={handleEditBooking}
       />
 
+      {/* Reschedule Modal */}
+      <RescheduleBooking 
+        booking={bookingToReschedule}
+        isOpen={rescheduleOpen}
+        onClose={() => {
+          setRescheduleOpen(false);
+          setBookingToReschedule(null);
+        }}
+        onSuccess={(updatedBooking) => {
+          setBookings(prev => prev.map(b => b._id === updatedBooking._id ? updatedBooking : b));
+          setRescheduleOpen(false);
+          setBookingToReschedule(null);
+          toast.success('Booking rescheduled successfully!');
+        }}
+      />
+
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Booking</AlertDialogTitle>
+            <AlertDialogTitle>
+              {selectedForDelete.size > 0 ? 'Delete Bookings' : 'Delete Booking'}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete booking {bookingToDelete?.bookingId}? 
-              This action cannot be undone and all booking data will be permanently removed.
+              {selectedForDelete.size > 0 
+                ? `Are you sure you want to delete ${selectedForDelete.size} booking(s)? This action cannot be undone and all booking data will be permanently removed.`
+                : `Are you sure you want to delete booking ${bookingToDelete?.bookingId}? This action cannot be undone and all booking data will be permanently removed.`
+              }
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setBookingToDelete(null)}>
+            <AlertDialogCancel onClick={() => {
+              setBookingToDelete(null);
+              setDeleteDialogOpen(false);
+            }}>
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => bookingToDelete && handleDeleteBooking(bookingToDelete._id)}
+              onClick={() => {
+                if (selectedForDelete.size > 0) {
+                  handleBulkDelete();
+                } else {
+                  bookingToDelete && handleDeleteBooking(bookingToDelete._id);
+                }
+              }}
               className="bg-red-600 hover:bg-red-700"
             >
-              Delete Booking
+              {selectedForDelete.size > 0 ? `Delete ${selectedForDelete.size} Booking(s)` : 'Delete Booking'}
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Import Preview Dialog */}
+      <AlertDialog open={importPreviewOpen} onOpenChange={setImportPreviewOpen}>
+        <AlertDialogContent className="max-w-6xl max-h-[95vh] overflow-hidden flex flex-col">
+          <AlertDialogHeader className="border-b pb-4">
+            <div className="space-y-4">
+              <div>
+                <AlertDialogTitle className="text-xl mb-1">Preview & Manage Import Data</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {importingMessage}
+                </AlertDialogDescription>
+              </div>
+              
+              {/* Summary Stats - Small Cards in Header */}
+              {Object.keys(allSheetData).length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                    <p className="text-xs font-semibold text-gray-600 uppercase">Total Sheets</p>
+                    <p className="text-2xl font-bold text-blue-600 mt-1">{Object.keys(allSheetData).length}</p>
+                  </div>
+                  <div className="bg-indigo-50 rounded-lg p-3 border border-indigo-200">
+                    <p className="text-xs font-semibold text-gray-600 uppercase">Current Month</p>
+                    <p className="text-2xl font-bold text-indigo-600 mt-1">{importedData.length}</p>
+                  </div>
+                  <div className="bg-red-50 rounded-lg p-3 border border-red-200">
+                    <p className="text-xs font-semibold text-gray-600 uppercase">Deleted</p>
+                    <p className="text-2xl font-bold text-red-600 mt-1">
+                      {Object.values(allSheetData).reduce((sum, arr) => sum, 0) - 
+                       Object.values(allSheetData).reduce((sum, arr) => sum + arr.length, 0) + 
+                       importedData.length}
+                    </p>
+                  </div>
+                  <div className="bg-green-50 rounded-lg p-3 border border-green-200">
+                    <p className="text-xs font-semibold text-gray-600 uppercase">Total Ready</p>
+                    <p className="text-2xl font-bold text-green-600 mt-1">
+                      {Object.values(allSheetData).reduce((sum, arr) => sum + arr.length, 0)}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </AlertDialogHeader>
+
+          {/* Sheet Tabs - Improved UI */}
+          {Object.keys(allSheetData).length > 1 && (
+            <div className="px-6 py-3 border-b bg-linear-to-r from-blue-50 to-indigo-50">
+              <p className="text-xs font-semibold text-gray-600 mb-3 uppercase tracking-wide">Months/Sheets</p>
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {Object.keys(allSheetData).map((sheetName) => (
+                  <button
+                    key={sheetName}
+                    onClick={() => handleSheetChange(sheetName)}
+                    className={`px-5 py-2.5 rounded-lg font-medium text-sm transition-all whitespace-nowrap ${
+                      selectedSheet === sheetName
+                        ? 'bg-blue-500 text-white shadow-lg scale-105'
+                        : 'bg-white text-gray-700 border border-gray-200 hover:border-blue-300 hover:shadow-md'
+                    }`}
+                  >
+                    <span>{sheetName}</span>
+                    <span className={`ml-2 text-xs font-bold ${selectedSheet === sheetName ? 'text-blue-100' : 'text-gray-500'}`}>
+                      ({allSheetData[sheetName].length})
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Preview Table - Scrollable */}
+          <div className="flex-1 overflow-y-auto">
+            {importedData.length > 0 ? (
+              <table className="w-full text-sm">
+                <thead className="sticky top-0 bg-linear-to-r from-gray-100 to-gray-50 z-10 border-b-2 border-gray-300">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-700 w-10">#</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Name</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Email</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Phone</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Date</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Time</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Package</th>
+                    <th className="px-4 py-3 text-right font-semibold text-gray-700">Price</th>
+                    <th className="px-4 py-3 text-center font-semibold text-gray-700">Status</th>
+                    <th className="px-4 py-3 text-center font-semibold text-gray-700 w-12">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {importedData.map((booking, idx) => (
+                    <tr key={idx} className="border-b hover:bg-blue-50 transition-colors group">
+                      <td className="px-4 py-3 text-gray-600 text-xs font-medium">{idx + 1}</td>
+                      <td className="px-4 py-3">
+                        <div className="font-medium text-gray-900">
+                          {booking.formData?.firstName} {booking.formData?.lastName}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-gray-600">{booking.formData?.email}</td>
+                      <td className="px-4 py-3 text-xs text-gray-600">{booking.formData?.phone}</td>
+                      <td className="px-4 py-3 text-sm font-medium text-gray-800">{booking.formData?.date}</td>
+                      <td className="px-4 py-3 text-xs text-gray-600">{booking.formData?.timeSlot}</td>
+                      <td className="px-4 py-3 text-sm text-gray-700">{booking.formData?.package}</td>
+                      <td className="px-4 py-3 font-bold text-blue-600 text-right">
+                        ${booking.totalPrice?.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <Badge className={`${STATUS_CONFIG[booking.status]?.colorClass || 'bg-gray-100'} text-xs`}>
+                          {booking.status}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <button
+                          onClick={() => handleDeleteRow(idx)}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity bg-red-500 hover:bg-red-600 text-white rounded-lg p-2 inline-flex items-center justify-center"
+                          title="Delete this row"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="flex items-center justify-center h-32 text-gray-500">
+                <AlertCircle className="w-5 h-5 mr-2" />
+                No data in this sheet
+              </div>
+            )}
+          </div>
+
+          <AlertDialogFooter className="gap-3 pt-4 border-t">
+            <AlertDialogCancel onClick={() => {
+              setImportPreviewOpen(false);
+              setImportedData([]);
+              setAllSheetData({});
+              setSelectedSheet(null);
+            }} className="px-6">
+              Cancel
+            </AlertDialogCancel>
+            <Button
+              onClick={handleConfirmImport}
+              disabled={importing || Object.keys(allSheetData).length === 0 || Object.values(allSheetData).reduce((sum, arr) => sum + arr.length, 0) === 0}
+              className="bg-green-600 hover:bg-green-700 px-8"
+            >
+              {importing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Importing...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Add All ({Object.values(allSheetData).reduce((sum, arr) => sum + arr.length, 0)})
+                </>
+              )}
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -1619,17 +1451,25 @@ function StatusCard({ status, config, count, percentage, active, onClick }) {
   );
 }
 
-function BookingCard({ booking, onView, onEdit, onDelete, onStatusUpdate, canEdit, canDelete, canView, updatingStatus }) {
+function BookingCard({ booking, onView, onEdit, onDelete, onReschedule, onStatusUpdate, canEdit, canDelete, canView, updatingStatus, isSelected, onSelect }) {
   const statusConfig = STATUS_CONFIG[booking.status] || STATUS_CONFIG.pending;
   const initials = `${booking.formData?.firstName?.[0] || ''}${booking.formData?.lastName?.[0] || ''}`;
   const bookingDate = booking.formData?.date ? new Date(booking.formData.date) : new Date(booking.createdAt);
   
   return (
-    <Card className="group hover:shadow-lg transition-all duration-200">
+    <Card className={`group hover:shadow-lg transition-all duration-200 ${isSelected ? 'ring-2 ring-blue-500 bg-blue-50' : ''}`}>
       <CardHeader className="pb-3">
         <div className="flex justify-between items-start">
-          <div>
+          <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
+              {canDelete && (
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={onSelect}
+                  className="w-4 h-4 cursor-pointer"
+                />
+              )}
               <Badge variant="outline" className={statusConfig.colorClass}>
                 <statusConfig.Icon className="w-3 h-3 mr-1" />
                 {statusConfig.label}
@@ -1661,6 +1501,12 @@ function BookingCard({ booking, onView, onEdit, onDelete, onStatusUpdate, canEdi
                 <DropdownMenuItem onClick={onEdit}>
                   <Edit className="w-4 h-4 mr-2" />
                   Edit Booking
+                </DropdownMenuItem>
+              )}
+              {canEdit && (
+                <DropdownMenuItem onClick={onReschedule}>
+                  <RefreshCcw className="w-4 h-4 mr-2 text-blue-600" />
+                  Reschedule
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />

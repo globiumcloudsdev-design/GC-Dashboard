@@ -155,6 +155,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Eye, Edit, Trash2, MoreVertical, FileText, Download, CheckCircle, XCircle } from "lucide-react";
 import { formatToPakistaniDate, formatToPakistaniTime } from "@/utils/TimeFuntions";
+import { formatDate } from "@/utils/timezone";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -179,6 +180,7 @@ export const getAttendanceColumns = ({
       "half-day": "bg-yellow-100 text-yellow-800 border-yellow-200",
       holiday: "bg-purple-100 text-purple-800 border-purple-200",
       "weekly-off": "bg-gray-100 text-gray-800 border-gray-200",
+      weekly_off: "bg-gray-100 text-gray-800 border-gray-200",
       late: "bg-orange-100 text-orange-800 border-orange-200",
       early_checkout: "bg-pink-100 text-pink-800 border-pink-200",
       overtime: "bg-indigo-100 text-indigo-800 border-indigo-200",
@@ -216,11 +218,17 @@ export const getAttendanceColumns = ({
     {
       label: "Date",
       minWidth: "120px",
-      render: (a) => (
-        <div className="text-sm">
-          {formatToPakistaniDate(a.date || a.createdAt)}
-        </div>
-      ),
+      render: (a) => {
+        const date = new Date(a.date || a.createdAt);
+        const dayName = date.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'Asia/Karachi' });
+        const formattedDate = formatToPakistaniDate(a.date || a.createdAt);
+        return (
+          <div className="text-sm">
+            <div className="font-medium">{dayName}</div>
+            <div className="text-muted-foreground text-xs">{formattedDate}</div>
+          </div>
+        );
+      },
     },
     {
       label: "Status",
@@ -346,7 +354,7 @@ export const getAttendanceColumns = ({
                   )}
                   
                   {/* Delete Attendance */}
-                  {canDeleteAttendance && (
+                  {/* {canDeleteAttendance && (
                     <DropdownMenuItem 
                       onClick={() => handleDeleteAttendance(a._id)}
                       className="cursor-pointer text-red-600"
@@ -354,7 +362,7 @@ export const getAttendanceColumns = ({
                       <Trash2 className="h-4 w-4 mr-2" />
                       Delete Attendance
                     </DropdownMenuItem>
-                  )}
+                  )} */}
                 </>
               )}
               

@@ -25,6 +25,13 @@ const PayrollSchema = new mongoose.Schema(
     convertedAbsents: { type: Number, default: 0 }, // From 3 lates logic
     informedAbsents: { type: Number, default: 0 }, // Used for allowance cut
     
+    // Sales Stats (New fields for target-based incentives)
+    targetType: { type: String, enum: ['none', 'digit', 'amount', 'both'], default: 'none' },
+    salesCount: { type: Number, default: 0 }, // For digit target
+    revenue: { type: Number, default: 0 }, // For amount target
+    completedBookingsCount: { type: Number, default: 0 },
+    completedProjectsCount: { type: Number, default: 0 },
+    
     // Financials
     perDaySalary: { type: Number, default: 0 },
     

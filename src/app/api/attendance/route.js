@@ -726,6 +726,7 @@ export async function GET(request) {
     const limit = parseInt(searchParams.get("limit") || "50");
     const userType = searchParams.get("userType") || "all";
     const status = searchParams.get("status") || "all";
+    const shift = searchParams.get("shift") || "all";
     const date = searchParams.get("date") || "";
     const fromDateParam = searchParams.get("fromDate") || searchParams.get("startDate") || "";
     const toDateParam = searchParams.get("toDate") || searchParams.get("endDate") || "";
@@ -737,9 +738,45 @@ export async function GET(request) {
 
     const skip = (page - 1) * limit;
 
+    // --- Search Resolution Logic ---
+    let finalAgentId = agentId;
+    let finalUserId = userId;
+
+    if (search && !finalAgentId && !finalUserId) {
+      // Try to resolve search query to a unique agent or user
+      const agentMatches = (userType === 'agent' || userType === 'all') 
+        ? await Agent.find({
+            $or: [
+              { agentName: { $regex: search, $options: 'i' } },
+              { email: { $regex: search, $options: 'i' } },
+              { agentId: { $regex: search, $options: 'i' } }
+            ]
+          }).limit(2) 
+        : [];
+
+      const userMatches = (userType === 'user' || userType === 'all')
+        ? await User.find({
+            $or: [
+              { firstName: { $regex: search, $options: 'i' } },
+              { lastName: { $regex: search, $options: 'i' } },
+              { email: { $regex: search, $options: 'i' } }
+            ]
+          }).limit(2)
+        : [];
+
+      const totalMatches = agentMatches.length + userMatches.length;
+
+      if (totalMatches === 1) {
+        if (agentMatches.length === 1) finalAgentId = agentMatches[0]._id.toString();
+        else finalUserId = userMatches[0]._id.toString();
+        console.log(`🔍 Search resolved to unique entity: ${finalAgentId ? 'Agent' : 'User'} ${finalAgentId || finalUserId}`);
+      }
+    }
+
     console.log("📥 Attendance API Parameters:", {
       agentId,
       userId,
+      resolvedFromSearch: !!(finalAgentId || finalUserId),
       month,
       year,
       userType,
@@ -747,22 +784,25 @@ export async function GET(request) {
       date,
       fromDateParam,
       toDateParam,
-      status
+      status,
+      shift
     });
 
-    // --- Special Logic: For Single Agent/User View (Agent Detail Page) ---
-    if (agentId || userId) {
-      console.log(`🎯 Single User Mode Active for: ${agentId ? 'agent' : 'user'} ${agentId || userId}`);
+    // --- Special Logic: For Single Agent/User View (Agent Detail Page OR Unique Search) ---
+    if (finalAgentId || finalUserId) {
+      // console.log(`🎯 Single User Mode Active for: ${finalAgentId ? 'agent' : 'user'} ${finalAgentId || finalUserId}`);
       
-      const targetId = agentId || userId;
-      const targetEntityType = agentId ? 'agent' : 'user';
+      const targetId = finalAgentId || finalUserId;
+      const targetEntityType = finalAgentId ? 'agent' : 'user';
       
       // Find the agent/user first
       let targetEntity = null;
       if (targetEntityType === 'agent') {
-        targetEntity = await Agent.findById(targetId).populate('shift');
+        const doc = await Agent.findById(targetId).populate('shift');
+        targetEntity = doc ? doc.toObject() : null;
       } else {
-        targetEntity = await User.findById(targetId).populate('shift');
+        const doc = await User.findById(targetId).populate('shift');
+        targetEntity = doc ? doc.toObject() : null;
       }
       
       if (!targetEntity) {
@@ -788,11 +828,9 @@ export async function GET(request) {
           const monthStart = new Date(Date.UTC(yearNum, monthNum - 1, 1));
           const monthEnd = new Date(Date.UTC(yearNum, monthNum, 0, 23, 59, 59, 999));
           
-          // Start from first attendance or month start (whichever is later)
-          actualStartDate = firstAttendanceDatePK > monthStart ? firstAttendanceDatePK : monthStart;
-          
-          // End at today or month end (whichever is earlier)
-          actualEndDate = todayPK < monthEnd ? todayPK : monthEnd;
+          // Force full month usage to show complete stats including holidays/offs
+          actualStartDate = monthStart;
+          actualEndDate = monthEnd;
         } else {
           // Default to current month if invalid
           const currentDate = new Date();
@@ -821,11 +859,11 @@ export async function GET(request) {
       
       const queryField = targetEntityType === "agent" ? "agent" : "user";
       
-      console.log("📅 Date Range for Attendance:", {
-        actualStartDate: actualStartDate.toISOString(),
-        actualEndDate: actualEndDate.toISOString(),
-        firstAttendanceDatePK: firstAttendanceDatePK.toISOString()
-      });
+      // console.log("📅 Date Range for Attendance:", {
+      //   actualStartDate: actualStartDate.toISOString(),
+      //   actualEndDate: actualEndDate.toISOString(),
+      //   firstAttendanceDatePK: firstAttendanceDatePK.toISOString()
+      // });
 
       // Fetch Actual Attendance Records
       const attendanceRecords = await Attendance.find({
@@ -838,7 +876,7 @@ export async function GET(request) {
       .populate("shift", "name startTime endTime")
       .sort({ date: 1 });
 
-      console.log(`📊 Found ${attendanceRecords.length} attendance records`);
+      // console.log(`📊 Found ${attendanceRecords.length} attendance records`);
 
       // Create a map of existing attendance by date
       const attendanceMap = {};
@@ -913,6 +951,11 @@ export async function GET(request) {
                generated: false,
                status: normalizeStatus(record.status)
              };
+
+             // Restore populated entity (because record.toObject() overwrites agent/user with ObjectId)
+             if (targetEntityType === 'agent') item.agent = targetEntity;
+             else item.user = targetEntity;
+             
         } else {
              // Generate status for missing dates
              if (isHoliday) {
@@ -1003,6 +1046,10 @@ export async function GET(request) {
       filter.status = status;
     }
 
+    if (shift && shift !== 'all') {
+      filter.shift = shift;
+    }
+
     // Date filtering
     if (fromDateParam && toDateParam) {
       const startDate = new Date(fromDateParam);
@@ -1039,7 +1086,7 @@ export async function GET(request) {
       };
     }
 
-    console.log("🔍 General Attendance Filter:", JSON.stringify(filter, null, 2));
+    // console.log("🔍 General Attendance Filter:", JSON.stringify(filter, null, 2));
 
     // Handle search if provided
     let records, total;
@@ -1121,12 +1168,12 @@ export async function GET(request) {
 
     const totalPages = Math.ceil(total / limit);
 
-    console.log("📊 General Attendance Response:", {
-      totalRecords: total,
-      recordsReturned: records.length,
-      page,
-      limit
-    });
+    // console.log("📊 General Attendance Response:", {
+    //   totalRecords: total,
+    //   recordsReturned: records.length,
+    //   page,
+    //   limit
+    // });
 
     return NextResponse.json({ 
       success: true, 

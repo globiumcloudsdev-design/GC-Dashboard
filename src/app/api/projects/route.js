@@ -4,6 +4,8 @@ import Project from '@/Models/Project';
 import { sendEmail } from "@/lib/mailer";
 import { getWebsiteConfig } from "@/lib/websiteConfig";
 import { createBaseEmailTemplate, WEBSITE_CONFIG } from "@/lib/emailTemplates"; // Check if WEBSITE_CONFIG is exported
+import User from '@/Models/User';
+import Agent from '@/Models/Agent';
 // If getWebsiteConfig is dynamic, use that.
 // Let's check imports in booking route again
 // import { getWebsiteConfig } from "@/lib/websiteConfig";

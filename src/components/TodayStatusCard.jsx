@@ -124,6 +124,7 @@
 
 import React from 'react';
 import { ThemeContext } from '../context/ThemeContext';
+import { formatTime } from '@/utils/timezone';
 
 const styles = {
   infoCard: {
