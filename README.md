@@ -157,7 +157,7 @@ Additional documentation can be found in the following files:
 ## 📞 Support
 
 For support or questions:
-- Email: support@globiumclouds.com
+- Email: globiumclouds@gmail.com
 - Website: https://globiumclouds.com
 - LinkedIn: [Globium Clouds](https://linkedin.com/company/globiumclouds)
 
