@@ -49,6 +49,18 @@ export const getLeaveColumns = ({
       render: (r) => <span className="capitalize">{r.leaveType}</span>,
     },
     {
+      label: "Request Type",
+      minWidth: "110px",
+      render: (r) => {
+        const isDesktop = r.requestType === "desktop";
+        return (
+          <Badge className={isDesktop ? "bg-blue-100 text-blue-800" : "bg-purple-100 text-purple-800"}>
+            {isDesktop ? "🖥️ Desktop" : "📱 Mobile App"}
+          </Badge>
+        );
+      },
+    },
+    {
       label: "Period",
       minWidth: "150px",
       render: (r) => (

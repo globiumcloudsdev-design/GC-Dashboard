@@ -139,6 +139,7 @@ export async function POST(request) {
       endDate: endDateObj,
       reason,
       status: "pending",
+      requestType: "mobile_app",
       shift: shift // Save shift information with leave
     };
 
