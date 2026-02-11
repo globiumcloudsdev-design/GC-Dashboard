@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import * as XLSX from 'xlsx';
 import { Download, FileSpreadsheet, Printer, Users, DollarSign, Clock, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import GenerateAllSalaryModal from "@/components/GenerateAllSalaryModal";
 
 export default function PayrollAdminPage() {
   const { user, hasPermission } = useAuth();
@@ -34,6 +35,7 @@ export default function PayrollAdminPage() {
 
   const [payrolls, setPayrolls] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [generateAllModalOpen, setGenerateAllModalOpen] = useState(false);
 
   useEffect(() => {
     if (canView) fetchPayrolls(1); // load page 1 on mount or filter change
@@ -235,6 +237,10 @@ export default function PayrollAdminPage() {
 
   const formatCurrency = (val) => new Intl.NumberFormat('en-PK', { style: 'currency', currency: 'PKR', maximumFractionDigits: 0 }).format(val);
 
+  const handleGenerateAllSuccess = () => {
+    fetchPayrolls(1); // Refresh the payroll list
+  };
+
   if (!canView) return <div className="p-6">You do not have permission to view payrolls.</div>;
 
   return (
@@ -292,6 +298,13 @@ export default function PayrollAdminPage() {
                 </div>
                 
                 <div className="flex flex-wrap gap-2 items-center w-full md:w-auto">
+                    <Input 
+                        placeholder="Search Agent Name/ID" 
+                        value={filters.agent} 
+                        onChange={(e)=> setFilters(prev=>({...prev, agent: e.target.value}))}
+                        className="w-[160px]"
+                    />
+
                     <Select value={filters.month} onValueChange={(v) => setFilters(prev => ({ ...prev, month: v }))}>
                     <SelectTrigger className="w-[140px]">
                         <SelectValue placeholder="Month" />
@@ -324,6 +337,15 @@ export default function PayrollAdminPage() {
                         <SelectItem value="cancelled">Cancelled</SelectItem>
                     </SelectContent>
                     </Select>
+
+                    {canEdit && (
+                      <Button 
+                        onClick={() => setGenerateAllModalOpen(true)} 
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        <Users className="w-4 h-4 mr-2" /> Generate All Salary
+                      </Button>
+                    )}
 
                     <Button onClick={() => fetchPayrolls(1)} variant="default" className="bg-[#10B5DB] hover:bg-[#0e9ab9]">
                         Filter View
@@ -446,6 +468,13 @@ export default function PayrollAdminPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Generate All Salary Modal */}
+      <GenerateAllSalaryModal 
+        isOpen={generateAllModalOpen}
+        onClose={() => setGenerateAllModalOpen(false)}
+        onSuccess={handleGenerateAllSuccess}
+      />
     </div>
   );
 }
