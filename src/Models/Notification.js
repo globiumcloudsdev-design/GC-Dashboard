@@ -11,6 +11,14 @@ const NotificationSchema = new mongoose.Schema(
       type: String,
       required: true
     },
+    readBy: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User"
+    }],
+    deletedBy: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User"
+    }],
     type: {
       type: String,
       enum: ["info", "warning", "success", "error", "announcement"],
@@ -28,7 +36,7 @@ const NotificationSchema = new mongoose.Schema(
     targetModel: {
       type: String,
       enum: ["User", "Agent"],
-      required: function() {
+      required: function () {
         return this.targetType === "specific";
       }
     },
