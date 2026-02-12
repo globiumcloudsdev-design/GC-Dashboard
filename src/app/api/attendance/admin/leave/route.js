@@ -227,6 +227,7 @@ export async function POST(request) {
       endDate: end,
       reason,
       status: "approved",
+      requestType: "desktop",
       reviewedBy: decoded.id || decoded.userId,
       reviewedAt: new Date(),
       shift: shift

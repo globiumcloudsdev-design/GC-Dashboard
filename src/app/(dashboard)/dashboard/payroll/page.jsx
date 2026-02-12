@@ -299,7 +299,8 @@ export default function PayrollAdminPage() {
                 
                 <div className="flex flex-wrap gap-2 items-center w-full md:w-auto">
                     <Input 
-                        placeholder="Search Agent Name/ID" 
+                        placeholder="Search Agent Name/ID
+                        " 
                         value={filters.agent} 
                         onChange={(e)=> setFilters(prev=>({...prev, agent: e.target.value}))}
                         className="w-[160px]"

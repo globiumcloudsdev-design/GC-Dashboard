@@ -382,10 +382,35 @@ export async function PUT(request) {
       new Date(existingAttendance.createdAt);
     const dateString = baseDate.toISOString().split('T')[0];
     
+    // Debug: log input times
+    console.log("DEBUG UPDATE: providedCheckInTime =", providedCheckInTime, "type:", typeof providedCheckInTime);
+    console.log("DEBUG UPDATE: providedCheckOutTime =", providedCheckOutTime, "type:", typeof providedCheckOutTime);
+    console.log("DEBUG UPDATE: dateString =", dateString);
+    
+    // Helper function to convert Pakistan time (HH:MM) to UTC timestamp
+    const convertPakistaniTimeToUTC = (dateStr, timeStr) => {
+      if (!timeStr || typeof timeStr !== 'string') return null;
+      
+      // Create date in Pakistan timezone: YYYY-MM-DD HH:MM
+      // Pakistan is UTC+5 (or UTC+5:30 during DST, but we'll use UTC+5)
+      const pakistanTzOffset = 5 * 60 * 60 * 1000; // 5 hours in milliseconds
+      
+      // First, create as if it's UTC
+      const utcDate = new Date(`${dateStr}T${timeStr}:00Z`);
+      
+      // Then subtract the timezone offset to get the correct UTC time
+      // If user entered 10:30 in Pakistan (UTC+5), the actual UTC time is 05:30
+      const correctUTCDate = new Date(utcDate.getTime() - pakistanTzOffset);
+      
+      console.log(`DEBUG: Converting Pakistan time ${dateStr} ${timeStr} to UTC:`, correctUTCDate.toISOString());
+      return correctUTCDate;
+    };
+    
     // Handle check-in time
     if (providedCheckInTime !== undefined && providedCheckInTime !== null) {
-      if (providedCheckInTime.trim() !== "") {
-        checkInDate = new Date(`${dateString}T${providedCheckInTime}:00`);
+      if (typeof providedCheckInTime === 'string' && providedCheckInTime.trim() !== "") {
+        checkInDate = convertPakistaniTimeToUTC(dateString, providedCheckInTime);
+        console.log("DEBUG UPDATE: Created checkInDate =", checkInDate, "ISO:", checkInDate?.toISOString());
       } else {
         checkInDate = null;
       }
@@ -395,8 +420,9 @@ export async function PUT(request) {
     
     // Handle check-out time
     if (providedCheckOutTime !== undefined && providedCheckOutTime !== null) {
-      if (providedCheckOutTime.trim() !== "") {
-        checkOutDate = new Date(`${dateString}T${providedCheckOutTime}:00`);
+      if (typeof providedCheckOutTime === 'string' && providedCheckOutTime.trim() !== "") {
+        checkOutDate = convertPakistaniTimeToUTC(dateString, providedCheckOutTime);
+        console.log("DEBUG UPDATE: Created checkOutDate =", checkOutDate, "ISO:", checkOutDate?.toISOString());
       } else {
         checkOutDate = null;
       }
@@ -459,8 +485,10 @@ export async function PUT(request) {
     if (providedCheckInTime !== undefined) {
       if (checkInDate && !isNaN(checkInDate.getTime())) {
         updateData.checkInTime = checkInDate;
+        console.log("DEBUG UPDATE: Setting checkInTime in updateData =", checkInDate.toISOString());
       } else {
         updateData.checkInTime = null;
+        console.log("DEBUG UPDATE: Setting checkInTime to null");
       }
     }
 
@@ -468,10 +496,14 @@ export async function PUT(request) {
     if (providedCheckOutTime !== undefined) {
       if (checkOutDate && !isNaN(checkOutDate.getTime())) {
         updateData.checkOutTime = checkOutDate;
+        console.log("DEBUG UPDATE: Setting checkOutTime in updateData =", checkOutDate.toISOString());
       } else {
         updateData.checkOutTime = null;
+        console.log("DEBUG UPDATE: Setting checkOutTime to null");
       }
     }
+    
+    console.log("DEBUG UPDATE: Final updateData =", JSON.stringify(updateData, null, 2));
 
     // Handle leave data
     if (leaveReason !== undefined) {
