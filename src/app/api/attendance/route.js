@@ -1202,7 +1202,7 @@ export async function POST(request) {
     const body = await request.json();
     const { agent, user, shift, date, status, checkInTime, checkOutTime, lateMinutes, notes } = body;
 
-    console.log("📝 Creating attendance record:", { agent, user, date, status });
+    console.log("📝 Creating attendance record:", { agent, user, date, status, checkInTime, checkOutTime });
 
     // Validate required fields
     if (!date) {
@@ -1238,6 +1238,40 @@ export async function POST(request) {
       );
     }
 
+    // Helper function to convert Pakistan time (HH:MM) to UTC timestamp
+    const convertPakistaniTimeToUTC = (dateStr, timeStr) => {
+      if (!timeStr || typeof timeStr !== 'string') return null;
+      
+      // Create date in Pakistan timezone: YYYY-MM-DD HH:MM
+      // Pakistan is UTC+5
+      const pakistanTzOffset = 5 * 60 * 60 * 1000; // 5 hours in milliseconds
+      
+      // First, create as if it's UTC
+      const utcDate = new Date(`${dateStr}T${timeStr}:00Z`);
+      
+      // Then subtract the timezone offset to get the correct UTC time
+      const correctUTCDate = new Date(utcDate.getTime() - pakistanTzOffset);
+      
+      console.log(`DEBUG POST: Converting Pakistan time ${dateStr} ${timeStr} to UTC:`, correctUTCDate.toISOString());
+      return correctUTCDate;
+    };
+
+    // Parse date string to get just the date part
+    const dateObj = new Date(date);
+    const dateString = dateObj.toISOString().split('T')[0];
+
+    // Convert times if provided (HH:MM format)
+    let checkInDate = null;
+    let checkOutDate = null;
+
+    if (checkInTime && typeof checkInTime === 'string') {
+      checkInDate = convertPakistaniTimeToUTC(dateString, checkInTime);
+    }
+
+    if (checkOutTime && typeof checkOutTime === 'string') {
+      checkOutDate = convertPakistaniTimeToUTC(dateString, checkOutTime);
+    }
+
     // Create new attendance
     const attendance = new Attendance({
       agent: agent || null,
@@ -1245,8 +1279,8 @@ export async function POST(request) {
       shift,
       date: new Date(date),
       status: status || "present",
-      checkInTime: checkInTime ? new Date(checkInTime) : null,
-      checkOutTime: checkOutTime ? new Date(checkOutTime) : null,
+      checkInTime: checkInDate,
+      checkOutTime: checkOutDate,
       lateMinutes: lateMinutes || 0,
       notes: notes || ""
     });

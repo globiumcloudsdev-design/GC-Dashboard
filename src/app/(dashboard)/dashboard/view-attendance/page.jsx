@@ -604,6 +604,7 @@ export default function AdminAttendancePage() {
       const originalStatus = editingAttendance?.status;
       const isManuallySettingStatus = manualForm.status !== originalStatus;
 
+      // Send times as HH:MM format (API expects this format)
       const updateData = {
         attendanceId: editingAttendance._id,
         status: isManuallySettingStatus ? manualForm.status : null,
@@ -613,7 +614,12 @@ export default function AdminAttendancePage() {
         notes: manualForm.notes || ""
       };
 
+      console.log("🎯 DEBUG: handleUpdateAttendance - Sending updateData:", updateData);
+      console.log("🎯 DEBUG: manualForm.checkInTime =", manualForm.checkInTime, "type:", typeof manualForm.checkInTime);
+      console.log("🎯 DEBUG: manualForm.checkOutTime =", manualForm.checkOutTime, "type:", typeof manualForm.checkOutTime);
+
       const response = await adminService.updateAttendance(updateData);
+      console.log("🎯 DEBUG: API Response:", response);
       if (response.success) {
         toast.success("Attendance updated successfully");
         setShowEditModal(false);

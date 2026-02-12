@@ -96,7 +96,7 @@ export default function EditAttendanceModal({
         {(editForm.status === 'present' || editForm.status === 'half-day') && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="checkIn">Check-In Time</Label>
+              <Label htmlFor="checkIn">Check-In Time <span className="text-xs text-gray-500">(PKT)</span></Label>
               <Input
                 type="time"
                 value={editForm.checkInTime || ''}
@@ -104,10 +104,11 @@ export default function EditAttendanceModal({
                 required={editForm.status === 'present' || editForm.status === 'half-day'}
                 className="w-full"
               />
+              <p className="text-xs text-gray-500">Pakistani Time (PKT = UTC+5)</p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="checkOut">Check-Out Time</Label>
+              <Label htmlFor="checkOut">Check-Out Time <span className="text-xs text-gray-500">(PKT)</span></Label>
               <Input
                 type="time"
                 value={editForm.checkOutTime || ''}
