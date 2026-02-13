@@ -7,7 +7,6 @@ import { verifyToken, getUserIdFromToken } from "@/lib/jwt";
 export async function GET(request) {
   try {
     await connectDB();
-    // console.log('🎯 Today Route - Started');
     
     // Authentication
     const authHeader = request.headers.get('authorization');
@@ -38,13 +37,6 @@ export async function GET(request) {
     const todayEnd = new Date(todayStart);
     todayEnd.setDate(todayEnd.getDate() + 1);
 
-    // console.log('📅 Today range:', {
-    //   todayStart: todayStart.toISOString(),
-    //   todayEnd: todayEnd.toISOString(),
-    //   userId,
-    //   userType
-    // });
-
     const todayAttendance = await Attendance.findOne({
       [queryField]: userId,
       checkInTime: { 
@@ -56,14 +48,6 @@ export async function GET(request) {
     .populate("user", "firstName lastName email")
     .populate("agent", "agentName agentId email")
     .sort({ checkInTime: -1 });
-
-    // console.log('✅ Today query result:', {
-    //   found: !!todayAttendance,
-    //   checkInTime: todayAttendance?.checkInTime,
-    //   checkOutTime: todayAttendance?.checkOutTime,
-    //   isLate: todayAttendance?.isLate,
-    //   isOvertime: todayAttendance?.isOvertime
-    // });
 
     return NextResponse.json({
       success: true,

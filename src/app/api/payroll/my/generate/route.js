@@ -9,7 +9,6 @@ import WeeklyOff from "@/Models/WeeklyOff";
 import { verifyToken, getUserIdFromToken } from "@/lib/jwt";
 import { calculatePayrollLogic } from "@/lib/payrollUtils";
 
-
 export async function POST(request) {
   try {
     await connectDB();

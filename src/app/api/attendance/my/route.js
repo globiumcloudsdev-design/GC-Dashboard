@@ -195,7 +195,7 @@
 //       ],
 //     })
 //       .populate("shift", "name startTime endTime")
-//       .sort({ date: 1 });
+//       .sort({ date: -1 }); // Sort by date descending for better performance
 
 //     console.log(`📊 Found ${attends.length} attendance records in range`);
 
@@ -268,8 +268,8 @@
 //     const totalLateMinutes = attends.reduce((sum, a) => sum + (a.lateMinutes || 0), 0);
 //     const totalOvertimeMinutes = attends.reduce((sum, a) => sum + (a.overtimeMinutes || 0), 0);
 
-//     // Process each date in chronological order
-//     const sortedDates = filteredDates.sort((a, b) => a - b);
+//     // Process each date in REVERSE chronological order (newest to oldest)
+//     const sortedDates = filteredDates.sort((a, b) => b - a); // DESCENDING order
     
 //     for (const dateObj of sortedDates) {
 //       const key = toKeyPKT(dateObj);
@@ -466,7 +466,7 @@
 //           absentPercentage: absentRate,
 //           leavePercentage: leaveRate
 //         },
-//         records: tableData,
+//         records: tableData, // Already in descending order (newest to oldest)
 //         calculationNotes: {
 //           calculationStartDate: `Data calculated from first attendance: ${firstAttendanceDatePK.toLocaleDateString('en-PK')}`,
 //           calculationEndDate: `Data calculated up to: ${actualEndDate.toLocaleDateString('en-PK')}`,
@@ -474,7 +474,7 @@
 //           leaveIncludes: "approved_leave and pending_leave (NOT counted as absent)",
 //           workingDaysExcludes: "holidays, weekly offs, and all types of leaves",
 //           todaySpecialCase: "If shift hasn't started yet, today is marked as 'not_started' not 'absent'",
-//           ordering: "Dates shown in chronological order (oldest to newest)"
+//           ordering: "Dates shown in descending order (newest to oldest) - Today first, then older dates"
 //         }
 //       }
 //     });
@@ -488,7 +488,6 @@
 // }
 
 
-// app/api/attendance/my/route.js
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Attendance from "@/Models/Attendance";
@@ -563,15 +562,16 @@ function getDayName(date) {
   return toPakistanDate(date).toLocaleDateString("en-US", { weekday: "long" }).toLowerCase();
 }
 
-// Normalize status strings
-function normalizeStatus(s) {
+// UPDATED: Normalize status strings with informed flag
+function normalizeStatus(s, isInformed = false) {
   if (!s) return "absent";
   const str = String(s).toLowerCase();
   
   // Present categories
   if (["present"].includes(str)) return "present";
-  if (["late"].includes(str)) return "late";
+  if (["late"].includes(str)) return isInformed ? "present" : "late"; // Informed late = present
   if (["halfday", "half_day", "half-day", "half day"].includes(str)) return "half_day";
+  if (["early_checkout", "earlycheckout", "early-checkout", "early checkout"].includes(str)) return "early_checkout";
   
   // Leave categories
   if (["approved_leave", "approved leave", "leave_approved", "leave approved"].includes(str)) return "approved_leave";
@@ -583,7 +583,7 @@ function normalizeStatus(s) {
   if (["weekly_off", "weeklyoff", "weekly-off", "weekly off"].includes(str)) return "weekly_off";
   
   // Absent
-  if (["absent"].includes(str)) return "absent";
+  if (["absent"].includes(str)) return isInformed ? "absent" : "absent"; // Informed absent still absent
   
   return "present";
 }
@@ -744,6 +744,7 @@ export async function GET(request) {
       present: 0,
       late: 0,
       half_day: 0,
+      early_checkout: 0,
       approved_leave: 0,
       pending_leave: 0,
       absent: 0,
@@ -752,7 +753,9 @@ export async function GET(request) {
       totalWorkingDays: 0,
       totalPresentDays: 0,
       totalAbsentDays: 0,
-      totalLeaveDays: 0
+      totalLeaveDays: 0,
+      informedLate: 0,
+      informedAbsent: 0
     };
 
     const totalLateMinutes = attends.reduce((sum, a) => sum + (a.lateMinutes || 0), 0);
@@ -776,11 +779,15 @@ export async function GET(request) {
       let lateMinutes = 0;
       let overtimeMinutes = 0;
       let isLeaveDay = false;
+      let isInformed = false;
 
       if (record) {
-        // Get status from record
+        // Get informed status
+        isInformed = record.isInformed || false;
+        
+        // Get status from record with informed normalization
         const recordStatus = record.status || "present";
-        status = normalizeStatus(recordStatus);
+        status = normalizeStatus(recordStatus, isInformed);
         
         isLeaveDay = ["approved_leave", "pending_leave", "leave"].includes(recordStatus.toLowerCase());
 
@@ -794,6 +801,11 @@ export async function GET(request) {
         lateMinutes = record.lateMinutes || 0;
         overtimeMinutes = record.overtimeMinutes || 0;
 
+        // Add informed note to remarks
+        if (isInformed) {
+          remarks = "Informed";
+        }
+
         // Override if holiday/weekly off but still show leave if applicable
         if (isHoliday && !isLeaveDay) {
           status = "holiday";
@@ -802,7 +814,7 @@ export async function GET(request) {
           status = "weekly_off";
           remarks = "Weekly Off" + (record.notes ? ` - ${record.notes}` : "");
         } else {
-          remarks = record.notes || "";
+          remarks = remarks || record.notes || "";
         }
       } else {
         // No attendance record
@@ -827,7 +839,7 @@ export async function GET(request) {
         }
       }
 
-      // Stats calculation (all dates in range are past/today, no future)
+      // Stats calculation
       const isWorkingDay = !isHoliday && !isWeeklyOff && 
                          !["approved_leave", "pending_leave", "holiday", "weekly_off", "not_started"].includes(status);
       
@@ -836,11 +848,17 @@ export async function GET(request) {
       }
 
       // Count present statuses
-      if (["present", "late", "half_day"].includes(status)) {
+      if (["present", "late", "half_day", "early_checkout"].includes(status)) {
         stats.totalPresentDays++;
         if (status === "present") stats.present++;
         else if (status === "late") stats.late++;
         else if (status === "half_day") stats.half_day++;
+        else if (status === "early_checkout") stats.early_checkout++;
+        
+        // Count informed late
+        if (record && record.isInformed && record.lateMinutes > 0) {
+          stats.informedLate++;
+        }
       }
       // Count leave statuses
       else if (status === "approved_leave") {
@@ -851,11 +869,16 @@ export async function GET(request) {
         stats.pending_leave++;
         stats.totalLeaveDays++;
       }
-      // Count absent only for working days (not today if shift not started)
+      // Count absent only for working days
       else if (status === "absent") {
         if (isWorkingDay && !(isToday && !todayShiftStarted)) {
           stats.absent++;
           stats.totalAbsentDays++;
+          
+          // Count informed absent
+          if (record && record.isInformed) {
+            stats.informedAbsent++;
+          }
         }
       }
       // Count non-working days
@@ -875,6 +898,7 @@ export async function GET(request) {
         remarks,
         lateMinutes,
         overtimeMinutes,
+        isInformed, // Add informed flag
         rawRecord: record || null,
         isHoliday,
         isWeeklyOff,
@@ -887,7 +911,7 @@ export async function GET(request) {
     }
 
     // Final derived stats
-    const totalPresentDays = stats.present + stats.late + stats.half_day;
+    const totalPresentDays = stats.present + stats.late + stats.half_day + stats.early_checkout;
     
     // Calculate percentages
     const attendanceRate = stats.totalWorkingDays > 0
@@ -924,7 +948,12 @@ export async function GET(request) {
           present: stats.present,
           late: stats.late,
           half_day: stats.half_day,
+          early_checkout: stats.early_checkout,
           totalPresentDays: totalPresentDays,
+          
+          // Informed counts
+          informedLate: stats.informedLate,
+          informedAbsent: stats.informedAbsent,
           
           // Leave counts
           approved_leave: stats.approved_leave,
@@ -956,11 +985,13 @@ export async function GET(request) {
           absentPercentage: absentRate,
           leavePercentage: leaveRate
         },
-        records: tableData, // Already in descending order (newest to oldest)
+        records: tableData,
         calculationNotes: {
           calculationStartDate: `Data calculated from first attendance: ${firstAttendanceDatePK.toLocaleDateString('en-PK')}`,
           calculationEndDate: `Data calculated up to: ${actualEndDate.toLocaleDateString('en-PK')}`,
-          presentIncludes: "present, late, and half_day statuses",
+          presentIncludes: "present, late, half_day, and early_checkout statuses",
+          informedLate: "Informed late counts as present (no penalty) but is tracked separately",
+          informedAbsent: "Informed absent counts as absent but is tracked separately",
           leaveIncludes: "approved_leave and pending_leave (NOT counted as absent)",
           workingDaysExcludes: "holidays, weekly offs, and all types of leaves",
           todaySpecialCase: "If shift hasn't started yet, today is marked as 'not_started' not 'absent'",
