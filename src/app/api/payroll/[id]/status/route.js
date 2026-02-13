@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Payroll from '@/Models/Payroll';
 import Agent from '@/Models/Agent';
+import Shift from '@/Models/Shift';
 
 export async function PUT(request, { params }) {
   try {

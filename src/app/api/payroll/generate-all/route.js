@@ -210,11 +210,11 @@
 
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
-import Agent from "@/Models/Agent";
 import Payroll from "@/Models/Payroll";
 import Notification from "@/Models/Notification";
 import { calculatePayrollLogic, getAllAgentsSalesStatus } from "@/lib/payrollUtils";
-
+import Agent from '@/Models/Agent';
+import Shift from '@/Models/Shift';
 /**
  * POST - Bulk Generate Payroll for All Active Agents
  * Body: { month, year, skipZeroSales, manualOverrides: { agentId: salesValue } }
