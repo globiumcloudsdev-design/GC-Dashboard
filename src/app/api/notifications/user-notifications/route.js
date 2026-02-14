@@ -23,15 +23,27 @@ export async function GET(req) {
     const userId = authData.userId;
 
     // Step 3: Query
+    // const notifications = await Notification.find({
+    //   $or: [
+    //     { targetType: "all" }, // 1. Ya to notification sab ke liye ho
+    //     { targetUsers: userId }, // 2. Ya user ki ID targetUsers array mein ho
+    //   ],
+    //   isActive: true,
+    // })
+    //   .sort({ createdAt: -1 })
+    //   .populate("createdBy", "name"); // Admin ka naam
+
+    // Step 3 ki query ko is tarah update karein:
     const notifications = await Notification.find({
       $or: [
-        { targetType: "all" }, // 1. Ya to notification sab ke liye ho
-        { targetUsers: userId }, // 2. Ya user ki ID targetUsers array mein ho
+        { targetType: "all" },
+        { targetUsers: userId },
       ],
       isActive: true,
+      deletedBy: { $ne: userId } // <--- IS LINE SE DELETED WALI HIDE HO JAYENGI
     })
       .sort({ createdAt: -1 })
-      .populate("createdBy", "name"); // Admin ka naam
+      .populate("createdBy", "name");
 
     return NextResponse.json(notifications, { status: 200 });
   } catch (error) {
