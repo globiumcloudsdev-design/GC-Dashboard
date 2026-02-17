@@ -42,7 +42,7 @@ export async function GET(req) {
       })
         .sort({ createdAt: -1 })
         .populate("createdBy", "name email")
-        .populate("targetUsers", "agentName agentId email");
+        .populate("targetUsers", "agentName agentId email firstName lastName");
 
       return NextResponse.json(notifications, { status: 200 });
     }
@@ -52,6 +52,7 @@ export async function GET(req) {
       // ✅ Get all notifications (no auth restriction)
       notifications = await Notification.find({})
         .populate("createdBy", "name email")
+        .populate("targetUsers", "agentName agentId email firstName lastName")
         .sort({ createdAt: -1 });
     } else {
       // ✅ Normal user route (everyone can access)

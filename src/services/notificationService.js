@@ -3,9 +3,10 @@ import api from '@/lib/api';
 
 export const notificationService = {
   // GET ALL - Admin ke liye
-  getAllNotifications: async () => {
+  getAllNotifications: async (isAdmin = false) => {
     try {
-      const response = await api.get('/notifications');
+      const url = isAdmin ? '/notifications?type=admin' : '/notifications';
+      const response = await api.get(url);
       return {
         success: true,
         data: response.data,

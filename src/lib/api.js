@@ -20,7 +20,7 @@ api.interceptors.request.use(
     if (showLoader) showLoader();
 
     // Add authorization header if token exists
-    const token = localStorage.getItem('agentToken') || localStorage.getItem('accessToken');
+    const token = localStorage.getItem('agentToken') || localStorage.getItem('accessToken') || localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

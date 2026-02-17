@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAgent } from "../context/AgentContext";
 import { useNotifications } from "../hooks/useNotifications";
+import NotificationDialog from "./NotificationDialog";
 import {
   Bell,
   User,
@@ -37,15 +38,28 @@ import { AnimatePresence, motion } from "framer-motion";
 export default function AgentTopbar({ collapsed, toggleSidebar, isOpen }) {
   const router = useRouter();
   const { agent, logout } = useAgent();
-  const { notifications, loading, unreadCount, dismissNotification, markAsRead, markAllAsRead, isNotificationRead } = useNotifications();
+  const {
+    notifications,
+    loading,
+    unreadCount,
+    dismissNotification,
+    markAsRead,
+    markAllAsRead,
+    isNotificationRead,
+  } = useNotifications();
   const [showNoti, setShowNoti] = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState(null);
+  const [showDialog, setShowDialog] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const notificationRef = useRef(null);
 
   // Close notifications when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target)
+      ) {
         setShowNoti(false);
       }
     };
@@ -94,6 +108,15 @@ export default function AgentTopbar({ collapsed, toggleSidebar, isOpen }) {
     return notificationTime.toLocaleDateString();
   };
 
+  // Handle notification click - mark as read and show dialog
+  const handleNotificationClick = (notification) => {
+    if (!isNotificationRead(notification)) {
+      markAsRead(notification._id);
+    }
+    setSelectedNotification(notification);
+    setShowDialog(true);
+  };
+
   const handleLogout = async () => {
     await logout();
     router.push("/agent/login");
@@ -107,7 +130,9 @@ export default function AgentTopbar({ collapsed, toggleSidebar, isOpen }) {
   return (
     <header
       className={`flex items-center justify-between fixed top-0 left-0 right-0 z-40 bg-white dark:bg-gray-900 shadow-md rounded-b-xl py-3 transition-all duration-300 overflow-visible ${
-        collapsed ? "lg:left-[80px] lg:right-0 lg:px-4 lg:sm:px-6" : "lg:left-[300px] lg:right-0 lg:px-4 lg:sm:px-6"
+        collapsed
+          ? "lg:left-[80px] lg:right-0 lg:px-4 lg:sm:px-6"
+          : "lg:left-[300px] lg:right-0 lg:px-4 lg:sm:px-6"
       }`}
     >
       {/* Left Section */}
@@ -158,88 +183,143 @@ export default function AgentTopbar({ collapsed, toggleSidebar, isOpen }) {
           <AnimatePresence>
             {showNoti && (
               <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25 }}
-                className="absolute right-0 mt-3 w-80 sm:w-96 rounded-xl border border-gray-200 bg-white shadow-xl overflow-hidden dark:border-gray-700 dark:bg-gray-800 z-50"
+                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className="absolute right-0 mt-3 w-80 sm:w-[420px] rounded-2xl border border-gray-200 bg-white shadow-2xl overflow-hidden dark:border-gray-700 dark:bg-gray-800 z-50"
                 style={{ zIndex: 1000 }}
               >
-                <div className="border-b p-3 font-semibold text-gray-700 dark:text-gray-300 flex items-center justify-between">
-                  Notifications
-                  {unreadCount > 0 && (
-                    <button
-                      onClick={() => markAllAsRead()}
-                      className="text-xs text-[#10B5DB] hover:text-[#0a8fb3] font-medium"
-                    >
-                      Mark all as read
-                    </button>
-                  )}
+                {/* Header */}
+                <div className="bg-gradient-to-r from-[#10B5DB]/5 to-blue-50 dark:from-[#10B5DB]/10 dark:to-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-gray-800 dark:text-gray-100 text-base">
+                        Notifications
+                      </h3>
+                      {unreadCount > 0 && (
+                        <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-semibold bg-[#10B5DB] text-white">
+                          {unreadCount}
+                        </span>
+                      )}
+                    </div>
+                    {unreadCount > 0 && (
+                      <button
+                        onClick={() => markAllAsRead()}
+                        className="text-xs text-[#10B5DB] hover:text-[#0a8fb3] font-semibold transition-colors duration-150 hover:underline"
+                      >
+                        ✓ Mark all read
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="max-h-96 overflow-y-auto">
+
+                {/* Notifications List */}
+                <div className="max-h-[500px] overflow-y-auto styled-scrollbar">
                   {loading && (
-                    <div className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
-                      Loading notifications...
+                    <div className="p-8 text-center">
+                      <div className="inline-block w-8 h-8 border-4 border-[#10B5DB] border-t-transparent rounded-full animate-spin"></div>
+                      <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+                        Loading notifications...
+                      </p>
                     </div>
                   )}
                   {!loading && notifications.length > 0 ? (
-                    notifications.map((n) => {
-                      const isRead = isNotificationRead(n);
-                      return (
-                        <div
-                          key={n._id}
-                          className={`flex items-start gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150 border-b last:border-b-0 ${
-                            !isRead ? "bg-blue-50 dark:bg-blue-950/20" : ""
-                          }`}
-                        >
-                          {getNotificationIcon(n.type)}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <p className={`text-sm font-medium ${
+                    <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                      {notifications.map((n, index) => {
+                        const isRead = isNotificationRead(n);
+                        return (
+                          <motion.div
+                            key={n._id}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.05 }}
+                            onClick={() => handleNotificationClick(n)}
+                            className={`group flex items-start gap-3 px-4 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 cursor-pointer ${
+                              !isRead ? "bg-blue-50/50 dark:bg-blue-950/20" : ""
+                            }`}
+                          >
+                            {/* Icon */}
+                            <div
+                              className={`flex-shrink-0 mt-0.5 p-2 rounded-lg ${
                                 !isRead
-                                  ? "text-gray-900 dark:text-gray-100 font-bold"
-                                  : "text-gray-800 dark:text-gray-100"
-                              }`}>
-                                {n.title}
-                              </p>
-                              {!isRead && (
-                                <span className="inline-flex items-center justify-center w-2 h-2 rounded-full bg-[#10B5DB]" />
-                              )}
-                            </div>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
-                              {n.message}
-                            </p>
-                            <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
-                              {getTimeAgo(n.createdAt)}
-                            </p>
-                          </div>
-                          <div className="flex-shrink-0 flex items-center gap-1">
-                            {!isRead ? (
-                              <button
-                                onClick={() => markAsRead(n._id)}
-                                className="text-gray-400 hover:text-[#10B5DB] dark:hover:text-[#10B5DB]"
-                                title="Mark as read"
-                              >
-                                <Eye size={16} />
-                              </button>
-                            ) : (
-                              <EyeOff size={16} className="text-gray-300" />
-                            )}
-                            <button
-                              onClick={() => dismissNotification(n._id)}
-                              className="text-gray-400 hover:text-red-500 dark:hover:text-red-400"
-                              title="Delete notification"
+                                  ? "bg-white dark:bg-gray-800 shadow-sm"
+                                  : ""
+                              }`}
                             >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })
+                              {getNotificationIcon(n.type)}
+                            </div>
+
+                            {/* Content */}
+                            <div className="flex-1 min-w-0 space-y-1">
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex items-center gap-2 flex-1">
+                                  <p
+                                    className={`text-sm font-semibold line-clamp-1 ${
+                                      !isRead
+                                        ? "text-gray-900 dark:text-gray-100"
+                                        : "text-gray-700 dark:text-gray-300"
+                                    }`}
+                                  >
+                                    {n.title}
+                                  </p>
+                                  {!isRead && (
+                                    <span className="inline-flex h-2 w-2 rounded-full bg-[#10B5DB] shadow-lg shadow-[#10B5DB]/50 animate-pulse" />
+                                  )}
+                                </div>
+                              </div>
+                              <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 leading-relaxed">
+                                {n.message}
+                              </p>
+                              <div className="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500">
+                                <Clock size={12} />
+                                <span>{getTimeAgo(n.createdAt)}</span>
+                              </div>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                              {!isRead && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    markAsRead(n._id);
+                                  }}
+                                  className="p-1.5 rounded-md text-gray-400 hover:text-[#10B5DB] hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-150"
+                                  title="Mark as read"
+                                >
+                                  <Eye size={16} />
+                                </button>
+                              )}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  dismissNotification(n._id);
+                                }}
+                                className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-150"
+                                title="Delete notification"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
                   ) : (
-                    <p className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
-                      No notifications
-                    </p>
+                    !loading && (
+                      <div className="p-12 text-center">
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
+                          <Bell size={28} className="text-gray-400" />
+                        </div>
+                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                          No notifications yet
+                        </p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                          You're all caught up! 🎉
+                        </p>
+                      </div>
+                    )
                   )}
                 </div>
               </motion.div>
@@ -259,17 +339,15 @@ export default function AgentTopbar({ collapsed, toggleSidebar, isOpen }) {
             >
               <Avatar className="h-8 w-8">
                 <AvatarImage src="/avatars/default.png" alt="Agent" />
-                <AvatarFallback>
-                  {agent?.name?.charAt(0) || "A"}
-                </AvatarFallback>
+                <AvatarFallback>{agent?.name?.charAt(0) || "A"}</AvatarFallback>
               </Avatar>
               <span className="hidden sm:inline text-sm font-medium text-gray-900 dark:text-gray-100">
                 {agent?.name || "Agent"}
               </span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent 
-            align="end" 
+          <DropdownMenuContent
+            align="end"
             className="w-48 sm:w-56 rounded-lg"
             style={{ zIndex: 1000 }} // Explicit z-index for dropdown
           >
@@ -282,15 +360,26 @@ export default function AgentTopbar({ collapsed, toggleSidebar, isOpen }) {
               <Settings size={16} className="mr-2" /> Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="text-red-500"
-              onClick={handleLogout}
-            >
+            <DropdownMenuItem className="text-red-500" onClick={handleLogout}>
               <LogOut size={16} className="mr-2" /> Logout
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* Notification Dialog */}
+      <NotificationDialog
+        notification={selectedNotification}
+        isOpen={showDialog}
+        onClose={() => setShowDialog(false)}
+        onDelete={dismissNotification}
+        onMarkAsRead={markAsRead}
+        isRead={
+          selectedNotification
+            ? isNotificationRead(selectedNotification)
+            : false
+        }
+      />
     </header>
   );
 }
