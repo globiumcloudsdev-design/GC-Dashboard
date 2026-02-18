@@ -16,9 +16,7 @@ import {
   MessageCircle,
   Clock,
   AlertCircle,
-  Check,
   Eye,
-  EyeOff,
   Trash2,
 } from "lucide-react";
 import {
@@ -45,7 +43,6 @@ export default function AgentTopbar({ collapsed, toggleSidebar, isOpen }) {
     dismissNotification,
     markAsRead,
     markAllAsRead,
-    isNotificationRead,
   } = useNotifications();
   const [showNoti, setShowNoti] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
@@ -110,7 +107,7 @@ export default function AgentTopbar({ collapsed, toggleSidebar, isOpen }) {
 
   // Handle notification click - mark as read and show dialog
   const handleNotificationClick = (notification) => {
-    if (!isNotificationRead(notification)) {
+    if (!notification.isRead) {
       markAsRead(notification._id);
     }
     setSelectedNotification(notification);
@@ -129,7 +126,7 @@ export default function AgentTopbar({ collapsed, toggleSidebar, isOpen }) {
 
   return (
     <header
-      className={`flex items-center justify-between fixed top-0 left-0 right-0 z-40 bg-white dark:bg-gray-900 shadow-md rounded-b-xl py-3 transition-all duration-300 overflow-visible ${
+      className={`flex items-center justify-between fixed top-0 left-0 right-0 z-40 bg-white dark:bg-gray-900 shadow-md rounded-b-xl h-20 transition-all duration-300 overflow-visible ${
         collapsed
           ? "lg:left-[80px] lg:right-0 lg:px-4 lg:sm:px-6"
           : "lg:left-[300px] lg:right-0 lg:px-4 lg:sm:px-6"
@@ -176,7 +173,9 @@ export default function AgentTopbar({ collapsed, toggleSidebar, isOpen }) {
           >
             <Bell size={20} />
             {unreadCount > 0 && (
-              <span className="absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-red-500 border border-white dark:border-gray-900" />
+              <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-red-500 text-white text-[10px] font-bold px-1 border-2 border-white dark:border-gray-900 shadow-sm animate-pulse">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
             )}
           </Button>
 
@@ -226,85 +225,82 @@ export default function AgentTopbar({ collapsed, toggleSidebar, isOpen }) {
                   )}
                   {!loading && notifications.length > 0 ? (
                     <div className="divide-y divide-gray-100 dark:divide-gray-700">
-                      {notifications.map((n, index) => {
-                        const isRead = isNotificationRead(n);
-                        return (
-                          <motion.div
-                            key={n._id}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.05 }}
-                            onClick={() => handleNotificationClick(n)}
-                            className={`group flex items-start gap-3 px-4 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 cursor-pointer ${
-                              !isRead ? "bg-blue-50/50 dark:bg-blue-950/20" : ""
+                      {notifications.map((n, index) => (
+                        <motion.div
+                          key={n._id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                          onClick={() => handleNotificationClick(n)}
+                          className={`group flex items-start gap-3 px-4 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 cursor-pointer ${
+                            !n.isRead ? "bg-blue-50/50 dark:bg-blue-950/20" : ""
+                          }`}
+                        >
+                          {/* Icon */}
+                          <div
+                            className={`flex-shrink-0 mt-0.5 p-2 rounded-lg ${
+                              !n.isRead
+                                ? "bg-white dark:bg-gray-800 shadow-sm"
+                                : ""
                             }`}
                           >
-                            {/* Icon */}
-                            <div
-                              className={`flex-shrink-0 mt-0.5 p-2 rounded-lg ${
-                                !isRead
-                                  ? "bg-white dark:bg-gray-800 shadow-sm"
-                                  : ""
-                              }`}
-                            >
-                              {getNotificationIcon(n.type)}
-                            </div>
+                            {getNotificationIcon(n.type)}
+                          </div>
 
-                            {/* Content */}
-                            <div className="flex-1 min-w-0 space-y-1">
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="flex items-center gap-2 flex-1">
-                                  <p
-                                    className={`text-sm font-semibold line-clamp-1 ${
-                                      !isRead
-                                        ? "text-gray-900 dark:text-gray-100"
-                                        : "text-gray-700 dark:text-gray-300"
-                                    }`}
-                                  >
-                                    {n.title}
-                                  </p>
-                                  {!isRead && (
-                                    <span className="inline-flex h-2 w-2 rounded-full bg-[#10B5DB] shadow-lg shadow-[#10B5DB]/50 animate-pulse" />
-                                  )}
-                                </div>
-                              </div>
-                              <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 leading-relaxed">
-                                {n.message}
-                              </p>
-                              <div className="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500">
-                                <Clock size={12} />
-                                <span>{getTimeAgo(n.createdAt)}</span>
-                              </div>
-                            </div>
-
-                            {/* Actions */}
-                            <div className="flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                              {!isRead && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    markAsRead(n._id);
-                                  }}
-                                  className="p-1.5 rounded-md text-gray-400 hover:text-[#10B5DB] hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-150"
-                                  title="Mark as read"
+                          {/* Content */}
+                          <div className="flex-1 min-w-0 space-y-1">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex items-center gap-2 flex-1">
+                                <p
+                                  className={`text-sm font-semibold line-clamp-1 ${
+                                    !n.isRead
+                                      ? "text-gray-900 dark:text-gray-100"
+                                      : "text-gray-700 dark:text-gray-300"
+                                  }`}
                                 >
-                                  <Eye size={16} />
-                                </button>
-                              )}
+                                  {n.title}
+                                </p>
+                                {!n.isRead && (
+                                  <span className="inline-flex h-2 w-2 rounded-full bg-[#10B5DB] shadow-lg shadow-[#10B5DB]/50 animate-pulse" />
+                                )}
+                              </div>
+                            </div>
+                            <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 leading-relaxed">
+                              {n.message}
+                            </p>
+                            <div className="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500">
+                              <Clock size={12} />
+                              <span>{getTimeAgo(n.createdAt)}</span>
+                            </div>
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            {!n.isRead && (
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  dismissNotification(n._id);
+                                  markAsRead(n._id);
                                 }}
-                                className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-150"
-                                title="Delete notification"
+                                className="p-1.5 rounded-md text-gray-400 hover:text-[#10B5DB] hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-150"
+                                title="Mark as read"
                               >
-                                <Trash2 size={16} />
+                                <Eye size={16} />
                               </button>
-                            </div>
-                          </motion.div>
-                        );
-                      })}
+                            )}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                dismissNotification(n._id);
+                              }}
+                              className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-150"
+                              title="Delete notification"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </motion.div>
+                      ))}
                     </div>
                   ) : (
                     !loading && (
@@ -374,11 +370,7 @@ export default function AgentTopbar({ collapsed, toggleSidebar, isOpen }) {
         onClose={() => setShowDialog(false)}
         onDelete={dismissNotification}
         onMarkAsRead={markAsRead}
-        isRead={
-          selectedNotification
-            ? isNotificationRead(selectedNotification)
-            : false
-        }
+        isRead={selectedNotification?.isRead || false}
       />
     </header>
   );

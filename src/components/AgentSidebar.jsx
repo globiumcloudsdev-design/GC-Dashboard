@@ -5,17 +5,17 @@ import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAgent } from "../context/AgentContext";
 import { Button } from "@/components/ui/button";
-import { 
-  BarChart3, 
-  Clock, 
-  DollarSign, 
+import {
+  BarChart3,
+  Clock,
+  DollarSign,
   Wallet,
-  Settings, 
-  LogOut,  
-  Menu, 
-  X, 
+  Settings,
+  LogOut,
+  Menu,
+  X,
   User,
-  Layers
+  Layers,
 } from "lucide-react";
 import { useMediaQuery } from "react-responsive";
 import { motion, AnimatePresence } from "framer-motion";
@@ -29,7 +29,13 @@ import {
 } from "@/components/ui/tooltip";
 import Image from "next/image";
 
-export default function AgentSidebar({ isOpen, setIsOpen, collapsed, setCollapsed, children }) {
+export default function AgentSidebar({
+  isOpen,
+  setIsOpen,
+  collapsed,
+  setCollapsed,
+  children,
+}) {
   const router = useRouter();
   const pathname = usePathname(); // Use usePathname hook for Next.js 13+
   const { logout, agent } = useAgent();
@@ -57,7 +63,12 @@ export default function AgentSidebar({ isOpen, setIsOpen, collapsed, setCollapse
 
   const baseNavItems = [
     { label: "Dashboard", href: "/agent/dashboard", icon: BarChart3 },
-    { label: "Upload Sales", href: "/agent/projects", icon: Layers, requiresRevenue: true }, 
+    {
+      label: "Upload Sales",
+      href: "/agent/projects",
+      icon: Layers,
+      requiresRevenue: true,
+    },
     { label: "Attendance", href: "/agent/attendance", icon: Clock },
     { label: "Sales", href: "/agent/sales", icon: DollarSign },
     { label: "Salary", href: "/agent/salary", icon: Wallet },
@@ -65,10 +76,13 @@ export default function AgentSidebar({ isOpen, setIsOpen, collapsed, setCollapse
   ];
 
   // Filter navItems based on agent's target type
-  const navItems = baseNavItems.filter(item => {
+  const navItems = baseNavItems.filter((item) => {
     if (item.requiresRevenue) {
       // Show only if agent has revenue target (amount or both)
-      return agent?.monthlyTargetType === 'amount' || agent?.monthlyTargetType === 'both';
+      return (
+        agent?.monthlyTargetType === "amount" ||
+        agent?.monthlyTargetType === "both"
+      );
     }
     return true;
   });
@@ -93,10 +107,8 @@ export default function AgentSidebar({ isOpen, setIsOpen, collapsed, setCollapse
         <motion.aside
           initial={false}
           animate={{
-            width: isMobile
-              ? (isOpen ? "100vw" : 0)
-              : (collapsed ? 80 : 300),
-            x: isMobile && !isOpen ? "-100%" : 0
+            width: isMobile ? (isOpen ? "100vw" : 0) : collapsed ? 80 : 300,
+            x: isMobile && !isOpen ? "-100%" : 0,
           }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
           className={cn(
@@ -105,7 +117,7 @@ export default function AgentSidebar({ isOpen, setIsOpen, collapsed, setCollapse
             "lg:left-0 lg:top-0 lg:h-screen lg:rounded-r-2xl",
             "overflow-hidden",
             isMobile && !isOpen ? "pointer-events-none" : "",
-            !isMobile && "lg:border-r-0"
+            !isMobile && "lg:border-r-0",
           )}
         >
           {/* Mobile Header with Close Button */}
@@ -134,7 +146,7 @@ export default function AgentSidebar({ isOpen, setIsOpen, collapsed, setCollapse
             <div
               className={cn(
                 "flex items-center justify-center py-6 px-4 border-b border-gray-200 transition-all duration-200 gap-8",
-                collapsed ? "opacity-0 pointer-events-none" : "opacity-100"
+                collapsed ? "opacity-0 pointer-events-none" : "opacity-100",
               )}
             >
               <Image
@@ -152,9 +164,11 @@ export default function AgentSidebar({ isOpen, setIsOpen, collapsed, setCollapse
             {navItems.map((item, index) => {
               // Check if current path matches item href
               const isActive = pathname === item.href;
-              
+
               // For debugging
-              console.log(`Item: ${item.label}, Path: ${pathname}, Active: ${isActive}`);
+              console.log(
+                `Item: ${item.label}, Path: ${pathname}, Active: ${isActive}`,
+              );
 
               return (
                 <Tooltip key={index}>
@@ -172,7 +186,9 @@ export default function AgentSidebar({ isOpen, setIsOpen, collapsed, setCollapse
                           : "text-gray-700 hover:bg-gray-100/60",
 
                         // Collapsed icon mode (desktop only)
-                        !isMobile && collapsed ? "justify-center px-3" : "justify-start"
+                        !isMobile && collapsed
+                          ? "justify-center px-3"
+                          : "justify-start",
                       )}
                     >
                       {/* Active indicator line - Show on left side */}
@@ -184,9 +200,9 @@ export default function AgentSidebar({ isOpen, setIsOpen, collapsed, setCollapse
                         size={22}
                         className={cn(
                           "transition-all duration-200",
-                          isActive 
-                            ? "text-[#10B5DB]" 
-                            : "text-gray-600 group-hover:text-[#10B5DB]"
+                          isActive
+                            ? "text-[#10B5DB]"
+                            : "text-gray-600 group-hover:text-[#10B5DB]",
                         )}
                       />
 
@@ -194,7 +210,9 @@ export default function AgentSidebar({ isOpen, setIsOpen, collapsed, setCollapse
                         <span className="truncate transition-opacity duration-200">
                           {item.label}
                           {isActive && (
-                            <span className="ml-2 text-xs text-[#10B5DB]/70">●</span>
+                            <span className="ml-2 text-xs text-[#10B5DB]/70">
+                              ●
+                            </span>
                           )}
                         </span>
                       )}
@@ -224,7 +242,9 @@ export default function AgentSidebar({ isOpen, setIsOpen, collapsed, setCollapse
                   <p className="text-sm font-semibold text-gray-800 truncate">
                     {agent?.name || "Agent"}
                   </p>
-                  <p className="text-xs text-gray-500 truncate">Agent Dashboard</p>
+                  <p className="text-xs text-gray-500 truncate">
+                    Agent Dashboard
+                  </p>
                 </div>
               </div>
             </div>
@@ -238,7 +258,7 @@ export default function AgentSidebar({ isOpen, setIsOpen, collapsed, setCollapse
               onClick={handleLogout}
               className={cn(
                 "w-full flex items-center gap-3 text-[15px] font-medium rounded-xl px-4 py-3 text-red-600 hover:bg-red-100 transition-colors",
-                !isMobile && collapsed ? "justify-center" : "justify-start"
+                !isMobile && collapsed ? "justify-center" : "justify-start",
               )}
             >
               <LogOut size={20} />
@@ -264,10 +284,10 @@ export default function AgentSidebar({ isOpen, setIsOpen, collapsed, setCollapse
           className={cn(
             "transition-all duration-300 min-h-screen",
             isMobile
-              ? "pt-14 p-4"
+              ? "pt-32 p-4"
               : collapsed
-                ? "ml-20 pt-20 p-8"
-                : "ml-80 pt-20 p-8"
+                ? "ml-20 pt-32 p-8"
+                : "ml-80 pt-32 p-8",
           )}
         >
           {children}

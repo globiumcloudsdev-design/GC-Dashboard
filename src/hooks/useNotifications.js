@@ -6,38 +6,29 @@ export const useNotifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [unreadCount, setUnreadCount] = useState(0);
   const isFetchingRef = useRef(false);
 
-  // Get auth token from localStorage
+  // ——— Derived: Unread Count ———
+  // The API returns `isRead: true/false` per notification
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
+
+  // ——— Auth Token ———
   const getAuthToken = useCallback(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("agentToken") || localStorage.getItem("token") || localStorage.getItem("accessToken");
+      return (
+        localStorage.getItem("agentToken") ||
+        localStorage.getItem("token") ||
+        localStorage.getItem("accessToken")
+      );
     }
     return null;
   }, []);
 
-  // Get user/agent ID from context or localStorage
-  const getAgentId = useCallback(() => {
-    if (typeof window !== "undefined") {
-      const agentData = localStorage.getItem("agentData") || localStorage.getItem("userData");
-      if (agentData) {
-        try {
-          const parsed = JSON.parse(agentData);
-          return parsed._id || parsed.id;
-        } catch (e) {
-          console.error("Error parsing user/agent data:", e);
-        }
-      }
-    }
-    return null;
-  }, []);
-
-  // Fetch notifications from API
+  // ——————————————————————————————————————————————
+  //  FETCH NOTIFICATIONS   GET /api/notifications/user-notifications
+  // ——————————————————————————————————————————————
   const fetchNotifications = useCallback(async () => {
-    // Prevent multiple simultaneous fetches
     if (isFetchingRef.current) return;
-
     isFetchingRef.current = true;
 
     try {
@@ -65,14 +56,8 @@ export const useNotifications = () => {
       }
 
       const data = await response.json();
+      // API returns: [{ _id, title, message, type, createdAt, isRead, createdBy, ... }]
       setNotifications(Array.isArray(data) ? data : []);
-
-      // Calculate unread count - check if current agent is in readBy array
-      const agentId = getAgentId();
-      const unreadNotifications = data.filter(
-        n => agentId && (!n.readBy || !n.readBy.includes(agentId))
-      );
-      setUnreadCount(unreadNotifications.length);
     } catch (err) {
       console.error("Error fetching notifications:", err);
       setError(err.message);
@@ -81,26 +66,23 @@ export const useNotifications = () => {
       setLoading(false);
       isFetchingRef.current = false;
     }
-  }, [getAuthToken, getAgentId]);
+  }, [getAuthToken]);
 
-  // Mark notification as read
+  // ——————————————————————————————————————————————
+  //  MARK SINGLE AS READ   PATCH /api/notifications/[id]
+  // ——————————————————————————————————————————————
   const markAsRead = useCallback(
     async (notificationId) => {
-      console.log('📝 [Frontend] Mark as Read Request:', { notificationId });
       try {
         const token = getAuthToken();
-        if (!token) {
-          console.error('❌ [Frontend] No token found');
-          return;
-        }
+        if (!token) return;
 
-        const agentId = getAgentId();
-        if (!agentId) {
-          console.error('❌ [Frontend] No agent ID found');
-          return;
-        }
-
-        console.log('🔑 [Frontend] Agent ID:', agentId);
+        // ✅ Optimistic update — set isRead = true in local state
+        setNotifications((prev) =>
+          prev.map((n) =>
+            n._id === notificationId ? { ...n, isRead: true } : n
+          )
+        );
 
         const response = await fetch(`/api/notifications/${notificationId}`, {
           method: "PATCH",
@@ -110,109 +92,79 @@ export const useNotifications = () => {
           },
         });
 
-        console.log('📥 [Frontend] Mark as Read Response:', {
-          ok: response.ok,
-          status: response.status
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          console.log('✅ [Frontend] Mark as Read Success:', data);
-
-          // Update local state - add agent to readBy array
+        if (!response.ok) {
+          // Rollback on failure
           setNotifications((prev) =>
             prev.map((n) =>
-              n._id === notificationId
-                ? {
-                  ...n,
-                  readBy: n.readBy ? [...n.readBy, agentId] : [agentId],
-                }
-                : n
+              n._id === notificationId ? { ...n, isRead: false } : n
             )
           );
-          // Update unread count
-          setUnreadCount((prev) => Math.max(0, prev - 1));
-        } else {
-          const error = await response.json();
-          console.error('❌ [Frontend] Mark as Read Failed:', error);
+          console.error("Mark as read failed:", await response.json());
         }
       } catch (err) {
-        console.error("❌ [Frontend] Error marking notification as read:", err);
+        console.error("Error marking notification as read:", err);
+        // Rollback
+        setNotifications((prev) =>
+          prev.map((n) =>
+            n._id === notificationId ? { ...n, isRead: false } : n
+          )
+        );
       }
     },
-    [getAuthToken, getAgentId]
+    [getAuthToken]
   );
 
-  // Mark all notifications as read
+  // ——————————————————————————————————————————————
+  //  MARK ALL AS READ   PATCH /api/notifications/all
+  // ——————————————————————————————————————————————
   const markAllAsRead = useCallback(async () => {
     try {
       const token = getAuthToken();
       if (!token) return;
 
-      const agentId = getAgentId();
-      if (!agentId) return;
+      // ✅ Optimistic update — set all isRead = true
+      const previousNotifications = [...notifications];
+      setNotifications((prev) =>
+        prev.map((n) => ({ ...n, isRead: true }))
+      );
 
-      const response = await fetch("/api/notifications/mark-all-read", {
-        method: "POST",
+      const response = await fetch("/api/notifications/all", {
+        method: "PATCH",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
 
-      if (response.ok) {
-        // Update local state - add agent to readBy for all notifications
-        setNotifications((prev) =>
-          prev.map((n) => ({
-            ...n,
-            readBy: n.readBy ? [...new Set([...n.readBy, agentId])] : [agentId],
-          }))
-        );
-        setUnreadCount(0);
+      if (!response.ok) {
+        // Rollback on failure
+        setNotifications(previousNotifications);
+        console.error("Mark all as read failed:", await response.json());
       }
     } catch (err) {
       console.error("Error marking all notifications as read:", err);
+      // Re-fetch to restore correct state
+      fetchNotifications();
     }
-  }, [getAuthToken, getAgentId]);
+  }, [getAuthToken, notifications, fetchNotifications]);
 
-  // Delete/Dismiss notification (soft delete - adds to deletedBy array)
+  // ——————————————————————————————————————————————
+  //  DELETE (SOFT DELETE)   DELETE /api/notifications/[id]
+  // ——————————————————————————————————————————————
   const dismissNotification = useCallback(
     async (notificationId) => {
-      console.log('🗑️ [Frontend] Delete Request:', { notificationId });
       try {
         const token = getAuthToken();
-        if (!token) {
-          console.error('❌ [Frontend] No token found');
-          return;
-        }
+        if (!token) return;
 
-        const agentId = getAgentId();
-        console.log('🔑 [Frontend] Agent ID:', agentId);
+        // Store for rollback
+        const previousNotifications = [...notifications];
 
-        // Check if notification was unread before deletion
-        const notificationToDelete = notifications.find((n) => n._id === notificationId);
-        const wasUnread =
-          notificationToDelete &&
-          agentId &&
-          (!notificationToDelete.readBy ||
-            !notificationToDelete.readBy.includes(agentId));
-
-        console.log('📊 [Frontend] Notification State:', {
-          found: !!notificationToDelete,
-          wasUnread: wasUnread
-        });
-
-        // Remove from local state first (optimistic update)
+        // ✅ Optimistic update — remove from local state
         setNotifications((prev) =>
           prev.filter((n) => n._id !== notificationId)
         );
-        console.log('✅ [Frontend] Optimistic update - removed from UI');
 
-        if (wasUnread) {
-          setUnreadCount((prev) => Math.max(0, prev - 1));
-        }
-
-        // Update server
         const response = await fetch(`/api/notifications/${notificationId}`, {
           method: "DELETE",
           headers: {
@@ -221,48 +173,40 @@ export const useNotifications = () => {
           },
         });
 
-        console.log('📥 [Frontend] Delete Response:', {
-          ok: response.ok,
-          status: response.status
-        });
-
         if (!response.ok) {
-          const error = await response.json();
-          console.error('❌ [Frontend] Delete Failed:', error);
-          throw new Error("Failed to delete notification");
+          // Rollback on failure
+          setNotifications(previousNotifications);
+          console.error("Delete notification failed:", await response.json());
         }
-
-        const data = await response.json();
-        console.log('✅ [Frontend] Delete Success:', data);
       } catch (err) {
-        console.error("❌ [Frontend] Error dismissing notification:", err);
-        // Refetch on error to restore state
+        console.error("Error dismissing notification:", err);
+        // Re-fetch to restore correct state
         fetchNotifications();
       }
     },
-    [getAuthToken, fetchNotifications, notifications, getAgentId]
+    [getAuthToken, notifications, fetchNotifications]
   );
 
-  // Check if notification is read by current agent
-  const isNotificationRead = useCallback(
-    (notification) => {
-      const agentId = getAgentId();
-      return agentId && notification.readBy && notification.readBy.includes(agentId);
-    },
-    [getAgentId]
-  );
+  // ——————————————————————————————————————————————
+  //  HELPER: Check if a notification is read
+  //  (uses the `isRead` boolean from API)
+  // ——————————————————————————————————————————————
+  const isNotificationRead = useCallback((notification) => {
+    return !!notification?.isRead;
+  }, []);
 
-  // Set up initial fetch and auto-refresh
+  // ——————————————————————————————————————————————
+  //  AUTO FETCH ON MOUNT + POLLING + VISIBILITY
+  // ——————————————————————————————————————————————
   useEffect(() => {
     fetchNotifications();
 
-    // Auto-refresh notifications every 2 minutes (reduced from 30 seconds)
+    // Auto-refresh every 2 minutes
     const interval = setInterval(fetchNotifications, 120000);
-
     return () => clearInterval(interval);
   }, [fetchNotifications]);
 
-  // Refetch when returning from background
+  // Refetch when tab becomes visible again
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
@@ -285,6 +229,5 @@ export const useNotifications = () => {
     markAllAsRead,
     dismissNotification,
     isNotificationRead,
-    getAgentId,
   };
 };

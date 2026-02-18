@@ -109,44 +109,44 @@
 //       console.error('Error fetching attendance:', error);
 //     }
 //   };
-  
+
 //   // Fetch agent stats
 //   const fetchAgentStats = async () => {
 //     if (!agent?.id && !agent?._id) return;
-    
+
 //     try {
 //       const agentId = agent.id || agent._id;
-      
+
 //       // Get current month's start and end dates
 //       const now = new Date();
 //       const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 //       const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-      
+
 //       const [overviewResponse, bookingsResponse] = await Promise.all([
 //         agentSalesService.getAgentSalesOverview(agentId),
 //         agentSalesService.getAgentBookings(agentId, { limit: 100 }) // Get more bookings to filter current month
 //       ]);
 
 //       const overview = overviewResponse?.data?.overview || {};
-      
+
 //       // Get all bookings
-//       const allBookings = Array.isArray(bookingsResponse?.data?.bookings) 
-//         ? bookingsResponse.data.bookings 
-//         : Array.isArray(bookingsResponse?.bookings) 
-//         ? bookingsResponse.bookings 
+//       const allBookings = Array.isArray(bookingsResponse?.data?.bookings)
+//         ? bookingsResponse.data.bookings
+//         : Array.isArray(bookingsResponse?.bookings)
+//         ? bookingsResponse.bookings
 //         : [];
-      
+
 //       // Filter current month's bookings
 //       const currentMonthBookings = allBookings.filter(booking => {
 //         const bookingDate = new Date(booking.createdAt);
 //         return bookingDate >= currentMonthStart && bookingDate <= currentMonthEnd;
 //       });
-      
+
 //       // Filter current month's completed bookings
-//       const currentMonthCompletedBookings = currentMonthBookings.filter(booking => 
+//       const currentMonthCompletedBookings = currentMonthBookings.filter(booking =>
 //         booking.status === 'completed' || booking.status === 'Completed'
 //       );
-      
+
 //       setStats({
 //         totalBookings: currentMonthBookings.length, // Current month's total bookings
 //         monthlyTarget: agent.monthlyTarget || 0, // Agent's monthly sales target
@@ -226,7 +226,7 @@
 //         officeLocation.latitude,
 //         officeLocation.longitude
 //       );
-      
+
 //       setCurrentAddress(address || `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`);
 //       setIsAtOffice(dist <= checkRadius);
 //       setDistance(dist);
@@ -245,7 +245,7 @@
 //     if (!isLoggedIn || agentLoading) {
 //       return;
 //     }
-    
+
 //     try {
 //       setLoading(true);
 //       await Promise.all([
@@ -264,12 +264,12 @@
 //   useEffect(() => {
 //     if (isLoggedIn && !agentLoading) {
 //       fetchAllData();
-      
+
 //       // Refetch location every 10 seconds (reduced frequency for better performance)
 //       const locationRefreshInterval = setInterval(() => {
 //         fetchLocationData();
 //       }, 10000);
-      
+
 //       return () => clearInterval(locationRefreshInterval);
 //     }
 //   }, [officeLocation, checkRadius, agent, isLoggedIn, agentLoading]);
@@ -308,17 +308,17 @@
 //   // Helper functions
 //   const formatDistance = (dist) => {
 //     if (dist == null) return 'Unknown';
-    
+
 //     // If within 10m radius, show "You're in office"
 //     if (dist <= checkRadius) {
 //       return '✅ You\'re in office';
 //     }
-    
+
 //     // If greater than 10m, show distance from office
 //     if (dist < 1000) {
 //       return `📏 ${dist.toFixed(0)} m from office`;
 //     }
-    
+
 //     return `📏 ${(dist / 1000).toFixed(2)} km from office`;
 //   };
 
@@ -331,7 +331,7 @@
 //   const goToSales = () => router.push('/agent/sales');
 
 //   // Calculate progress percentage (sales count based)
-//   const progressPercentage = stats.monthlyTarget > 0 
+//   const progressPercentage = stats.monthlyTarget > 0
 //     ? Math.min(Math.round((stats.achievedSales / stats.monthlyTarget) * 100), 100)
 //     : 0;
 
@@ -415,7 +415,7 @@
 //                 )}
 //                 {/* Real-time tracking status */}
 //                 <div className="flex flex-wrap items-center gap-3 mt-3 text-xs">
-//                   <motion.div 
+//                   <motion.div
 //                     className="flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2 py-1 rounded-lg border border-emerald-200"
 //                     animate={{ opacity: [0.7, 1] }}
 //                     transition={{ duration: 0.5, repeat: Infinity }}
@@ -533,7 +533,7 @@
 //                 )}
 //               </div>
 //               {recentActivity.length > 0 && (
-//                 <button 
+//                 <button
 //                   onClick={goToSales}
 //                   className="w-full mt-4 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-lg text-sm font-medium transition-colors"
 //                 >
@@ -561,13 +561,13 @@
 //               <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
 //             </div>
 //             <div className="p-4 space-y-3">
-//               <button 
+//               <button
 //                 onClick={goToSales}
 //                 className="w-full text-left bg-blue-50 hover:bg-blue-100 text-blue-700 p-3 rounded-lg text-sm font-medium transition-colors"
 //               >
 //                 Add New Lead
 //               </button>
-//               <button 
+//               <button
 //                 onClick={goToAttendance}
 //                 className="w-full text-left bg-green-50 hover:bg-green-100 text-green-700 p-3 rounded-lg text-sm font-medium transition-colors"
 //               >
@@ -597,7 +597,7 @@
 //                   <span className="text-lg font-bold text-purple-600">{progressPercentage}%</span>
 //                 </div>
 //                 <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-//                   <div 
+//                   <div
 //                     className="bg-gradient-to-r from-purple-500 to-pink-500 h-3 rounded-full transition-all duration-500 relative"
 //                     style={{ width: `${progressPercentage}%` }}
 //                   >
@@ -607,7 +607,7 @@
 //                   </div>
 //                 </div>
 //               </div>
-              
+
 //               <div className="grid grid-cols-2 gap-3 mb-3">
 //                 <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-3 rounded-lg border border-purple-100">
 //                   <div className="flex items-center gap-2 mb-1">
@@ -653,16 +653,11 @@
 
 // export default HomeScreen;
 
-
-
-
-
-
 // src/app/(agent)/agent/dashboard/page.jsx
 "use client";
-import { useContext, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { useContext, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import {
   BarChart3,
   MapPin,
@@ -678,16 +673,21 @@ import {
   CheckCircle2,
   Filter,
   Download,
-  Hash
-} from 'lucide-react';
-import { ThemeContext } from '../../../../context/ThemeContext';
-import { AgentContext } from '../../../../context/AgentContext';
-import { useOfficeLocation } from '../../../../context/LocationContext';
-import { agentAttendanceService } from '../../../../services/agentAttendenceService';
-import { agentSalesService } from '../../../../services/agentSalesService';
-import { getAddressFromCoords, getCurrentLocation, getDistance } from '../../../../utils/locationUtils';
-import ShiftSchedule from '../../../../components/ShiftSchedule';
-import MonthlyTargetProgress from '../../../../components/sales/MonthlyTargetProgress';
+  Hash,
+} from "lucide-react";
+import { ThemeContext } from "../../../../context/ThemeContext";
+import { AgentContext } from "../../../../context/AgentContext";
+import { useOfficeLocation } from "../../../../context/LocationContext";
+import { agentAttendanceService } from "../../../../services/agentAttendenceService";
+import { agentSalesService } from "../../../../services/agentSalesService";
+import {
+  getAddressFromCoords,
+  getCurrentLocation,
+  getDistance,
+} from "../../../../utils/locationUtils";
+import { cn } from "../../../../lib/utils";
+import ShiftSchedule from "../../../../components/ShiftSchedule";
+import MonthlyTargetProgress from "../../../../components/sales/MonthlyTargetProgress";
 
 // Accuracy threshold — ignore fixes with accuracy worse than this (in meters)
 const ACCURACY_THRESHOLD = 1000;
@@ -698,18 +698,22 @@ const fadeUp = {
   visible: (custom = 0) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.6, delay: custom * 0.1, ease: "easeOut" }
-  })
+    transition: { duration: 0.6, delay: custom * 0.1, ease: "easeOut" },
+  }),
 };
 
 const HomeScreen = () => {
   const router = useRouter();
   const { theme } = useContext(ThemeContext);
-  const { agent, isLoggedIn, isLoading: agentLoading } = useContext(AgentContext);
+  const {
+    agent,
+    isLoggedIn,
+    isLoading: agentLoading,
+  } = useContext(AgentContext);
   const { officeLocation, checkRadius } = useOfficeLocation();
 
   const [distance, setDistance] = useState(null);
-  const [currentAddress, setCurrentAddress] = useState('');
+  const [currentAddress, setCurrentAddress] = useState("");
   const [loading, setLoading] = useState(true);
   const [isAtOffice, setIsAtOffice] = useState(false);
   const [agentStats, setAgentStats] = useState(null);
@@ -719,156 +723,183 @@ const HomeScreen = () => {
     todayStatus: null,
     monthlyStats: null,
     todaysCheckIns: 0,
-    lastCheckInTime: null
+    lastCheckInTime: null,
   });
 
   // Target stats data
   const [targetStats, setTargetStats] = useState({
-    targetType: 'none',
+    targetType: "none",
     digitTarget: 0,
     amountTarget: 0,
-    currency: 'PKR',
+    currency: "PKR",
     achievedDigits: 0,
     achievedAmount: 0,
     progressPercentage: 0,
-    isTargetAchieved: false
+    isTargetAchieved: false,
   });
 
   const [recentActivity, setRecentActivity] = useState([]);
 
   // Current month for target display
-  const [currentMonth, setCurrentMonth] = useState('');
+  const [currentMonth, setCurrentMonth] = useState("");
 
   // Fetch attendance data
   const fetchAttendanceData = async () => {
     try {
       const [todayStatusResp, monthlyStatsResp] = await Promise.allSettled([
         agentAttendanceService.getTodayStatus?.(),
-        agentAttendanceService.getMonthlySummary?.()
+        agentAttendanceService.getMonthlySummary?.(),
       ]);
 
       let todayStatus = null;
-      if (todayStatusResp.status === 'fulfilled') {
+      if (todayStatusResp.status === "fulfilled") {
         const data = todayStatusResp.value?.data ?? todayStatusResp.value;
         todayStatus = Array.isArray(data) ? data[0] : data;
       }
 
       let monthlyStats = null;
-      if (monthlyStatsResp.status === 'fulfilled') {
+      if (monthlyStatsResp.status === "fulfilled") {
         monthlyStats = monthlyStatsResp.value?.data ?? monthlyStatsResp.value;
       }
 
       setAttendanceData({
         todayStatus,
         monthlyStats,
-        todaysCheckIns: todayStatus ? 1 : 0
+        todaysCheckIns: todayStatus ? 1 : 0,
       });
-
     } catch (error) {
-      console.error('Error fetching attendance:', error);
+      console.error("Error fetching attendance:", error);
     }
   };
-  
+
   // Fetch agent stats and targets
   const fetchAgentStats = async () => {
     if (!agent?.id && !agent?._id) return;
-    
+
     try {
       const agentId = agent.id || agent._id;
-      
+
       // Get agent's target info from agent data
-      const agentTargetType = agent.monthlyTargetType || 'none';
+      const agentTargetType = agent.monthlyTargetType || "none";
       const digitTarget = agent.monthlyDigitTarget || 0;
       const amountTarget = agent.monthlyAmountTarget || 0;
-      const currency = agent.targetCurrency || 'PKR';
-      
+      const currency = agent.targetCurrency || "PKR";
+
       // Get current month's start and end dates
       const now = new Date();
       const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-      
+      const currentMonthEnd = new Date(
+        now.getFullYear(),
+        now.getMonth() + 1,
+        0,
+        23,
+        59,
+        59,
+      );
+
       const [overviewResponse, bookingsResponse] = await Promise.all([
         agentSalesService.getAgentSalesOverview(agentId),
-        agentSalesService.getAgentBookings(agentId, { limit: 100 }) // Get more bookings to filter current month
+        agentSalesService.getAgentBookings(agentId, { limit: 100 }), // Get more bookings to filter current month
       ]);
 
       const overview = overviewResponse?.data?.overview || {};
-      
+
       // Get all bookings
-      const allBookings = Array.isArray(bookingsResponse?.data?.bookings) 
-        ? bookingsResponse.data.bookings 
-        : Array.isArray(bookingsResponse?.bookings) 
-        ? bookingsResponse.bookings 
-        : [];
-      
+      const allBookings = Array.isArray(bookingsResponse?.data?.bookings)
+        ? bookingsResponse.data.bookings
+        : Array.isArray(bookingsResponse?.bookings)
+          ? bookingsResponse.bookings
+          : [];
+
       // Filter current month's bookings
-      const currentMonthBookings = allBookings.filter(booking => {
+      const currentMonthBookings = allBookings.filter((booking) => {
         const bookingDate = new Date(booking.createdAt);
-        return bookingDate >= currentMonthStart && bookingDate <= currentMonthEnd;
+        return (
+          bookingDate >= currentMonthStart && bookingDate <= currentMonthEnd
+        );
       });
-      
+
       // Filter current month's completed bookings
-      const currentMonthCompletedBookings = currentMonthBookings.filter(booking => 
-        booking.status === 'completed' || booking.status === 'Completed'
+      const currentMonthCompletedBookings = currentMonthBookings.filter(
+        (booking) =>
+          booking.status === "completed" || booking.status === "Completed",
       );
-      
+
       // Calculate achieved values based on target type
       let achievedDigits = 0;
       let achievedAmount = 0;
-      
+
       // For digit or both target types, count completed bookings
-      if (agentTargetType === 'digit' || agentTargetType === 'both') {
+      if (agentTargetType === "digit" || agentTargetType === "both") {
         achievedDigits = currentMonthCompletedBookings.length;
       }
-      
+
       // For amount target: sum from completed projects
       // For both target: revenue from projects ONLY (not bookings)
-      if (agentTargetType === 'amount' || agentTargetType === 'both') {
+      if (agentTargetType === "amount" || agentTargetType === "both") {
         // Fetch projects for current month
         try {
           // Fetch ALL projects for this agent
-          console.log(`🔍 Dashboard: Fetching ALL projects for agent ${agentId}`);
-          const projectsRes = await fetch(`/api/projects?assignedAgent=${agentId}&limit=1000`);
+          console.log(
+            `🔍 Dashboard: Fetching ALL projects for agent ${agentId}`,
+          );
+          const projectsRes = await fetch(
+            `/api/projects?assignedAgent=${agentId}&limit=1000`,
+          );
           const projectsJson = await projectsRes.json();
           console.log(`📦 Dashboard: Projects API response:`, projectsJson);
-          
+
           let projectData = [];
           if (projectsJson && projectsJson.success) {
             projectData = projectsJson.data || [];
           } else if (Array.isArray(projectsJson)) {
             projectData = projectsJson;
           }
-          
+
           // Filter by current month based on updatedAt or completedAt
-          projectData = projectData.filter(p => {
-            const relevantDate = p.completedAt ? new Date(p.completedAt) : new Date(p.updatedAt);
-            return relevantDate >= currentMonthStart && relevantDate <= currentMonthEnd;
+          projectData = projectData.filter((p) => {
+            const relevantDate = p.completedAt
+              ? new Date(p.completedAt)
+              : new Date(p.updatedAt);
+            return (
+              relevantDate >= currentMonthStart &&
+              relevantDate <= currentMonthEnd
+            );
           });
-          
-          console.log(`📦 Dashboard: Projects in current month: ${projectData.length} projects`);
-          
+
+          console.log(
+            `📦 Dashboard: Projects in current month: ${projectData.length} projects`,
+          );
+
           // Calculate amount from completed projects only
-          const completedProjects = projectData.filter(p => {
-            const status = (p.status || '').toString().toLowerCase();
-            return status === 'completed' || status === 'delivered';
+          const completedProjects = projectData.filter((p) => {
+            const status = (p.status || "").toString().toLowerCase();
+            return status === "completed" || status === "delivered";
           });
-          
+
           achievedAmount = completedProjects.reduce((sum, p) => {
             const amt = parseFloat(p.price) || parseFloat(p.amount) || 0;
             return sum + (isNaN(amt) ? 0 : amt);
           }, 0);
-          
+
           console.log(`💰 Revenue from projects (${agentTargetType} target):`, {
             achievedAmount,
             totalProjects: projectData.length,
             completedProjects: completedProjects.length,
-            completedProjectDetails: completedProjects.map(p => ({ title: p.title, price: p.price, status: p.status }))
+            completedProjectDetails: completedProjects.map((p) => ({
+              title: p.title,
+              price: p.price,
+              status: p.status,
+            })),
           });
         } catch (projErr) {
-          console.error('❌ Failed to fetch projects for target calculation', projErr);
+          console.error(
+            "❌ Failed to fetch projects for target calculation",
+            projErr,
+          );
         }
       }
-      
+
       // Update target stats
       setTargetStats({
         targetType: agentTargetType,
@@ -878,76 +909,80 @@ const HomeScreen = () => {
         achievedDigits,
         achievedAmount,
         progressPercentage: 0, // Will be calculated in MonthlyTargetProgress component
-        isTargetAchieved: false
+        isTargetAchieved: false,
       });
 
       // Create recent activity from latest bookings with amounts
       const activity = allBookings.slice(0, 5).map((booking, index) => {
-        const amount = parseFloat(booking.amount) || 
-                      parseFloat(booking.discountedPrice) || 
-                      parseFloat(booking.totalPrice) || 
-                      parseFloat(booking.price);
-        
-        let currencySymbol = currency || 'PKR';
-        if (agentTargetType === 'digit') {
-          currencySymbol = '$';
-        } else if (currencySymbol === 'USD') {
-          currencySymbol = '$';
+        const amount =
+          parseFloat(booking.amount) ||
+          parseFloat(booking.discountedPrice) ||
+          parseFloat(booking.totalPrice) ||
+          parseFloat(booking.price);
+
+        let currencySymbol = currency || "PKR";
+        if (agentTargetType === "digit") {
+          currencySymbol = "$";
+        } else if (currencySymbol === "USD") {
+          currencySymbol = "$";
         }
-        
+
         return {
           id: booking._id || index,
-          message: `New booking from ${booking?.formData?.firstName || booking?.customerName || 'Customer'}`,
-          amount: amount ? `${currencySymbol} ${amount.toLocaleString()}` : null,
-          status: booking.status || 'Pending',
-          time: new Date(booking.createdAt).toLocaleDateString('en-IN', {
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          })
+          message: `New booking from ${booking?.formData?.firstName || booking?.customerName || "Customer"}`,
+          amount: amount
+            ? `${currencySymbol} ${amount.toLocaleString()}`
+            : null,
+          status: booking.status || "Pending",
+          time: new Date(booking.createdAt).toLocaleDateString("en-IN", {
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
         };
       });
 
       setRecentActivity(activity);
-
     } catch (error) {
-      console.error('❌ Error fetching agent stats:', error);
+      console.error("❌ Error fetching agent stats:", error);
     }
   };
 
   const fetchLocationData = async () => {
     try {
       let location = null;
-      let address = '';
+      let address = "";
 
       if (agent?.location?.latitude && agent?.location?.longitude) {
         location = {
           latitude: agent.location.latitude,
           longitude: agent.location.longitude,
-          accuracy: agent.location.accuracy
+          accuracy: agent.location.accuracy,
         };
-        address = agent.location.address || '';
-      }
-      else {
+        address = agent.location.address || "";
+      } else {
         try {
           const freshLocation = await getCurrentLocation();
           if (freshLocation) {
             location = freshLocation;
             try {
-              const freshAddress = await getAddressFromCoords(freshLocation.latitude, freshLocation.longitude);
-              address = freshAddress || '';
+              const freshAddress = await getAddressFromCoords(
+                freshLocation.latitude,
+                freshLocation.longitude,
+              );
+              address = freshAddress || "";
             } catch (addressError) {
-              console.warn('Could not get address:', addressError);
+              console.warn("Could not get address:", addressError);
             }
           }
         } catch (error) {
-          console.warn('Failed to get fresh location from browser:', error);
+          console.warn("Failed to get fresh location from browser:", error);
         }
       }
 
       if (!location || !location.latitude || !location.longitude) {
-        setCurrentAddress('Location unavailable');
+        setCurrentAddress("Location unavailable");
         setIsAtOffice(false);
         setDistance(null);
         setLocationAccuracy(null);
@@ -956,7 +991,7 @@ const HomeScreen = () => {
       }
 
       if (location.accuracy && location.accuracy > ACCURACY_THRESHOLD) {
-        setCurrentAddress('Location unavailable (low accuracy)');
+        setCurrentAddress("Location unavailable (low accuracy)");
         setIsAtOffice(false);
         setDistance(null);
         setLocationAccuracy(location.accuracy || null);
@@ -968,17 +1003,20 @@ const HomeScreen = () => {
         location.latitude,
         location.longitude,
         officeLocation.latitude,
-        officeLocation.longitude
+        officeLocation.longitude,
       );
-      
-      setCurrentAddress(address || `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`);
+
+      setCurrentAddress(
+        address ||
+          `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`,
+      );
       setIsAtOffice(dist <= checkRadius);
       setDistance(dist);
       setLocationAccuracy(location.accuracy || null);
       setLastLocationUpdate(new Date());
     } catch (error) {
-      console.error('❌ Error fetching location:', error);
-      setCurrentAddress('Address unavailable');
+      console.error("❌ Error fetching location:", error);
+      setCurrentAddress("Address unavailable");
       setIsAtOffice(false);
       setDistance(null);
       setLocationAccuracy(null);
@@ -989,16 +1027,16 @@ const HomeScreen = () => {
     if (!isLoggedIn || agentLoading) {
       return;
     }
-    
+
     try {
       setLoading(true);
       await Promise.all([
         fetchLocationData(),
         fetchAttendanceData(),
-        fetchAgentStats()
+        fetchAgentStats(),
       ]);
     } catch (error) {
-      console.error('Error fetching all data:', error);
+      console.error("Error fetching all data:", error);
     } finally {
       setLoading(false);
     }
@@ -1008,12 +1046,12 @@ const HomeScreen = () => {
   useEffect(() => {
     if (isLoggedIn && !agentLoading) {
       fetchAllData();
-      
+
       // Refetch location every 10 seconds (reduced frequency for better performance)
       const locationRefreshInterval = setInterval(() => {
         fetchLocationData();
       }, 10000);
-      
+
       return () => clearInterval(locationRefreshInterval);
     }
   }, [officeLocation, checkRadius, agent, isLoggedIn, agentLoading]);
@@ -1028,7 +1066,7 @@ const HomeScreen = () => {
   // Redirect if not logged in
   useEffect(() => {
     if (!agentLoading && !isLoggedIn) {
-      router.push('/agent/login');
+      router.push("/agent/login");
     }
   }, [isLoggedIn, agentLoading, router]);
 
@@ -1036,8 +1074,18 @@ const HomeScreen = () => {
   useEffect(() => {
     const now = new Date();
     const months = [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December",
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
     ];
     const currentMonthString = `${months[now.getMonth()]} ${now.getFullYear()}`;
     setCurrentMonth(currentMonthString);
@@ -1062,112 +1110,118 @@ const HomeScreen = () => {
 
   // Helper functions
   const formatDistance = (dist) => {
-    if (dist == null) return 'Unknown';
-    
+    if (dist == null) return "Unknown";
+
     // If within 10m radius, show "You're in office"
     if (dist <= checkRadius) {
-      return '✅ You\'re in office';
+      return "✅ You're in office";
     }
-    
+
     // If greater than 10m, show distance from office
     if (dist < 1000) {
       return `📏 ${dist.toFixed(0)} m from office`;
     }
-    
+
     return `📏 ${(dist / 1000).toFixed(2)} km from office`;
   };
 
   const formatTime = (dateString) => {
-    if (!dateString) return 'None';
-    return new Date(dateString).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    if (!dateString) return "None";
+    return new Date(dateString).toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
-  const goToAttendance = () => router.push('/agent/attendance');
-  const goToSales = () => router.push('/agent/sales');
+  const goToAttendance = () => router.push("/agent/attendance");
+  const goToSales = () => router.push("/agent/sales");
 
   // Stat cards data - dynamic based on target type
   const getStatCards = () => {
     const cards = [];
-    
+
     // Card 1: Completed Units/Bookings (always show)
     cards.push({
       title: "Completed Sales",
       value: targetStats.achievedDigits.toString(),
       subtitle: "This Month",
       icon: CheckCircle2,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-      onClick: goToSales
+      color: "text-blue-600",
+      bgColor: "bg-blue-50",
+      onClick: goToSales,
     });
-    
+
     // Card 2: Present Days (always show)
     cards.push({
       title: "Present Days",
       value: (attendanceData.monthlyStats?.present || 0).toString(),
       subtitle: "This Month",
       icon: Users,
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
-      onClick: goToAttendance
+      color: "text-green-600",
+      bgColor: "bg-green-50",
+      onClick: goToAttendance,
     });
-    
+
     // Card 3 & 4: Based on target type
-    if (targetStats.targetType === 'digit') {
+    if (targetStats.targetType === "digit") {
       cards.push({
         title: "Digit Target",
         value: targetStats.digitTarget.toString(),
         subtitle: "Units Goal",
         icon: Hash,
-        color: 'text-purple-600',
-        bgColor: 'bg-purple-50',
-        onClick: goToSales
+        color: "text-purple-600",
+        bgColor: "bg-purple-50",
+        onClick: goToSales,
       });
       cards.push({
         title: "Remaining",
-        value: Math.max(0, targetStats.digitTarget - targetStats.achievedDigits).toString(),
+        value: Math.max(
+          0,
+          targetStats.digitTarget - targetStats.achievedDigits,
+        ).toString(),
         subtitle: "Units Needed",
         icon: Target,
-        color: 'text-orange-600',
-        bgColor: 'bg-orange-50',
-        onClick: goToSales
+        color: "text-orange-600",
+        bgColor: "bg-orange-50",
+        onClick: goToSales,
       });
-    } else if (targetStats.targetType === 'amount') {
+    } else if (targetStats.targetType === "amount") {
       cards.push({
         title: "Revenue Target",
         value: `${targetStats.currency} ${targetStats.amountTarget.toLocaleString()}`,
         subtitle: "Monthly Goal",
         icon: DollarSign,
-        color: 'text-purple-600',
-        bgColor: 'bg-purple-50',
-        onClick: goToSales
+        color: "text-purple-600",
+        bgColor: "bg-purple-50",
+        onClick: goToSales,
       });
       cards.push({
         title: "Revenue Achieved",
         value: `${targetStats.currency} ${targetStats.achievedAmount.toLocaleString()}`,
         subtitle: "This Month",
         icon: TrendingUp,
-        color: 'text-green-600',
-        bgColor: 'bg-green-50',
-        onClick: goToSales
+        color: "text-green-600",
+        bgColor: "bg-green-50",
+        onClick: goToSales,
       });
-    } else if (targetStats.targetType === 'both') {
+    } else if (targetStats.targetType === "both") {
       cards.push({
         title: "Digit Target",
         value: `${targetStats.achievedDigits}/${targetStats.digitTarget}`,
         subtitle: "Units Progress",
         icon: Hash,
-        color: 'text-purple-600',
-        bgColor: 'bg-purple-50',
-        onClick: goToSales
+        color: "text-purple-600",
+        bgColor: "bg-purple-50",
+        onClick: goToSales,
       });
       cards.push({
         title: "Revenue Progress",
         value: `${targetStats.currency} ${targetStats.achievedAmount.toLocaleString()}`,
         subtitle: `of ${targetStats.currency} ${targetStats.amountTarget.toLocaleString()}`,
         icon: DollarSign,
-        color: 'text-green-600',
-        bgColor: 'bg-green-50',
-        onClick: goToSales
+        color: "text-green-600",
+        bgColor: "bg-green-50",
+        onClick: goToSales,
       });
     } else {
       // No target type
@@ -1176,36 +1230,56 @@ const HomeScreen = () => {
         value: targetStats.achievedDigits.toString(),
         subtitle: "This Month",
         icon: Target,
-        color: 'text-purple-600',
-        bgColor: 'bg-purple-50',
-        onClick: goToSales
+        color: "text-purple-600",
+        bgColor: "bg-purple-50",
+        onClick: goToSales,
       });
       cards.push({
         title: "Performance",
         value: "N/A",
         subtitle: "No Target Set",
         icon: TrendingUp,
-        color: 'text-gray-600',
-        bgColor: 'bg-gray-50',
-        onClick: goToSales
+        color: "text-gray-600",
+        bgColor: "bg-gray-50",
+        onClick: goToSales,
       });
     }
-    
+
     return cards;
   };
-  
+
   const statCards = getStatCards();
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-8">
-      {/* Header */}
-      <div className="mb-6 px-4 sm:px-6 lg:px-8 pt-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-          Welcome back, {agent?.agentName || agent?.name || "Agent"}!
-        </h1>
-        <p className="text-gray-600 mt-2">
-          Here's your performance overview for {currentMonth}
-        </p>
+    <div className="min-h-screen bg-[#F8FAFC] pb-10">
+      {/* Header Section */}
+      <div className="mb-8 px-4 sm:px-6 lg:px-8 pt-12">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+              Welcome back,{" "}
+              <span className="text-[#10B5DB]">
+                {agent?.agentName || agent?.name || "Agent"}
+              </span>
+              !
+            </h1>
+            <p className="text-gray-500 mt-1.5 font-medium">
+              Here's your performance overview for{" "}
+              <span className="text-gray-800">{currentMonth}</span>
+            </p>
+          </div>
+          <div className="hidden md:flex items-center gap-3">
+            <div className="flex flex-col items-end">
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                Status
+              </span>
+              <span className="flex items-center gap-1.5 text-sm font-semibold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
+                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                Active Now
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Location Card */}
@@ -1215,7 +1289,7 @@ const HomeScreen = () => {
           animate="visible"
           variants={fadeUp}
           custom={1}
-          className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-lg border border-white/50 mb-6 mx-4 sm:mx-6 lg:mx-8"
+          className="bg-white/90 backdrop-blur-xl rounded-3xl p-5 sm:p-7 shadow-xl shadow-blue-500/5 border border-white mb-8 mx-4 sm:mx-6 lg:mx-8"
         >
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-start sm:items-center gap-4 flex-1">
@@ -1232,12 +1306,15 @@ const HomeScreen = () => {
                 {distance !== null && (
                   <p className="text-slate-600 flex items-center gap-2">
                     <Target className="h-4 w-4 text-slate-400" />
-                    Distance from office: <span className="font-semibold text-slate-800">{formatDistance(distance)}</span>
+                    Distance from office:{" "}
+                    <span className="font-semibold text-slate-800">
+                      {formatDistance(distance)}
+                    </span>
                   </p>
                 )}
                 {/* Real-time tracking status */}
                 <div className="flex flex-wrap items-center gap-3 mt-3 text-xs">
-                  <motion.div 
+                  <motion.div
                     className="flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2 py-1 rounded-lg border border-emerald-200"
                     animate={{ opacity: [0.7, 1] }}
                     transition={{ duration: 0.5, repeat: Infinity }}
@@ -1253,7 +1330,9 @@ const HomeScreen = () => {
                   )}
                   {lastLocationUpdate && (
                     <div className="flex items-center gap-1 bg-slate-100 text-slate-700 px-2 py-1 rounded-lg border border-slate-200">
-                      <span>Updated: {lastLocationUpdate.toLocaleTimeString()}</span>
+                      <span>
+                        Updated: {lastLocationUpdate.toLocaleTimeString()}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -1269,28 +1348,44 @@ const HomeScreen = () => {
       )}
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8 px-4 sm:px-6 lg:px-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 mb-8 px-4 sm:px-6 lg:px-8">
         {statCards.map((stat, index) => (
           <motion.div
             key={index}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            whileHover={{ scale: 1.02 }}
+            whileHover={{ y: -5 }}
             onClick={stat.onClick}
-            className="cursor-pointer"
+            className="cursor-pointer group"
           >
-            <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {stat.title}
-                    {stat.subtitle && <span className="text-xs ml-1">({stat.subtitle})</span>}
-                  </p>
+            <div className="bg-white rounded-3xl p-6 shadow-lg shadow-gray-200/50 border border-gray-100 hover:shadow-xl hover:border-[#10B5DB]/20 transition-all duration-300 relative overflow-hidden h-full">
+              {/* Decorative background element */}
+              <div
+                className={cn(
+                  "absolute -right-6 -top-6 w-24 h-24 rounded-full opacity-0 group-hover:opacity-10 transition-opacity duration-300",
+                  stat.bgColor,
+                )}
+              />
+
+              <div className="flex flex-col h-full justify-between relative z-10">
+                <div
+                  className={`p-3 rounded-2xl w-fit ${stat.bgColor} mb-4 transition-transform duration-300 group-hover:scale-110`}
+                >
+                  <stat.icon className={`h-6 w-6 ${stat.color}`} />
                 </div>
-                <div className={`p-2 rounded-lg ${stat.bgColor}`}>
-                  <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                <div>
+                  <p className="text-3xl font-extrabold text-gray-900 tracking-tight mb-1">
+                    {stat.value}
+                  </p>
+                  <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                    {stat.title}
+                  </p>
+                  {stat.subtitle && (
+                    <p className="text-xs font-medium text-gray-400 mt-1">
+                      {stat.subtitle}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -1308,73 +1403,100 @@ const HomeScreen = () => {
           custom={3}
           className="xl:col-span-4"
         >
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 overflow-hidden">
+          <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-xl shadow-gray-200/40 border border-white overflow-hidden h-full">
             {/* Header with Actions */}
-            <div className="p-6 border-b border-slate-100/50">
+            <div className="p-6 border-b border-gray-100 bg-gray-50/50">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="flex items-center">
-                  <div className="p-2 bg-blue-100 rounded-xl mr-3">
-                    <Activity className="h-6 w-6 text-blue-600" />
+                  <div className="p-3 bg-[#10B5DB]/10 rounded-2xl mr-4">
+                    <Activity className="h-6 w-6 text-[#10B5DB]" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-slate-900">Recent Activity</h3>
-                    <p className="text-slate-600 text-sm">Latest bookings and updates</p>
+                    <h3 className="text-xl font-extrabold text-gray-900 tracking-tight">
+                      Recent Activity
+                    </h3>
+                    <p className="text-gray-500 text-sm font-medium">
+                      Latest bookings and updates
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
-                    <Filter className="h-4 w-4 text-slate-600" />
+                  <button className="p-2.5 hover:bg-white hover:shadow-md rounded-xl transition-all duration-200 border border-transparent hover:border-gray-100">
+                    <Filter className="h-4 w-4 text-gray-600" />
                   </button>
-                  <button className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
-                    <Download className="h-4 w-4 text-slate-600" />
+                  <button className="p-2.5 hover:bg-white hover:shadow-md rounded-xl transition-all duration-200 border border-transparent hover:border-gray-100">
+                    <Download className="h-4 w-4 text-gray-600" />
                   </button>
                 </div>
               </div>
             </div>
-            <div className="p-4">
-              <div className="space-y-3">
-                {recentActivity.length > 0 ? recentActivity.map((activity, index) => (
-                  <motion.div
-                    key={activity.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
-                    onClick={goToSales}
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="text-sm font-medium text-gray-900">{activity.message}</p>
-                        {activity.status && (
-                          <span className={`text-xs px-2 py-0.5 rounded-full ${
-                            activity.status.toLowerCase() === 'completed' ? 'bg-green-100 text-green-700' :
-                            activity.status.toLowerCase() === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                            'bg-blue-100 text-blue-700'
-                          }`}>
-                            {activity.status}
-                          </span>
-                        )}
+            <div className="p-6">
+              <div className="space-y-4">
+                {recentActivity.length > 0 ? (
+                  recentActivity.map((activity, index) => (
+                    <motion.div
+                      key={activity.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="flex items-center justify-between p-4 bg-gray-50/50 hover:bg-white hover:shadow-lg hover:shadow-gray-200/30 rounded-2xl transition-all duration-300 cursor-pointer group border border-transparent hover:border-[#10B5DB]/10"
+                      onClick={goToSales}
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-1.5">
+                          <p className="text-[15px] font-bold text-gray-800 group-hover:text-[#10B5DB] transition-colors">
+                            {activity.message}
+                          </p>
+                          {activity.status && (
+                            <span
+                              className={cn(
+                                "text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full",
+                                activity.status.toLowerCase() === "completed"
+                                  ? "bg-emerald-100 text-emerald-700"
+                                  : activity.status.toLowerCase() === "pending"
+                                    ? "bg-amber-100 text-amber-700"
+                                    : "bg-blue-100 text-blue-700",
+                              )}
+                            >
+                              {activity.status}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-4">
+                          {activity.amount && (
+                            <p className="text-sm font-bold text-emerald-600 font-mono">
+                              {activity.amount}
+                            </p>
+                          )}
+                          <p className="text-xs font-semibold text-gray-400 flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {activity.time}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex items-center justify-between mt-1 gap-2">
-                        {activity.amount && (
-                          <p className="text-xs font-semibold text-green-600">{activity.amount}</p>
-                        )}
-                        <p className="text-xs text-gray-500">{activity.time}</p>
+                      <div className="p-2 rounded-xl bg-gray-100 group-hover:bg-[#10B5DB] group-hover:text-white transition-all duration-300">
+                        <ChevronRight className="h-4 w-4" />
                       </div>
+                    </motion.div>
+                  ))
+                ) : (
+                  <div className="text-center py-12 bg-gray-50/50 rounded-3xl border-2 border-dashed border-gray-100">
+                    <div className="p-4 bg-gray-100 rounded-full w-fit mx-auto mb-4">
+                      <Activity className="h-8 w-8 text-gray-300" />
                     </div>
-                    <ChevronRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                  </motion.div>
-                )) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <Activity className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-                    <p>No recent activity</p>
+                    <p className="text-gray-500 font-bold">
+                      No recent activity found
+                    </p>
+                    <p className="text-gray-400 text-sm mt-1">
+                      Your activity will appear here once you start selling.
+                    </p>
                   </div>
                 )}
               </div>
               {recentActivity.length > 0 && (
-                <button 
+                <button
                   onClick={goToSales}
-                  className="w-full mt-4 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-lg text-sm font-medium transition-colors"
+                  className="w-full mt-6 bg-gray-50 hover:bg-[#10B5DB] hover:text-white text-gray-600 py-3.5 rounded-2xl text-[15px] font-bold transition-all duration-300 shadow-sm hover:shadow-lg hover:shadow-[#10B5DB]/20 border border-gray-100 hover:border-[#10B5DB]"
                 >
                   View All Activity
                 </button>
@@ -1407,25 +1529,58 @@ const HomeScreen = () => {
           />
 
           {/* Quick Actions */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="p-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
+          <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-xl shadow-gray-200/40 border border-white overflow-hidden">
+            <div className="p-6 border-b border-gray-100 bg-gray-50/50">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-indigo-100 rounded-xl">
+                  <Zap className="h-5 w-5 text-indigo-600" />
+                </div>
+                <h3 className="text-lg font-extrabold text-gray-900 tracking-tight">
+                  Quick Actions
+                </h3>
+              </div>
             </div>
-            <div className="p-4 space-y-3">
-              <button 
+            <div className="p-6 space-y-4">
+              <button
                 onClick={goToSales}
-                className="w-full text-left bg-blue-50 hover:bg-blue-100 text-blue-700 p-3 rounded-lg text-sm font-medium transition-colors"
+                className="group w-full flex items-center justify-between bg-blue-50/50 hover:bg-blue-600 p-4 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-blue-200 border border-blue-100/50"
               >
-                Add New Lead
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-white rounded-xl shadow-sm group-hover:scale-110 transition-transform">
+                    <Hash className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <span className="text-sm font-bold text-blue-700 group-hover:text-white transition-colors">
+                    Add New Lead
+                  </span>
+                </div>
+                <ChevronRight className="h-4 w-4 text-blue-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
               </button>
-              <button 
+
+              <button
                 onClick={goToAttendance}
-                className="w-full text-left bg-green-50 hover:bg-green-100 text-green-700 p-3 rounded-lg text-sm font-medium transition-colors"
+                className="group w-full flex items-center justify-between bg-emerald-50/50 hover:bg-emerald-600 p-4 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-emerald-200 border border-emerald-100/50"
               >
-                View Attendance
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-white rounded-xl shadow-sm group-hover:scale-110 transition-transform">
+                    <Calendar className="h-5 w-5 text-emerald-600" />
+                  </div>
+                  <span className="text-sm font-bold text-emerald-700 group-hover:text-white transition-colors">
+                    View Attendance
+                  </span>
+                </div>
+                <ChevronRight className="h-4 w-4 text-emerald-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
               </button>
-              <button className="w-full text-left bg-purple-50 hover:bg-purple-100 text-purple-700 p-3 rounded-lg text-sm font-medium transition-colors">
-                Generate Report
+
+              <button className="group w-full flex items-center justify-between bg-purple-50/50 hover:bg-purple-600 p-4 rounded-2xl transition-all duration-300 shadow-sm hover:shadow-purple-200 border border-purple-100/50">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-white rounded-xl shadow-sm group-hover:scale-110 transition-transform">
+                    <TrendingUp className="h-5 w-5 text-purple-600" />
+                  </div>
+                  <span className="text-sm font-bold text-purple-700 group-hover:text-white transition-colors">
+                    Generate Report
+                  </span>
+                </div>
+                <ChevronRight className="h-4 w-4 text-purple-400 group-hover:text-white group-hover:translate-x-1 transition-all" />
               </button>
             </div>
           </div>
