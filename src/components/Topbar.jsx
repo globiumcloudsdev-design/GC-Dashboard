@@ -117,28 +117,28 @@ export default function Topbar({ collapsed }) {
 
   return (
     <header
-      className={`flex items-center justify-between fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 shadow-md rounded-b-xl px-4 sm:px-6 py-3 transition-all duration-300 ${
-        collapsed ? "lg:ml-20" : "lg:ml-60"
+      className={`flex items-center justify-between fixed top-0 left-0 right-0 z-40 h-20 transition-all duration-300 border-b border-gray-200/50 dark:border-slate-800/50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl px-4 sm:px-8 ${
+        collapsed ? "lg:ml-[80px]" : "lg:ml-[280px]"
       }`}
     >
       {/* Left Section */}
-      <div className="flex items-center gap-4 sm:gap-6">
-        <Button variant="ghost" size="icon" className="lg:hidden">
-          <Menu size={20} />
-        </Button>
-
-        <h1 className="text-lg sm:text-xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">
-          <span className="font-bold text-[#10B5DB]">GC</span> Dashboard
+      <div className="flex items-center gap-4">
+        <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+          <span className="text-[#10B5DB] drop-shadow-sm">GC</span>
+          <span className="text-slate-400 font-medium">/</span>
+          <span className="text-sm uppercase tracking-[0.2em] font-bold text-slate-500 mt-0.5">
+            Dashboard
+          </span>
         </h1>
       </div>
 
-      {/* Center Section */}
-      <div className="flex-1 max-w-full sm:max-w-md mx-4 hidden md:flex">
-        <div className="relative w-full">
-          <Search className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+      {/* Center Section (Search Bar) */}
+      <div className="flex-1 max-w-md mx-8 hidden lg:flex">
+        <div className="relative w-full group">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-[#10B5DB] transition-colors" />
           <Input
-            placeholder="Search..."
-            className="pl-10 pr-3 py-2 bg-gray-50 border border-gray-200 dark:bg-gray-800 dark:border-gray-700 focus-visible:ring-2 focus-visible:ring-blue-500 rounded-lg w-full"
+            placeholder="Search resources, users..."
+            className="pl-10 h-10 bg-slate-100/50 border-transparent dark:bg-slate-800/50 focus:bg-white dark:focus:bg-slate-800 focus:ring-1 focus:ring-[#10B5DB]/50 rounded-xl w-full transition-all"
           />
         </div>
       </div>
@@ -162,19 +162,26 @@ export default function Topbar({ collapsed }) {
           <AnimatePresence>
             {showNoti && (
               <motion.div
-                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                initial={{ opacity: 0, y: 15, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                className="absolute right-0 mt-3 w-80 sm:w-[400px] rounded-xl border border-gray-200 bg-white shadow-2xl overflow-hidden dark:border-gray-700 dark:bg-gray-800 z-50"
+                exit={{ opacity: 0, y: 15, scale: 0.95 }}
+                className="absolute right-0 mt-4 w-80 sm:w-[420px] rounded-2xl border border-slate-200 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] overflow-hidden dark:border-slate-800 z-[100]"
               >
-                <div className="bg-gradient-to-r from-[#10B5DB]/5 to-transparent border-b p-4 flex items-center justify-between">
-                  <div className="font-bold text-gray-800 dark:text-gray-100">
-                    Notifications {unreadCount > 0 && `(${unreadCount})`}
+                <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-slate-900 dark:text-white">
+                      Notifications
+                    </span>
+                    {unreadCount > 0 && (
+                      <span className="flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#10B5DB] text-white">
+                        {unreadCount}
+                      </span>
+                    )}
                   </div>
                   {unreadCount > 0 && (
                     <button
                       onClick={() => markAllAsRead()}
-                      className="text-xs text-[#10B5DB] hover:underline font-semibold"
+                      className="text-xs text-[#10B5DB] hover:text-[#0e9ab9] font-bold transition-colors"
                     >
                       Mark all read
                     </button>

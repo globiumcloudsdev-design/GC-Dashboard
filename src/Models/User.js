@@ -41,7 +41,7 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
-        // ✅ ADD SHIFT FIELD HERE
+    // ✅ ADD SHIFT FIELD HERE
     shift: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Shift",
@@ -55,6 +55,8 @@ const userSchema = new mongoose.Schema(
       required: true,
       index: true, // ✅ Keep only this index for role
     },
+    
+    pushTokens: [{ type: String }],
 
     // Account Status
     isActive: {

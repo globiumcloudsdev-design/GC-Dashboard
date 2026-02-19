@@ -126,36 +126,36 @@ export default function AgentTopbar({ collapsed, toggleSidebar, isOpen }) {
 
   return (
     <header
-      className={`flex items-center justify-between fixed top-0 left-0 right-0 z-40 bg-white dark:bg-gray-900 shadow-md rounded-b-xl h-20 transition-all duration-300 overflow-visible ${
-        collapsed
-          ? "lg:left-[80px] lg:right-0 lg:px-4 lg:sm:px-6"
-          : "lg:left-[300px] lg:right-0 lg:px-4 lg:sm:px-6"
+      className={`flex items-center justify-between fixed top-0 left-0 right-0 z-40 h-20 transition-all duration-300 border-b border-gray-200/50 dark:border-slate-800/50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl px-4 sm:px-8 ${
+        collapsed ? "lg:left-[80px]" : "lg:left-[300px]"
       }`}
     >
       {/* Left Section */}
-      <div className="flex items-center gap-4 sm:gap-6">
-        {/* Mobile Menu Button */}
+      <div className="flex items-center gap-4">
         <Button
           variant="ghost"
           size="icon"
           onClick={toggleSidebar}
-          className="lg:hidden hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full p-2"
-          aria-label="Toggle sidebar"
+          className="lg:hidden hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"
         >
           <Menu size={20} />
         </Button>
-        <h1 className="text-lg sm:text-xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">
-          <span className="font-bold text-[#10B5DB]">Agent</span> Dashboard
+        <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+          <span className="text-[#10B5DB] drop-shadow-sm">Agent</span>
+          <span className="text-slate-400 font-medium">/</span>
+          <span className="text-sm uppercase tracking-[0.2em] font-bold text-slate-500 mt-0.5">
+            Portal
+          </span>
         </h1>
       </div>
 
       {/* Center Section (Search Bar) */}
-      <div className="flex-1 max-w-full sm:max-w-md mx-4 hidden md:flex">
-        <div className="relative w-full">
-          <Search className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+      <div className="flex-1 max-w-md mx-8 hidden lg:flex">
+        <div className="relative w-full group">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-[#10B5DB] transition-colors" />
           <Input
-            placeholder="Search..."
-            className="pl-10 pr-3 py-2 bg-gray-50 border border-gray-200 dark:bg-gray-800 dark:border-gray-700 focus-visible:ring-2 focus-visible:ring-blue-500 rounded-lg w-full"
+            placeholder="Search activities, docs..."
+            className="pl-10 h-10 bg-slate-100/50 border-transparent dark:bg-slate-800/50 focus:bg-white dark:focus:bg-slate-800 focus:ring-1 focus:ring-[#10B5DB]/50 rounded-xl w-full transition-all"
           />
         </div>
       </div>
@@ -182,35 +182,32 @@ export default function AgentTopbar({ collapsed, toggleSidebar, isOpen }) {
           <AnimatePresence>
             {showNoti && (
               <motion.div
-                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                initial={{ opacity: 0, y: 15, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
-                className="absolute right-0 mt-3 w-80 sm:w-[420px] rounded-2xl border border-gray-200 bg-white shadow-2xl overflow-hidden dark:border-gray-700 dark:bg-gray-800 z-50"
-                style={{ zIndex: 1000 }}
+                exit={{ opacity: 0, y: 15, scale: 0.95 }}
+                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                className="absolute right-0 mt-4 w-80 sm:w-[420px] rounded-2xl border border-slate-200 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] overflow-hidden dark:border-slate-800 z-[100]"
               >
                 {/* Header */}
-                <div className="bg-gradient-to-r from-[#10B5DB]/5 to-blue-50 dark:from-[#10B5DB]/10 dark:to-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-gray-800 dark:text-gray-100 text-base">
-                        Notifications
-                      </h3>
-                      {unreadCount > 0 && (
-                        <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-semibold bg-[#10B5DB] text-white">
-                          {unreadCount}
-                        </span>
-                      )}
-                    </div>
+                <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-slate-900 dark:text-white text-base">
+                      Notifications
+                    </span>
                     {unreadCount > 0 && (
-                      <button
-                        onClick={() => markAllAsRead()}
-                        className="text-xs text-[#10B5DB] hover:text-[#0a8fb3] font-semibold transition-colors duration-150 hover:underline"
-                      >
-                        ✓ Mark all read
-                      </button>
+                      <span className="flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#10B5DB] text-white">
+                        {unreadCount}
+                      </span>
                     )}
                   </div>
+                  {unreadCount > 0 && (
+                    <button
+                      onClick={() => markAllAsRead()}
+                      className="text-xs text-[#10B5DB] hover:text-[#0a8fb3] font-bold transition-colors duration-150"
+                    >
+                      ✓ Mark all read
+                    </button>
+                  )}
                 </div>
 
                 {/* Notifications List */}

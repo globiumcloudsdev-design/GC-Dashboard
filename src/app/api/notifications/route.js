@@ -139,6 +139,7 @@ import Notification from "@/Models/Notification";
 import User from "@/Models/User";
 import Role from "@/Models/Role"; // Isay lazmi import rakhein
 import { verifyAuth } from "@/lib/auth";
+import { createAndSendNotification } from "@/lib/notificationHelper";
 
 // ✅ GET: Fetch Notifications (Admin vs Agent Logic)
 export async function GET(req) {
@@ -172,59 +173,149 @@ export async function GET(req) {
       };
     }
 
-    const notifications = await Notification.find(query)
-      .sort({ createdAt: -1 })
-      .populate("createdBy", "firstName lastName")
-      .lean();
+    const { searchParams } = new URL(req.url);
+    const page = parseInt(searchParams.get("page")) || 1;
+    const limit = parseInt(searchParams.get("limit")) || 10;
+    const search = searchParams.get("search") || "";
+    const skip = (page - 1) * limit;
 
-    return NextResponse.json(notifications, { status: 200 });
+    if (search) {
+      query.$and = [
+        { ...query },
+        {
+          $or: [
+            { title: { $regex: search, $options: "i" } },
+            { message: { $regex: search, $options: "i" } }
+          ]
+        }
+      ];
+    }
+
+    const [notifications, total] = await Promise.all([
+      Notification.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate("createdBy", "firstName lastName")
+        .populate("targetUsers", "agentName agentId firstName lastName email")
+        .lean(),
+      Notification.countDocuments(query)
+    ]);
+
+    return NextResponse.json({
+      success: true,
+      data: notifications,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    }, { status: 200 });
   } catch (error) {
     return NextResponse.json({ message: "Error", error: error.message }, { status: 500 });
   }
 }
 
 // ✅ POST: Create Notification (Sirf Admin/Super Admin)
+// export async function POST(req) {
+//   await connectDB();
+//   const auth = await verifyAuth(req);
+//   if (auth.error) return NextResponse.json({ message: auth.error }, { status: auth.status });
+
+//   try {
+//     // ——— STEP 1: Role detect karna (Multiple methods se) ———
+//     let roleName = "";
+
+//     // Method 1: Token se role check karo (fastest - no DB call)
+//     if (auth.userRole) {
+//       roleName = auth.userRole;
+//       console.log("📌 [POST Notification] Role from token:", roleName);
+//     }
+
+//     // Method 2: DB se User + Role populate karein (fallback)
+//     if (!roleName || roleName === "user") {
+//       const dbUser = await User.findById(auth.userId).populate("role");
+//       console.log("📌 [POST Notification] DB User found:", !!dbUser);
+//       console.log("📌 [POST Notification] DB User role object:", dbUser?.role);
+//       console.log("📌 [POST Notification] DB User role name:", dbUser?.role?.name);
+
+//       if (dbUser?.role?.name) {
+//         roleName = dbUser.role.name;
+//       }
+//     }
+
+//     // ——— STEP 2: Normalize role name aggressively ———
+//     // "Super Admin" / "super-admin" / "super_admin" / "SuperAdmin" → sab "superadmin" ban jayega
+//     const normalizedRole = roleName
+//       .toLowerCase()
+//       .trim()
+//       .replace(/[\s_\-]+/g, ""); // Remove ALL spaces, underscores, hyphens
+
+//     console.log("📌 [POST Notification] Final role check:", {
+//       original: roleName,
+//       normalized: normalizedRole,
+//     });
+
+//     // ——— STEP 3: Security Check ———
+//     const allowedRoles = ["admin", "superadmin"]; // normalized forms
+//     if (!allowedRoles.includes(normalizedRole)) {
+//       return NextResponse.json(
+//         { message: "Unauthorized: Admins only", debug: { original: roleName, normalized: normalizedRole } },
+//         { status: 403 }
+//       );
+//     }
+
+//     // ——— STEP 4: Create Notification ———
+//     const { title, message, targetType, targetUsers } = await req.json();
+
+//     const newNotification = await Notification.create({
+//       title,
+//       message,
+//       targetType: targetType || "all",
+//       targetUsers: targetType === "specific" ? targetUsers : [],
+//       createdBy: auth.userId,
+//     });
+
+//     return NextResponse.json({ message: "Notification sent!", notification: newNotification }, { status: 201 });
+
+//     const { title, message, targetType, targetUsers } = await req.json();
+
+//     await createAndSendNotification({
+//       title,
+//       message,
+//       type: "announcement",
+//       targetType,
+//       targetUsers
+//     });
+
+//     return NextResponse.json({ message: "Notification Sent" });
+//   } catch (error) {
+//     console.error("❌ [POST Notification] Error:", error);
+//     return NextResponse.json({ message: "Post error", error: error.message }, { status: 500 });
+//   }
+// }
+
 export async function POST(req) {
   await connectDB();
   const auth = await verifyAuth(req);
   if (auth.error) return NextResponse.json({ message: auth.error }, { status: auth.status });
 
   try {
-    // ——— STEP 1: Role detect karna (Multiple methods se) ———
+    // --- STEP 1: Role detect karna ---
     let roleName = "";
-
-    // Method 1: Token se role check karo (fastest - no DB call)
     if (auth.userRole) {
       roleName = auth.userRole;
-      console.log("📌 [POST Notification] Role from token:", roleName);
-    }
-
-    // Method 2: DB se User + Role populate karein (fallback)
-    if (!roleName || roleName === "user") {
+    } else {
       const dbUser = await User.findById(auth.userId).populate("role");
-      console.log("📌 [POST Notification] DB User found:", !!dbUser);
-      console.log("📌 [POST Notification] DB User role object:", dbUser?.role);
-      console.log("📌 [POST Notification] DB User role name:", dbUser?.role?.name);
-
-      if (dbUser?.role?.name) {
-        roleName = dbUser.role.name;
-      }
+      roleName = dbUser?.role?.name || "";
     }
 
-    // ——— STEP 2: Normalize role name aggressively ———
-    // "Super Admin" / "super-admin" / "super_admin" / "SuperAdmin" → sab "superadmin" ban jayega
-    const normalizedRole = roleName
-      .toLowerCase()
-      .trim()
-      .replace(/[\s_\-]+/g, ""); // Remove ALL spaces, underscores, hyphens
+    // Aggressive Normalization
+    const normalizedRole = roleName.toLowerCase().trim().replace(/[\s_\-]+/g, "");
 
-    console.log("📌 [POST Notification] Final role check:", {
-      original: roleName,
-      normalized: normalizedRole,
-    });
-
-    // ——— STEP 3: Security Check ———
-    const allowedRoles = ["admin", "superadmin"]; // normalized forms
+    // --- STEP 2: Security Check ---
+    const allowedRoles = ["admin", "superadmin"];
     if (!allowedRoles.includes(normalizedRole)) {
       return NextResponse.json(
         { message: "Unauthorized: Admins only", debug: { original: roleName, normalized: normalizedRole } },
@@ -232,18 +323,33 @@ export async function POST(req) {
       );
     }
 
-    // ——— STEP 4: Create Notification ———
-    const { title, message, targetType, targetUsers } = await req.json();
+    // --- STEP 3: Get Data & Send via Helper ---
+    // Body ko aik hi baar parse karein
+    const { title, message, targetType, targetUsers, type } = await req.json();
 
-    const newNotification = await Notification.create({
+    if (!title || !message) {
+      return NextResponse.json({ message: "Title and message are required" }, { status: 400 });
+    }
+
+    // Hum apna Global Helper use karenge jo DB aur Push dono handle karega
+    const notification = await createAndSendNotification({
       title,
       message,
+      type: type || "announcement", // manual announcement
       targetType: targetType || "all",
       targetUsers: targetType === "specific" ? targetUsers : [],
-      createdBy: auth.userId,
+      targetModel: "Agent",
+      metadata: {
+        senderName: "Admin",
+        clickAction: "NOTIFICATION_LIST" // Mobile app ko batane ke liye kahan jana hai
+      }
     });
 
-    return NextResponse.json({ message: "Notification sent!", notification: newNotification }, { status: 201 });
+    return NextResponse.json({
+      message: "Notification sent successfully to DB and Mobile!",
+      notification
+    }, { status: 201 });
+
   } catch (error) {
     console.error("❌ [POST Notification] Error:", error);
     return NextResponse.json({ message: "Post error", error: error.message }, { status: 500 });

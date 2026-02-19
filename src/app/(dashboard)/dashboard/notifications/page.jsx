@@ -39,6 +39,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
@@ -77,6 +86,9 @@ export default function NotificationsAdminPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const itemsPerPage = 10;
 
   // Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -95,23 +107,40 @@ export default function NotificationsAdminPage() {
   // Fetch data on mount
   useEffect(() => {
     if (canView) {
-      fetchNotifications();
+      fetchNotifications(currentPage, searchTerm);
       fetchAgents();
     }
-  }, [canView]);
+  }, [canView, currentPage, viewAgent]);
 
-  const fetchNotifications = async (agentId = null) => {
+  // Debounced search
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (canView) {
+        setCurrentPage(1);
+        fetchNotifications(1, searchTerm);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm]);
+
+  const fetchNotifications = async (page = 1, search = "") => {
     setLoading(true);
     let result;
-    if (agentId && agentId !== "all") {
-      result = await notificationService.getNotificationsForAgent(agentId);
-    } else {
-      // ✅ Pass 'true' to get all admin-level data
-      result = await notificationService.getAllNotifications(true);
-    }
+    // Note: viewAgent filtering is currently client-side or re-fetches.
+    // To be fast, we use the main API with page/limit/search.
+    result = await notificationService.getAllNotifications(
+      true,
+      page,
+      itemsPerPage,
+      search,
+    );
 
     if (result.success) {
       setNotifications(result.data);
+      if (result.pagination) {
+        setTotalPages(result.pagination.totalPages);
+      }
     } else {
       toast.error(result.message);
     }
@@ -120,7 +149,7 @@ export default function NotificationsAdminPage() {
 
   const fetchAgents = async () => {
     try {
-      const res = await agentService.getAllAgents();
+      const res = await agentService.getAllAgents({ limit: 500 }); // Saare load karne ki bajaye reasonable limit
       setAgents(res.agents || []);
     } catch (err) {
       console.error("Failed to fetch agents", err);
@@ -235,11 +264,18 @@ export default function NotificationsAdminPage() {
     }
   };
 
-  const filteredNotifications = notifications.filter(
-    (n) =>
-      n.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      n.message.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const displayNotifications = notifications;
+
+  useEffect(() => {
+    // Initial search or page change handled by fetchNotifications side effect
+  }, [searchTerm]);
+
+  const getAgentName = (id) => {
+    const agent = agents.find((a) => a._id === id || a.agentId === id);
+    return agent
+      ? `${agent.agentName} (${agent.agentId || "N/A"})`
+      : `ID: ${id.substring(0, 8)}...`;
+  };
 
   if (!canView)
     return (
@@ -328,7 +364,7 @@ export default function NotificationsAdminPage() {
               <Loader2 className="h-10 w-10 animate-spin text-[#10B5DB] mb-2" />
               <p className="text-sm font-medium">Fetching history...</p>
             </div>
-          ) : filteredNotifications.length === 0 ? (
+          ) : displayNotifications.length === 0 ? (
             <div className="text-center py-20 text-muted-foreground">
               <Megaphone className="h-16 w-16 mx-auto mb-4 opacity-5 bg-gray-100 rounded-full p-4" />
               <p className="text-lg font-medium">No results found</p>
@@ -351,20 +387,31 @@ export default function NotificationsAdminPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  <AnimatePresence>
-                    {filteredNotifications.map((n, idx) => (
+                  <AnimatePresence mode="wait">
+                    {displayNotifications.map((n, idx) => (
                       <motion.tr
                         key={n._id}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.05 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.2 }}
                         className="group hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors"
                       >
                         <TableCell>
                           <div className="flex flex-col">
-                            <span className="font-bold text-gray-900 dark:text-gray-100">
-                              {n.title}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-gray-900 dark:text-gray-100">
+                                {n.title}
+                              </span>
+                              {n.isEdited && (
+                                <Badge
+                                  variant="outline"
+                                  className="text-[9px] h-4 px-1 py-0 border-orange-200 text-orange-600 bg-orange-50 font-medium"
+                                >
+                                  Edited
+                                </Badge>
+                              )}
+                            </div>
                             <span className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
                               {n.message}
                             </span>
@@ -401,9 +448,7 @@ export default function NotificationsAdminPage() {
                                           (target.agentId
                                             ? ` (${target.agentId})`
                                             : "")
-                                        : "ID: " +
-                                          target.substring(0, 8) +
-                                          "..."}
+                                        : getAgentName(target)}
                                     </span>
                                   ))}
                                 </div>
@@ -471,6 +516,72 @@ export default function NotificationsAdminPage() {
             </div>
           )}
         </CardContent>
+        {totalPages > 1 && (
+          <div className="p-4 border-t bg-gray-50/30">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(1, prev - 1))
+                    }
+                    disabled={currentPage === 1}
+                    className={
+                      currentPage === 1
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                  />
+                </PaginationItem>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => {
+                    // Show current page, first, last, and one before/after current
+                    if (
+                      page === 1 ||
+                      page === totalPages ||
+                      (page >= currentPage - 1 && page <= currentPage + 1)
+                    ) {
+                      return (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            onClick={() => setCurrentPage(page)}
+                            isActive={currentPage === page}
+                            className="cursor-pointer"
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    }
+                    if (page === currentPage - 2 || page === currentPage + 2) {
+                      return (
+                        <PaginationItem key={page}>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      );
+                    }
+                    return null;
+                  },
+                )}
+
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                    }
+                    disabled={currentPage === totalPages}
+                    className={
+                      currentPage === totalPages
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
       </Card>
 
       {/* Create/Edit Dashboard Modal */}

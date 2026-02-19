@@ -48,6 +48,10 @@ const NotificationSchema = new mongoose.Schema(
     isActive: {
       type: Boolean,
       default: true
+    },
+    isEdited: {
+      type: Boolean,
+      default: false
     }
   },
   {

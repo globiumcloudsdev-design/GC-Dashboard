@@ -3,14 +3,17 @@ import api from '@/lib/api';
 
 export const notificationService = {
   // GET ALL - Admin ke liye
-  getAllNotifications: async (isAdmin = false) => {
+  getAllNotifications: async (isAdmin = false, page = 1, limit = 20, search = "") => {
     try {
-      const url = isAdmin ? '/notifications?type=admin' : '/notifications';
+      const url = isAdmin
+        ? `/notifications?type=admin&page=${page}&limit=${limit}&search=${search}`
+        : `/notifications?page=${page}&limit=${limit}&search=${search}`;
       const response = await api.get(url);
       return {
         success: true,
-        data: response.data,
-        message: 'Notifications fetched successfully'
+        data: response.data.data || response.data,
+        pagination: response.data.pagination,
+        message: "Notifications fetched successfully",
       };
     } catch (error) {
       return {
