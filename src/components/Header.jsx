@@ -139,38 +139,54 @@ export default function Header() {
     <motion.header
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${
+      transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+      className={`fixed top-0 left-0 right-0 z-[100] py-4 transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] border-b ${
         isScrolled
-          ? "py-3 bg-white/80 backdrop-blur-xl shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] border-b border-white/20"
-          : "py-6 bg-transparent"
+          ? "bg-white/80 backdrop-blur-2xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.08)] border-gray-100"
+          : "bg-transparent border-transparent"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         {/* Logo Section */}
         <motion.div
           onClick={() => router.push("/")}
-          className="flex items-center gap-2 cursor-pointer group"
+          className="flex items-center gap-3 cursor-pointer group"
           whileHover={{ scale: 1.02 }}
+          transition={{ duration: 0.4 }}
         >
-          <div
-            className={`relative transition-all duration-500 ${isScrolled ? "w-12 h-12" : "w-16 h-16"}`}
-          >
-            <Image
-              src={isScrolled ? "/images/GCLogo.png" : "/GCLogowhite.png"}
-              alt="Globium Clouds Logo"
-              fill
-              className="object-contain"
-              priority
-            />
+          <div className="relative w-12 h-12 transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] text-center">
+            {/* Cross-fading Logos for Soft Transition */}
+            <div
+              className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${isScrolled ? "opacity-100" : "opacity-0"}`}
+            >
+              <Image
+                src="/images/GCLogo.png"
+                alt="Globium Clouds Logo"
+                fill
+                className="object-contain"
+                priority
+              />
+            </div>
+            <div
+              className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${isScrolled ? "opacity-0" : "opacity-100"}`}
+            >
+              <Image
+                src="/GCLogowhite.png"
+                alt="Globium Clouds Logo white"
+                fill
+                className="object-contain"
+                priority
+              />
+            </div>
           </div>
           <div className="flex flex-col">
             <span
-              className={`text-xl font-black tracking-tighter transition-colors duration-500 ${isScrolled ? "text-[#0A0F14]" : "text-white"}`}
+              className={`text-xl font-black tracking-tighter transition-colors duration-700 ease-in-out ${isScrolled ? "text-[#0A0F14]" : "text-white"}`}
             >
               GLOBIUM <span className="text-[#10B5DB]">CLOUDS</span>
             </span>
             <span
-              className={`text-[8px] font-bold tracking-[0.4em] uppercase transition-colors duration-500 ${isScrolled ? "text-gray-400" : "text-gray-300"}`}
+              className={`text-[8px] font-bold tracking-[0.4em] uppercase transition-colors duration-700 ease-in-out ${isScrolled ? "text-gray-400" : "text-gray-300"}`}
             >
               Limitless Innovation
             </span>

@@ -34,7 +34,9 @@ export default function BlogsPage() {
       const res = await blogService.list({ page: 1, limit: 50 });
       if (res?.success) {
         // Only show published blogs
-        const publishedBlogs = (res.data.blogs || []).filter(blog => blog.status === "published");
+        const publishedBlogs = (res.data.blogs || []).filter(
+          (blog) => blog.status === "published",
+        );
         setBlogs(publishedBlogs);
       }
     } catch (err) {
@@ -53,19 +55,21 @@ export default function BlogsPage() {
     });
   };
 
-  const categories = ["all", ...new Set(blogs.map(blog => blog.category))];
+  const categories = ["all", ...new Set(blogs.map((blog) => blog.category))];
 
-  const filteredBlogs = blogs.filter(blog => {
-    const matchesSearch = blog.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         blog.excerpt?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === "all" || blog.category === selectedCategory;
+  const filteredBlogs = blogs.filter((blog) => {
+    const matchesSearch =
+      blog.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      blog.excerpt?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory =
+      selectedCategory === "all" || blog.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
   return (
     <div className="min-h-screen bg-[#0A0F14]">
       <Header />
-      
+
       {/* Hero Section */}
       <section className="relative pt-32 pb-16 bg-[#0A0F14] overflow-hidden">
         {/* Background Elements */}
@@ -74,7 +78,7 @@ export default function BlogsPage() {
           <div className="absolute top-20 -right-20 w-96 h-96 bg-[#10B5DB]/20 rounded-full blur-[120px] animate-pulse" />
           <div className="absolute bottom-20 -left-20 w-96 h-96 bg-purple-600/20 rounded-full blur-[120px] animate-pulse" />
         </div>
-        
+
         <div className="relative z-10 max-w-7xl mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -93,32 +97,51 @@ export default function BlogsPage() {
             <p className="text-xl md:text-2xl mb-8 text-gray-300 max-w-3xl mx-auto">
               Insights, updates, and stories from our team
             </p>
-            
-            {/* Search and Filter */}
-            <div className="max-w-2xl mx-auto bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-2xl">
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                  <Input
-                    placeholder="Search blogs..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 h-12 text-lg bg-white/10 border-white/20 text-white placeholder:text-gray-400"
-                  />
+
+            {/* Search and Filter Control Center */}
+            <div className="max-w-3xl mx-auto mt-12 mb-10 group">
+              <div className="relative p-2 bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] transition-all duration-300 hover:border-[#10B5DB]/30">
+                <div className="flex flex-col md:flex-row items-center gap-2">
+                  {/* Search Field */}
+                  <div className="relative flex-1 w-full">
+                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-[#10B5DB] h-5 w-5 opacity-60 pointer-events-none" />
+                    <Input
+                      placeholder="Search for articles..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full h-14 pl-14 pr-6 bg-white/5 border-transparent focus:border-transparent focus:ring-0 text-white placeholder:text-gray-500 rounded-[1.4rem] transition-all text-base"
+                    />
+                  </div>
+
+                  {/* Vertical Divider (Desktop) */}
+                  <div className="hidden md:block w-px h-8 bg-white/10" />
+
+                  {/* Category Filter */}
+                  <div className="relative w-full md:w-[220px]">
+                    <Select
+                      value={selectedCategory}
+                      onValueChange={setSelectedCategory}
+                    >
+                      <SelectTrigger className="w-full h-14 pl-4 pr-6 bg-transparent border-transparent focus:ring-0 text-white rounded-[1.4rem] hover:bg-white/5 transition-all">
+                        <div className="flex items-center gap-3">
+                          <Filter className="h-4 w-4 text-[#10B5DB] opacity-60" />
+                          <SelectValue placeholder="All Categories" />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#0D1219]/95 backdrop-blur-2xl border-white/10 text-white rounded-2xl shadow-3xl">
+                        {categories.map((cat) => (
+                          <SelectItem
+                            key={cat}
+                            value={cat}
+                            className="focus:bg-[#10B5DB]/20 focus:text-white cursor-pointer rounded-lg mx-1 py-3"
+                          >
+                            {cat === "all" ? "All Categories" : cat}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="w-full md:w-48 h-12 bg-white/10 border-white/20 text-white">
-                    <Filter className="h-4 w-4 mr-2" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat === "all" ? "All Categories" : cat}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
             </div>
           </motion.div>
@@ -129,7 +152,7 @@ export default function BlogsPage() {
       <section className="relative py-20 bg-[#0A0F14] overflow-hidden">
         {/* Background pattern */}
         <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%220%200%2040%2040%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M0%2040%20L40%2040%20L40%200%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff10%22%20stroke-width%3D%220.5%22/%3E%3C/svg%3E')] opacity-20"></div>
-        
+
         <div className="relative z-10 max-w-7xl mx-auto px-6">
           {loading ? (
             <div className="text-center">
@@ -143,7 +166,8 @@ export default function BlogsPage() {
             <>
               <div className="mb-8">
                 <p className="text-gray-300">
-                  Showing {filteredBlogs.length} {filteredBlogs.length === 1 ? 'blog' : 'blogs'}
+                  Showing {filteredBlogs.length}{" "}
+                  {filteredBlogs.length === 1 ? "blog" : "blogs"}
                 </p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -178,7 +202,7 @@ export default function BlogsPage() {
                       <h3 className="text-xl font-bold mb-3 text-white group-hover:text-[#10B5DB] transition-colors line-clamp-2">
                         {blog.title}
                       </h3>
-                      
+
                       {blog.excerpt && (
                         <p className="text-gray-300 mb-4 line-clamp-3">
                           {blog.excerpt}
@@ -205,7 +229,8 @@ export default function BlogsPage() {
                       {blog.author && (
                         <div className="flex items-center gap-2 pt-4 border-t border-white/10">
                           <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#10B5DB] to-purple-600 flex items-center justify-center text-white text-sm font-semibold">
-                            {blog.author.firstName?.[0]}{blog.author.lastName?.[0]}
+                            {blog.author.firstName?.[0]}
+                            {blog.author.lastName?.[0]}
                           </div>
                           <span className="text-sm font-medium text-white">
                             {blog.author.firstName} {blog.author.lastName}
