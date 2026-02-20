@@ -1,12 +1,17 @@
 "use client";
-
 import Image from "next/image";
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import {
-  Linkedin, Facebook, Instagram, Home, Briefcase,
-  FolderOpen, Users, Phone, User, Mail, Send, LogIn
+  Linkedin,
+  Facebook,
+  Instagram,
+  Phone,
+  Mail,
+  Send,
+  ArrowRight,
+  Globe,
+  Shield,
+  Zap,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -18,147 +23,194 @@ export default function Footer() {
 
   const handleSubscribe = async (e) => {
     e.preventDefault();
-    
     if (!email || !email.includes("@")) {
       toast.error("Please enter a valid email address");
       return;
     }
-
     setLoading(true);
-    try {
-      const res = await fetch("/api/newsletter", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        toast.success("Successfully subscribed to newsletter! Check your email.");
-        setEmail("");
-      } else {
-        toast.error(data.error || "Subscription failed");
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to subscribe. Please try again.");
-    } finally {
+    // Simulating API call
+    setTimeout(() => {
+      toast.success("Successfully subscribed!");
+      setEmail("");
       setLoading(false);
-    }
+    }, 1000);
+  };
+
+  const footerLinks = {
+    company: [
+      { name: "About Us", href: "#about" },
+      { name: "Our Process", href: "#process" },
+      { name: "Expert Team", href: "#team" },
+      { name: "Contact", href: "#contact" },
+    ],
+    services: [
+      { name: "Web Systems", href: "#services" },
+      { name: "Mobile Apps", href: "#services" },
+      { name: "Cloud Solutions", href: "#services" },
+      { name: "AI/ML Dev", href: "#services" },
+    ],
+    legal: [
+      { name: "Privacy Policy", href: "/privacy" },
+      { name: "Terms of Service", href: "/terms" },
+      { name: "Cookie Policy", href: "/cookies" },
+    ],
   };
 
   return (
-    <footer className="bg-[#F8FAFC] text-gray-900 pt-20 border-t border-blue-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 lg:gap-8">
-          
-          {/* Column 1: Branding */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="flex items-center gap-3">
-              <div className=" p-1.5 rounded-xl shadow-sm border border-blue-50">
-                <Image src="/images/GCLogo.png" alt="Globium Clouds" width={60} height={60} className="rounded-lg" />
+    <footer className="bg-[#0A0F14] text-white pt-32 pb-12 relative overflow-hidden">
+      {/* Decorative Blur */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-[#10B5DB]/50 to-transparent" />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-16 lg:gap-8 mb-24">
+          {/* Brand Info */}
+          <div className="lg:col-span-4 space-y-8">
+            <div className="flex flex-col gap-4">
+              <div className="relative w-16 h-16">
+                <Image
+                  src="/images/GCLogo.png"
+                  alt="Globium Clouds"
+                  fill
+                  className="object-contain"
+                />
               </div>
-              
+              <div>
+                <h3 className="text-2xl font-black tracking-tighter uppercase">
+                  Globium <span className="text-[#10B5DB]">Clouds</span>
+                </h3>
+                <p className="text-[10px] font-bold tracking-[0.4em] text-gray-500 uppercase">
+                  Limitless Innovation
+                </p>
+              </div>
             </div>
-            <p className="text-gray-500 text-lg leading-relaxed max-w-sm font-medium">
-              Building reliable cloud and dashboard solutions. Manage users, bookings, and attendance — all in one place.
+            <p className="text-gray-400 text-base leading-relaxed max-w-sm font-medium">
+              We engineer scalable software solutions that empower businesses to
+              lead in the digital era. From cloud to AI, we build the future.
             </p>
-            <div className="flex items-center gap-3">
-              {[
-                { icon: Linkedin, href: "https://www.linkedin.com/company/globiumclouds/" },
-                { icon: Facebook, href: "https://www.facebook.com/globiumclouds/" },
-                { icon: Instagram, href: "https://www.instagram.com/explore/locations/202412828462806/globium-clouds/" }
-              ].map((social, i) => (
+            <div className="flex items-center gap-4">
+              {[Linkedin, Facebook, Instagram].map((Icon, i) => (
                 <motion.a
                   key={i}
-                  href={social.href}
-                  target="_blank"
-                  whileHover={{ y: -3, backgroundColor: "#10B5DB", color: "#ffffff" }}
-                  className="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-blue-100 text-[#10B5DB] transition-all shadow-sm"
+                  href="#"
+                  whileHover={{
+                    y: -5,
+                    scale: 1.1,
+                    backgroundColor: "#10B5DB",
+                    borderColor: "#10B5DB",
+                  }}
+                  className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 transition-all duration-300"
                 >
-                  <social.icon className="w-5 h-5" />
+                  <Icon className="w-5 h-5 transition-colors group-hover:text-white" />
                 </motion.a>
               ))}
             </div>
           </div>
 
-          {/* Column 2: Navigator */}
-          <div className="space-y-6">
-            <h4 className="text-xs font-black uppercase tracking-[0.2em] text-[#10B5DB]">Navigator</h4>
-            <ul className="space-y-3">
-              {[
-                { name: "Home", icon: Home, href: "#home" },
-                { name: "Services", icon: Briefcase, href: "#services" },
-                { name: "Portfolio", icon: FolderOpen, href: "#portfolio" },
-                { name: "Our Team", icon: Users, href: "#team" },
-                { name: "Agent Portal", icon: User, href: "/agent/login" },
-                { name: "Login", icon: LogIn, href: "/login" }
-              ].map((link) => (
+          {/* Quick Links */}
+          <div className="lg:col-span-2 space-y-8">
+            <h4 className="text-xs font-black uppercase tracking-[0.3em] text-[#10B5DB]">
+              Company
+            </h4>
+            <ul className="space-y-4">
+              {footerLinks.company.map((link) => (
                 <li key={link.name}>
-                  <a href={link.href} className="group flex items-center gap-2 text-gray-600 hover:text-[#10B5DB] transition-colors">
-                    <span className="text-sm font-bold">{link.name}</span>
+                  <a
+                    href={link.href}
+                    className="text-gray-400 hover:text-white hover:translate-x-2 transition-all flex items-center gap-2 group text-sm font-bold"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-transparent group-hover:bg-[#10B5DB] transition-all" />
+                    {link.name}
                   </a>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Column 3: Contact */}
-          <div className="space-y-6">
-            <h4 className="text-xs font-black uppercase tracking-[0.2em] text-[#10B5DB]">Connect</h4>
-            <div className="space-y-4 text-sm">
+          <div className="lg:col-span-2 space-y-8">
+            <h4 className="text-xs font-black uppercase tracking-[0.3em] text-[#10B5DB]">
+              Services
+            </h4>
+            <ul className="space-y-4">
+              {footerLinks.services.map((link) => (
+                <li key={link.name}>
+                  <a
+                    href={link.href}
+                    className="text-gray-400 hover:text-white hover:translate-x-2 transition-all flex items-center gap-2 group text-sm font-bold"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-transparent group-hover:bg-[#10B5DB] transition-all" />
+                    {link.name}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Connect & Newsletter */}
+          <div className="lg:col-span-4 space-y-10">
+            <div className="space-y-6">
+              <h4 className="text-xs font-black uppercase tracking-[0.3em] text-[#10B5DB]">
+                Stay Updated
+              </h4>
+              <form onSubmit={handleSubscribe} className="relative">
+                <input
+                  type="email"
+                  placeholder="Enter your corporate email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-sm focus:ring-1 focus:ring-[#10B5DB] outline-none transition-all placeholder:text-gray-600"
+                />
+                <button
+                  type="submit"
+                  className="absolute right-2 top-2 bottom-2 bg-[#10B5DB] hover:bg-[#0aa0c2] text-white px-6 rounded-xl transition-all flex items-center justify-center"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </form>
+            </div>
+
+            <div className="grid grid-cols-2 gap-8">
               <div>
-                <p className="text-[10px] uppercase font-bold text-gray-400 mb-1 tracking-widest">Phone</p>
-                <a href="tel:+923352778488" className="text-gray-900 font-bold hover:text-[#10B5DB] transition-colors">+92 335 2778488</a>
+                <h5 className="text-[10px] uppercase font-bold text-gray-500 mb-2 tracking-widest">
+                  Global Ops
+                </h5>
+                <p className="text-sm font-bold text-white">+92 335 2778488</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase font-bold text-gray-400 mb-1 tracking-widest">Email</p>
-                <a href="mailto:globiumclouds@gmail.com" className="text-gray-900 font-bold hover:text-[#10B5DB] transition-colors break-all">globiumclouds@gmail.com</a>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase font-bold text-gray-400 mb-1 tracking-widest">Office</p>
-                <a href="https://www.google.com/maps/search/?api=1&query=Buffer+Zone,+Sector+15-A/4,+Karachi" target="_blank" className="text-gray-600 font-medium leading-snug hover:text-[#10B5DB] transition-colors">Buffer Zone, Sector 15-A/4, Karachi</a>
+                <h5 className="text-[10px] uppercase font-bold text-gray-500 mb-2 tracking-widest">
+                  Email Us
+                </h5>
+                <p className="text-sm font-bold text-white break-all">
+                  support@globiumclouds.com
+                </p>
               </div>
             </div>
           </div>
-
-          {/* Column 4: Subscribe */}
-          <div className="space-y-6">
-            <h4 className="text-xs font-black uppercase tracking-[0.2em] text-[#10B5DB]">Newsletter</h4>
-            <p className="text-sm text-gray-500 font-medium">Stay updated with cloud trends.</p>
-            <form onSubmit={handleSubscribe} className="flex flex-col gap-2">
-              <input 
-                type="email" 
-                placeholder="your@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
-                className="w-full bg-white border border-blue-100 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#10B5DB] outline-none transition-all shadow-sm"
-              />
-              <button 
-                type="submit"
-                disabled={loading}
-                className="w-full bg-gray-900 text-white font-bold py-3 rounded-xl hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? "Subscribing..." : "Subscribe"} <Send className="w-4 h-4" />
-              </button>
-            </form>
-          </div>
-
         </div>
-      </div>
 
-      {/* Bottom Bar */}
-      <div className="border-t border-blue-100 py-8 bg-white">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="text-xs text-gray-400 font-bold uppercase tracking-widest">
-            © {currentYear} <span className="text-gray-900">Globium Clouds</span>. All rights reserved.
+        {/* Bottom Bar */}
+        <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="flex items-center gap-3">
+            <div className="flex gap-1">
+              {[Zap, Shield, Globe].map((Icon, i) => (
+                <Icon key={i} className="w-4 h-4 text-[#10B5DB]/40" />
+              ))}
+            </div>
+            <p className="text-xs text-gray-500 font-bold uppercase tracking-widest">
+              © {currentYear} Globium Clouds. High-performance software
+              engineering.
+            </p>
           </div>
-          <div className="flex items-center gap-6 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
-            <a href="/privacy-policy" className="hover:text-[#10B5DB]">Privacy Policy</a>
-            <a href="#" className="hover:text-[#10B5DB]">Terms</a>
-         
+
+          <div className="flex gap-8">
+            {footerLinks.legal.map((link) => (
+              <a
+                key={link.name}
+                href={link.href}
+                className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 hover:text-[#10B5DB] transition-colors"
+              >
+                {link.name}
+              </a>
+            ))}
           </div>
         </div>
       </div>

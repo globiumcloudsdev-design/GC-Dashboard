@@ -147,13 +147,28 @@
   }
 }
 
-/* Custom scrollbar styles */
+/* Custom Global Scrollbar Redesign */
 ::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
+  width: 14px;
 }
 
-/* Notification dropdown styled scrollbar */
+::-webkit-scrollbar-track {
+  background: #0A0F14;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  background-clip: padding-box;
+  border: 4px solid #0A0F14;
+  border-radius: 100px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #10B5DB;
+  border: 3px solid #0A0F14;
+}
+
+/* Notification dropdown & specific containers styled scrollbar */
 .styled-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
@@ -163,18 +178,16 @@
 }
 
 .styled-scrollbar::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #10B5DB/30;
   border-radius: 10px;
 }
 
 .styled-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #10B5DB;
 }
 
-.dark .styled-scrollbar::-webkit-scrollbar-thumb {
-  background: #475569;
-}
-
-.dark .styled-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
+/* Firefox compatibility */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #1e293b #0A0F14;
 }
