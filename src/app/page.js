@@ -13,18 +13,8 @@ import BlogSection from "@/components/BlogSection";
 import ContactSection from "@/components/ContactSection";
 import Footer from "@/components/Footer";
 
-// Dynamic imports for below-the-fold heavy components
-const PortfolioSection = dynamic(() => import("@/components/PortfolioSection"), {
-  loading: () => <div className="py-28 bg-[#0A0F14] flex items-center justify-center">
-    <div className="w-10 h-10 border-2 border-[#10B5DB]/20 border-t-[#10B5DB] rounded-full animate-spin" />
-  </div>
-});
-
-const TeamSection = dynamic(() => import("@/components/TeamSection"), {
-  loading: () => <div className="py-28 bg-[#F8FAFC] flex items-center justify-center">
-    <div className="w-10 h-10 border-2 border-[#10B5DB]/20 border-t-[#10B5DB] rounded-full animate-spin" />
-  </div>
-});
+import PortfolioSection from "@/components/PortfolioSection";
+import TeamSection from "@/components/TeamSection";
 
 export default function Home() {
   return (
