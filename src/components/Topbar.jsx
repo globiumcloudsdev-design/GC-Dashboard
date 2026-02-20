@@ -117,16 +117,16 @@ export default function Topbar({ collapsed }) {
 
   return (
     <header
-      className={`flex items-center justify-between fixed top-0 left-0 right-0 z-40 h-20 transition-all duration-300 border-b border-gray-200/50 dark:border-slate-800/50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl px-4 sm:px-8 ${
-        collapsed ? "lg:ml-[80px]" : "lg:ml-[280px]"
-      }`}
+      className={`flex items-center justify-between fixed top-0 right-0 z-40 h-20 transition-all duration-300 border-b border-gray-200/50 dark:border-slate-800/50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl pr-4 sm:pr-8 ${
+        collapsed ? "lg:left-[80px]" : "lg:left-[280px]"
+      } left-0 pl-16 sm:pl-16 lg:pl-8`}
     >
       {/* Left Section */}
       <div className="flex items-center gap-4">
-        <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+        <h1 className="text-base sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-1 sm:gap-2">
           <span className="text-[#10B5DB] drop-shadow-sm">GC</span>
           <span className="text-slate-400 font-medium">/</span>
-          <span className="text-sm uppercase tracking-[0.2em] font-bold text-slate-500 mt-0.5">
+          <span className="text-xs sm:text-sm uppercase tracking-[0.1em] sm:tracking-[0.2em] font-bold text-slate-500 mt-0.5">
             Dashboard
           </span>
         </h1>
