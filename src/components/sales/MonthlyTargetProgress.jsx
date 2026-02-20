@@ -146,15 +146,15 @@ const MonthlyTargetProgress = ({
   const progress = calculateProgress();
 
   return (
-    <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-xl shadow-gray-200/40 border border-white overflow-hidden p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-gray-200/60">
+    <div className="bg-white/80 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.03)] border border-white overflow-hidden p-8 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/5 group">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-5">
           <div
             className={cn(
-              "p-2.5 rounded-xl",
+              "p-4 rounded-[1.25rem] shadow-sm transition-transform duration-500 group-hover:rotate-6",
               targetType === "none"
-                ? "bg-gray-100"
+                ? "bg-slate-100"
                 : targetType === "digit"
                   ? "bg-blue-100"
                   : targetType === "amount"
@@ -163,41 +163,46 @@ const MonthlyTargetProgress = ({
             )}
           >
             {targetType === "digit" ? (
-              <Hash className="w-5 h-5 text-blue-600" />
+              <Hash className="w-6 h-6 text-blue-600" />
             ) : targetType === "amount" ? (
-              <DollarSign className="w-5 h-5 text-emerald-600" />
+              <DollarSign className="w-6 h-6 text-emerald-600" />
             ) : targetType === "both" ? (
-              <TrendingUp className="w-5 h-5 text-purple-600" />
+              <TrendingUp className="w-6 h-6 text-purple-600" />
             ) : (
-              <Target className="w-5 h-5 text-gray-600" />
+              <Target className="w-6 h-6 text-slate-600" />
             )}
           </div>
           <div>
-            <h3 className="text-[17px] font-extrabold text-gray-900 tracking-tight">
-              Performance Progress
+            <h3 className="text-xl font-black text-slate-900 tracking-tight">
+              Performance
             </h3>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-              {currentMonth}
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1">
+              Target Progress
             </p>
           </div>
         </div>
         <div className="text-right">
-          <div className={cn("text-2xl font-black mb-0.5", progress.textColor)}>
+          <div
+            className={cn(
+              "text-3xl font-black tracking-tighter mb-0.5",
+              progress.textColor,
+            )}
+          >
             {progress.percentage.toFixed(0)}%
           </div>
         </div>
       </div>
 
-      {/* Progress Bar Container */}
-      <div className="relative h-4 w-full bg-gray-100 rounded-full overflow-hidden mb-6 shadow-inner">
+      {/* Progress Bar Container - Glowing */}
+      <div className="relative h-5 w-full bg-slate-100 rounded-full overflow-hidden mb-8 shadow-inner">
         <div
           className={cn(
-            "absolute h-full left-0 top-0 transition-all duration-1000 ease-out rounded-full",
+            "absolute h-full left-0 top-0 transition-all duration-1000 ease-out rounded-full shadow-[0_0_20px_rgba(0,0,0,0.1)]",
             progress.color,
           )}
           style={{ width: `${progress.percentage}%` }}
         >
-          <div className="absolute inset-0 bg-white/20 animate-pulse" />
+          <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent animate-pulse" />
         </div>
       </div>
 
@@ -296,13 +301,15 @@ const MonthlyTargetProgress = ({
         )}
 
         {targetType === "none" && (
-          <div className="bg-gray-50/50 rounded-3xl p-6 border-2 border-dashed border-gray-200 text-center">
-            <Target className="w-8 h-8 text-gray-300 mx-auto mb-3" />
-            <p className="text-sm font-bold text-gray-400 uppercase tracking-widest leading-tight">
+          <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2rem] p-8 text-center">
+            <div className="w-16 h-16 bg-white shadow-md rounded-2xl flex items-center justify-center mx-auto mb-5 rotate-3">
+              <Target className="w-8 h-8 text-slate-200" />
+            </div>
+            <h4 className="text-sm font-black text-slate-400 uppercase tracking-[0.2em] mb-2">
               No Active Target
-            </p>
-            <p className="text-xs text-gray-400 mt-1 font-medium">
-              Monthly goals have not been set for you yet.
+            </h4>
+            <p className="text-xs text-slate-400 font-bold leading-relaxed max-w-[180px] mx-auto">
+              Monthly goals have not been assigned to your profile yet.
             </p>
           </div>
         )}
@@ -311,29 +318,28 @@ const MonthlyTargetProgress = ({
       {/* Bottom Status Badge */}
       <div
         className={cn(
-          "mt-6 flex items-center justify-center gap-2 p-3 rounded-2xl border transition-all duration-500",
+          "mt-8 flex items-center justify-center gap-3 p-4 rounded-2xl border transition-all duration-700",
           progress.isAchieved
-            ? "bg-emerald-50 border-emerald-100 text-emerald-700 shadow-sm"
-            : "bg-gray-50 border-gray-100 text-gray-600",
+            ? "bg-emerald-50 border-emerald-100 text-emerald-700 shadow-lg shadow-emerald-500/10"
+            : "bg-slate-50 border-slate-100 text-slate-500",
         )}
       >
         {progress.isAchieved ? (
           <>
-            <CheckCircle2
-              size={16}
-              className="text-emerald-500 animate-bounce"
-            />
-            <span className="text-sm font-black italic">
-              🎉 ALL TARGETS ACHIEVED!
+            <div className="p-1 bg-emerald-500 rounded-full">
+              <CheckCircle2 size={12} className="text-white" />
+            </div>
+            <span className="text-xs font-black tracking-widest uppercase italic">
+              All targets achieved!
             </span>
           </>
         ) : (
           <>
             <BarChart3
-              size={16}
+              size={14}
               className={cn("animate-pulse", progress.textColor)}
             />
-            <span className="text-xs font-bold leading-tight uppercase tracking-tight text-center">
+            <span className="text-[10px] font-black uppercase tracking-[0.15em] text-center">
               {progress.message}
             </span>
           </>

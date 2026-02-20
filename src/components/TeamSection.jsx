@@ -16,7 +16,10 @@ import "swiper/css/pagination";
 import "swiper/css/effect-coverflow";
 
 const TeamMember = ({ name, role, profileImage, linkedin, github }) => {
-  const initials = name.split(" ").map(n => n[0]).join("");
+  const initials = name
+    .split(" ")
+    .map((n) => n[0])
+    .join("");
 
   return (
     <div className="group relative py-8 px-2 md:py-12 md:px-4">
@@ -93,8 +96,8 @@ export default function TeamSection() {
         });
         let members = response.data || [];
 
-        const ceoIndex = members.findIndex(m =>
-          m.position?.toLowerCase().includes("ceo")
+        const ceoIndex = members.findIndex((m) =>
+          m.position?.toLowerCase().includes("ceo"),
         );
 
         let initialSlideIndex = 0;
@@ -148,7 +151,7 @@ export default function TeamSection() {
             initialSlide={initialSlide}
             loop={teamMembers.length > 2}
             slidesPerView={"auto"}
-            speed={500}               // ✅ FAST (ONLY CHANGE)
+            speed={500} // ✅ FAST (ONLY CHANGE)
             coverflowEffect={{
               rotate: 0,
               stretch: 0,
@@ -157,7 +160,7 @@ export default function TeamSection() {
               slideShadows: false,
             }}
             autoplay={{
-              delay: 1800,           // ✅ FAST (ONLY CHANGE)
+              delay: 1800, // ✅ FAST (ONLY CHANGE)
               disableOnInteraction: false,
               pauseOnMouseEnter: true,
             }}
@@ -171,7 +174,7 @@ export default function TeamSection() {
             }}
             className="team-swiper !pb-20"
           >
-            {teamMembers.map(member => (
+            {teamMembers.map((member) => (
               <SwiperSlide key={member._id} className="max-w-[420px]">
                 <TeamMember
                   name={member.name}
@@ -193,7 +196,7 @@ export default function TeamSection() {
         }
 
         .swiper-pagination-bullet-active {
-          background: #10B5DB !important;
+          background: #10b5db !important;
           width: 35px !important;
           border-radius: 12px !important;
         }

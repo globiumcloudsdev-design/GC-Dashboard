@@ -328,10 +328,10 @@ export default function AgentSidebar({
             isMobile
               ? isOpen
                 ? "blur-sm pointer-events-none"
-                : "pt-24 p-4"
+                : "pt-20 px-4 pb-4"
               : collapsed
-                ? "ml-20 pt-24 p-8"
-                : "ml-[300px] pt-24 p-8",
+                ? "ml-20 pt-20 px-8 pb-8"
+                : "ml-[300px] pt-20 px-8 pb-4",
           )}
         >
           {children}
