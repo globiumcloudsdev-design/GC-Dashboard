@@ -35,22 +35,22 @@ export default function ManualAttendanceModal({
               onValueChange={(value) => setManualForm({ ...manualForm, userType: value, userId: "", agentId: "" })}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Agent" />
+                <SelectValue placeholder="Employee" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="agent">Agent</SelectItem>
+                <SelectItem value="agent">Employee</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="person">Select Agent</Label>
+            <Label htmlFor="person">Select Employee</Label>
             <Select
               value={manualForm.agentId}
               onValueChange={(value) => setManualForm({ ...manualForm, agentId: value })}
               disabled={!agents || agents.length === 0}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder={agents && agents.length ? 'Select Agent' : 'No agents available'} />
+                <SelectValue placeholder={agents && agents.length ? 'Select Employee' : 'No employees available'} />
               </SelectTrigger>
               <SelectContent>
                 {agents.map(person => (

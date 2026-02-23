@@ -65,7 +65,7 @@ const MENU_SECTIONS = [
         permission: { module: "user", action: "view" },
       },
       {
-        label: "Agents",
+        label: "Employees",
         href: "/dashboard/agents",
         icon: User,
         permission: { module: "agent", action: "view" },

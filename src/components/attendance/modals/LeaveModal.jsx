@@ -5,7 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import CustomModal from "@/components/ui/customModal";
 
@@ -16,14 +22,14 @@ export default function LeaveModal({
   setLeaveForm,
   agents,
   loading,
-  onSubmit
+  onSubmit,
 }) {
   return (
     <CustomModal
       isOpen={isOpen}
       onClose={onClose}
       title="Assign Leave"
-      description="Assign leave to user or agent"
+      description="Assign leave to user or employee"
       size="md"
       preventClose={loading}
     >
@@ -33,29 +39,47 @@ export default function LeaveModal({
             <Label htmlFor="userType">User Type</Label>
             <Select
               value={leaveForm.userType}
-              onValueChange={(value) => setLeaveForm({ ...leaveForm, userType: value, userId: "", agentId: "" })}
+              onValueChange={(value) =>
+                setLeaveForm({
+                  ...leaveForm,
+                  userType: value,
+                  userId: "",
+                  agentId: "",
+                })
+              }
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Agent" />
+                <SelectValue placeholder="Employee" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="agent">Agent</SelectItem>
+                <SelectItem value="agent">Employee</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="person">Select Agent</Label>
+            <Label htmlFor="person">Select Employee</Label>
             <Select
               value={leaveForm.agentId}
-              onValueChange={(value) => setLeaveForm({ ...leaveForm, agentId: value })}
+              onValueChange={(value) =>
+                setLeaveForm({ ...leaveForm, agentId: value })
+              }
               disabled={!agents || agents.length === 0}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder={agents && agents.length ? 'Select Agent' : 'No agents available'} />
+                <SelectValue
+                  placeholder={
+                    agents && agents.length
+                      ? "Select Employee"
+                      : "No employees available"
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
-                {agents.map(person => (
-                  <SelectItem key={person._id || person.id} value={person._id || person.id}>
+                {agents.map((person) => (
+                  <SelectItem
+                    key={person._id || person.id}
+                    value={person._id || person.id}
+                  >
                     {`${person.agentName || person.name} (${person.agentId || person.email})`}
                   </SelectItem>
                 ))}
@@ -70,7 +94,9 @@ export default function LeaveModal({
             <Input
               type="date"
               value={leaveForm.startDate}
-              onChange={(e) => setLeaveForm({ ...leaveForm, startDate: e.target.value })}
+              onChange={(e) =>
+                setLeaveForm({ ...leaveForm, startDate: e.target.value })
+              }
               required
               className="w-full"
             />
@@ -80,7 +106,9 @@ export default function LeaveModal({
             <Input
               type="date"
               value={leaveForm.endDate}
-              onChange={(e) => setLeaveForm({ ...leaveForm, endDate: e.target.value })}
+              onChange={(e) =>
+                setLeaveForm({ ...leaveForm, endDate: e.target.value })
+              }
               required
               className="w-full"
             />
@@ -91,7 +119,9 @@ export default function LeaveModal({
           <Label htmlFor="leaveType">Leave Type</Label>
           <Select
             value={leaveForm.leaveType}
-            onValueChange={(value) => setLeaveForm({ ...leaveForm, leaveType: value })}
+            onValueChange={(value) =>
+              setLeaveForm({ ...leaveForm, leaveType: value })
+            }
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select leave type" />
@@ -109,7 +139,9 @@ export default function LeaveModal({
           <Label htmlFor="reason">Reason</Label>
           <Textarea
             value={leaveForm.reason}
-            onChange={(e) => setLeaveForm({ ...leaveForm, reason: e.target.value })}
+            onChange={(e) =>
+              setLeaveForm({ ...leaveForm, reason: e.target.value })
+            }
             placeholder="Reason for leave..."
             rows={3}
             className="w-full"
@@ -121,7 +153,12 @@ export default function LeaveModal({
           <Button
             type="submit"
             className="flex-1 w-full"
-            disabled={loading || !leaveForm.agentId || !leaveForm.startDate || !leaveForm.endDate}
+            disabled={
+              loading ||
+              !leaveForm.agentId ||
+              !leaveForm.startDate ||
+              !leaveForm.endDate
+            }
           >
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Assign Leave

@@ -77,7 +77,7 @@ export default function AgentSidebar({
   }, [isMobile, setIsOpen]);
 
   const handleLogout = async () => {
-    if (confirm("Logout from Agent Panel?")) {
+    if (confirm("Logout from Employee Panel?")) {
       await logout();
       router.push("/agent/login");
     }
@@ -155,7 +155,7 @@ export default function AgentSidebar({
                   className="flex flex-col"
                 >
                   <span className="font-bold text-lg text-slate-900 dark:text-white leading-none tracking-tight">
-                    Agent Portal
+                    Employee Portal
                   </span>
                   <span className="text-[10px] uppercase tracking-widest text-[#10B5DB] font-bold mt-1">
                     Globium Clouds
@@ -271,7 +271,7 @@ export default function AgentSidebar({
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
-                  {agent?.agentName || "Agent"}
+                  {agent?.agentName || "Employee"}
                 </p>
                 <p className="text-[10px] text-slate-500 uppercase font-medium">
                   {agent?.agentId || "ID: N/A"}

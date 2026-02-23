@@ -612,7 +612,7 @@ const HomeScreen = () => {
             <h1 className="text-3xl font-black text-slate-900 tracking-tight leading-none mb-2">
               Welcome back,{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#10B5DB] to-blue-600">
-                {agent?.agentName || agent?.name || "Agent"}
+                {agent?.agentName || agent?.name || "Employee"}
               </span>
               !
             </h1>
