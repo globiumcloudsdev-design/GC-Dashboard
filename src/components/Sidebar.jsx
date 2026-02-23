@@ -187,10 +187,11 @@ export default function Sidebar({ collapsed, setCollapsed }) {
     setOpenMobile(false);
   }, [pathname]);
 
-  const { user, hasPermission, logout } = useAuth();
+  const { user, loading: authLoading, hasPermission, logout } = useAuth();
 
-  // Optimized permission filtering
+  // Optimized permission filtering - wait for auth to load
   const allowedSections = useMemo(() => {
+    if (authLoading) return []; // Don't render until auth is ready
     return MENU_SECTIONS.map((section) => ({
       ...section,
       items: section.items.filter((item) => {
@@ -202,7 +203,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
         );
       }),
     })).filter((section) => section.items.length > 0);
-  }, [user, hasPermission]);
+  }, [user, authLoading, hasPermission]);
 
   const handleLogout = async () => {
     if (confirm("Are you sure you want to logout?")) {
@@ -248,43 +249,83 @@ export default function Sidebar({ collapsed, setCollapsed }) {
         )}
       >
         {/* Header / Logo Section */}
-        <div className="h-24 flex items-center px-6 shrink-0 border-b border-gray-200/50 dark:border-slate-800/50">
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-3 overflow-hidden"
-          >
-            <Image
-              src="/images/GCLogo.png"
-              alt="GC Logo"
-              width={40}
-              height={40}
-              className="object-contain"
-            />
-            {!collapsed && (
-              <motion.div
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="flex flex-col"
+        <div
+          className={cn(
+            "shrink-0 border-b border-gray-200/50 dark:border-slate-800/50 transition-all",
+            collapsed
+              ? "h-28 flex flex-col items-center justify-center gap-2 px-2 py-3"
+              : "h-24 flex items-center px-6",
+          )}
+        >
+          {collapsed ? (
+            // Collapsed: logo centered + expand button below
+            <>
+              <Link href="/dashboard">
+                <Image
+                  src="/images/GCLogo.png"
+                  alt="GC Logo"
+                  width={36}
+                  height={36}
+                  className="object-contain"
+                />
+              </Link>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setCollapsed(false)}
+                className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 w-8 h-8"
               >
-                <span className="font-bold text-lg leading-none tracking-tight text-slate-900 dark:text-white">
-                  GC Panel
-                </span>
-                <span className="text-[10px] uppercase tracking-widest text-[#10B5DB] font-bold mt-1">
-                  Dashboard
-                </span>
-              </motion.div>
-            )}
-          </Link>
+                <Menu size={16} className="text-slate-500" />
+              </Button>
+            </>
+          ) : (
+            // Expanded: logo left + toggle right
+            <>
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-3 overflow-hidden"
+              >
+                <Image
+                  src="/images/GCLogo.png"
+                  alt="GC Logo"
+                  width={40}
+                  height={40}
+                  className="object-contain"
+                />
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="flex flex-col"
+                >
+                  <span className="font-bold text-lg leading-none tracking-tight text-slate-900 dark:text-white">
+                    GC Panel
+                  </span>
+                  <span className="text-[10px] uppercase tracking-widest text-[#10B5DB] font-bold mt-1">
+                    Dashboard
+                  </span>
+                </motion.div>
+              </Link>
 
-          {isMobile && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setOpenMobile(false)}
-              className="ml-auto rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
-            >
-              <X size={20} />
-            </Button>
+              {isMobile ? (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setOpenMobile(false)}
+                  className="ml-auto rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+                >
+                  <X size={20} />
+                </Button>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setCollapsed(true)}
+                  className="ml-auto rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                >
+                  <Menu size={18} className="text-slate-500" />
+                </Button>
+              )}
+            </>
           )}
         </div>
 
@@ -292,8 +333,29 @@ export default function Sidebar({ collapsed, setCollapsed }) {
 
         {/* Navigation Area */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden py-6 custom-scrollbar px-4 space-y-8">
-          {allowedSections.map((section, sIdx) => (
-            <div key={sIdx} className="space-y-2">
+          {authLoading ? (
+            // Skeleton loading while auth is being checked
+            <div className="space-y-6 animate-pulse">
+              {[1, 2, 3].map((g) => (
+                <div key={g} className="space-y-2">
+                  {!collapsed && (
+                    <div className="h-3 w-20 bg-slate-200 dark:bg-slate-700 rounded mx-4 mb-3" />
+                  )}
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className={cn(
+                      "rounded-xl px-4 py-3 flex items-center gap-3",
+                      collapsed && "justify-center"
+                    )}>
+                      <div className="h-5 w-5 bg-slate-200 dark:bg-slate-700 rounded shrink-0" />
+                      {!collapsed && <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded flex-1" />}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          ) : (
+            allowedSections.map((section, sIdx) => (
+              <div key={sIdx} className="space-y-2">
               {!collapsed && (
                 <motion.h3
                   initial={{ opacity: 0 }}
@@ -366,8 +428,9 @@ export default function Sidebar({ collapsed, setCollapsed }) {
                   );
                 })}
               </div>
-            </div>
-          ))}
+              </div>
+            ))
+          )}
         </div>
 
         {/* Footer Section */}
@@ -403,16 +466,6 @@ export default function Sidebar({ collapsed, setCollapsed }) {
           )}
         </div>
       </motion.aside>
-
-      {/* Desktop Controls */}
-      <Button
-        variant="outline"
-        size="icon"
-        className="fixed top-4 left-4 hidden lg:flex z-[80] shadow-lg border-slate-200/50 dark:border-slate-700/50 bg-white/50 dark:bg-slate-900/50 backdrop-blur hover:scale-105 transition-all"
-        onClick={() => setCollapsed(!collapsed)}
-      >
-        <Menu size={20} />
-      </Button>
 
       {/* Mobile Toggle Button */}
       {isMobile && !openMobile && (
