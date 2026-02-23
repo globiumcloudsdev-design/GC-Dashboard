@@ -15,7 +15,28 @@ import Link from "next/link";
 import { projectService } from "@/services/projectService";
 
 export default function PortfolioSection() {
-  const [projects, setProjects] = useState([]);
+  const [projects, setProjects] = useState([
+    {
+      _id: "1",
+      title: "Global FinTech Platform",
+      shortDescription:
+        "A high-performance trading platform for enterprise clients.",
+      technologies: ["Next.js", "TypeScript", "Node.js"],
+      slug: "fintech-platform",
+      isActive: true,
+      isFeatured: true,
+    },
+    {
+      _id: "2",
+      title: "AI Power Cloud",
+      shortDescription:
+        "Scalable cloud infrastructure optimized for AI workloads.",
+      technologies: ["React", "AWS", "Python"],
+      slug: "ai-cloud",
+      isActive: true,
+      isFeatured: true,
+    },
+  ]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -24,13 +45,14 @@ export default function PortfolioSection() {
     const fetchProjects = async () => {
       try {
         const response = await projectService.getProjects({ limit: 100 });
-        if (response.success) {
-          setProjects(response.data.filter((p) => p.isActive && p.isFeatured));
-        } else {
-          setError("Failed to load projects");
+        const activeProjects = response.data?.filter((p) => p.isActive) || [];
+
+        if (response.success && activeProjects.length > 0) {
+          const featured = activeProjects.filter((p) => p.isFeatured);
+          setProjects(featured.length > 0 ? featured : activeProjects);
         }
       } catch (err) {
-        setError("Failed to load projects");
+        console.warn("Using fallback projects due to:", err.message);
       } finally {
         setLoading(false);
       }
@@ -52,23 +74,10 @@ export default function PortfolioSection() {
     setCurrentSlide((prev) => (prev - 1 + projects.length) % projects.length);
   const goToSlide = (index) => setCurrentSlide(index);
 
-  const getFloatingTags = (project) => [
-    "Admin Dashboard",
-    "Next.js 14",
-    "AI Integrated",
-    "Enterprise",
-  ];
+  const getFloatingTags = (project) =>
+    project.technologies || ["Next.js 14", "AI Integrated", "Enterprise"];
 
-  if (loading)
-    return (
-      <section className="py-28 bg-[#0A0F14] flex items-center justify-center">
-        <div className="w-10 h-10 border-2 border-[#10B5DB]/20 border-t-[#10B5DB] rounded-full animate-spin" />
-      </section>
-    );
-
-  if (error || projects.length === 0) return null;
-
-  const currentProject = projects[currentSlide];
+  const currentProject = projects.length > 0 ? projects[currentSlide] : null;
 
   return (
     <section
@@ -169,6 +178,11 @@ export default function PortfolioSection() {
                 <div className="absolute -inset-4 bg-[#10B5DB]/20 rounded-[3rem] blur-3xl opacity-50" />
 
                 <div className="relative p-2 bg-white/5 backdrop-blur-md rounded-[2.5rem] border border-white/10 shadow-2xl overflow-hidden">
+                  {loading && (
+                    <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/20 backdrop-blur-sm">
+                      <div className="w-8 h-8 border-2 border-[#10B5DB]/20 border-t-[#10B5DB] rounded-full animate-spin" />
+                    </div>
+                  )}
                   <motion.div
                     whileHover={{ scale: 1.03 }}
                     className="relative aspect-[4/3] rounded-[2rem] overflow-hidden bg-[#0A0F14]"
