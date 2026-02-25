@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // // src/app/api/payroll/generate-all/route.js
 // import { NextResponse } from "next/server";
 // import connectDB from "@/lib/mongodb";
@@ -215,6 +216,16 @@ import Notification from "@/Models/Notification";
 import { calculatePayrollLogic, getAllAgentsSalesStatus } from "@/lib/payrollUtils";
 import Agent from '@/Models/Agent';
 import Shift from '@/Models/Shift';
+=======
+// src/app/api/payroll/generate-all/route.js
+import { NextResponse } from "next/server";
+import connectDB from "@/lib/mongodb";
+import Agent from "@/Models/Agent";
+import Payroll from "@/Models/Payroll";
+import Notification from "@/Models/Notification";
+import { calculatePayrollLogic, getAllAgentsSalesStatus } from "@/lib/payrollUtils";
+
+>>>>>>> 9b9a343d88fc6a1e0f58f8ee4b853db9ddf556f7
 /**
  * POST - Bulk Generate Payroll for All Active Agents
  * Body: { month, year, skipZeroSales, manualOverrides: { agentId: salesValue } }
@@ -313,6 +324,11 @@ export async function POST(request) {
         }
 
         // Second pass (skipZeroSales=false): Generate payroll for all agents
+<<<<<<< HEAD
+=======
+        // Get manual override if provided, otherwise use null (attendance-based salary only)
+        // Important: Use explicit undefined check to preserve zero values
+>>>>>>> 9b9a343d88fc6a1e0f58f8ee4b853db9ddf556f7
         const manualSalesOverride = manualOverrides[agent._id.toString()] !== undefined 
           ? manualOverrides[agent._id.toString()] 
           : null;
@@ -326,7 +342,11 @@ export async function POST(request) {
           manualSalesOverride
         );
 
+<<<<<<< HEAD
         // Create payroll record with description
+=======
+        // Create payroll record
+>>>>>>> 9b9a343d88fc6a1e0f58f8ee4b853db9ddf556f7
         const payroll = await Payroll.create({
           agent: agent._id,
           month,
@@ -366,8 +386,12 @@ export async function POST(request) {
           netSalary: Math.round(result.netSalary),
           
           status: 'generated',
+<<<<<<< HEAD
           notes: result.allowanceCutReason ? `Allowance Cut: ${result.allowanceCutReason}` : "",
           description: result.description || "" // ADD THIS
+=======
+          notes: result.allowanceCutReason ? `Allowance Cut: ${result.allowanceCutReason}` : ""
+>>>>>>> 9b9a343d88fc6a1e0f58f8ee4b853db9ddf556f7
         });
 
         // Send notification to agent
@@ -386,11 +410,15 @@ export async function POST(request) {
           agentCode: agent.agentId,
           netSalary: Math.round(result.netSalary),
           salesCount: result.salesCount,
+<<<<<<< HEAD
           revenue: result.revenue,
           informedLates: result.informedLates,
           uninformedLates: result.uninformedLates,
           informedAbsents: result.informedAbsents,
           allowanceCut: result.isAllowanceCut
+=======
+          revenue: result.revenue
+>>>>>>> 9b9a343d88fc6a1e0f58f8ee4b853db9ddf556f7
         });
 
       } catch (error) {
@@ -417,4 +445,8 @@ export async function POST(request) {
       message: error.message 
     }, { status: 500 });
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 9b9a343d88fc6a1e0f58f8ee4b853db9ddf556f7

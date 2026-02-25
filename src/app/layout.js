@@ -8,7 +8,7 @@ export const metadata = {
   title: "Globium Clouds | Software Development Company & IT Solutions Provider",
   description: "Globium Clouds is a leading software development company in Pakistan offering custom software solutions, web development, mobile apps, SaaS products, AI solutions, and digital transformation services. Partner with experts for your next project.",
   keywords: "software development company, software house Pakistan, custom software solutions, web development services, mobile app development, SaaS development, AI solutions, software outsourcing, IT solutions, digital transformation, software consulting, ecommerce development, CRM development, ERP solutions, cloud computing, blockchain development, IoT solutions, machine learning, data analytics, UI/UX design, QA testing, DevOps services, cybersecurity solutions",
-  
+
   // ✅ Open Graph Tags
   openGraph: {
     title: "Globium Clouds | Software Development Company Pakistan",
@@ -26,7 +26,7 @@ export const metadata = {
     locale: "en_US",
     type: "website",
   },
-  
+
   // ✅ Twitter Cards
   twitter: {
     card: "summary_large_image",
@@ -36,7 +36,7 @@ export const metadata = {
     creator: "@globiumclouds",
     site: "@globiumclouds",
   },
-  
+
   // ✅ Robots Meta
   robots: {
     index: true,
@@ -49,14 +49,14 @@ export const metadata = {
       'max-snippet': -1,
     },
   },
-  
+
   // ✅ Authors/Creators
   authors: [
     { name: "Globium Clouds", url: "https://globiumclouds.com" }
   ],
   creator: "Globium Clouds",
   publisher: "Globium Clouds",
-  
+
   // ✅ Icons
   icons: {
     icon: '/favicon.ico',
@@ -68,20 +68,18 @@ export const metadata = {
       },
     ],
   },
-  
+
   // ✅ Canonical URL
   alternates: {
     canonical: "https://globiumclouds.com",
   },
-  
-  // ✅ Viewport
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 5,
-  },
-  
-  // ✅ Theme Color
+};
+
+// ✅ Separate Viewport Export (Next.js 15+ compatible)
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
   themeColor: '#3b82f6',
 };
 
@@ -89,14 +87,22 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-        {/* ✅ Modern Font - Inter */}
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+        {/* ✅ Modern Font - Inter (Preloaded for performance) */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap"
+          rel="stylesheet"
+        />
+        <noscript>
+          <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+        </noscript>
 
         {/* ✅ Direct Favicon Links */}
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/site.webmanifest" />
-        
+
         {/* ✅ Meta Tags */}
         <meta name="theme-color" content="#3b82f6" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -107,7 +113,7 @@ export default function RootLayout({ children }) {
         <meta name="msapplication-TileColor" content="#3b82f6" />
         <meta name="msapplication-TileImage" content="/mstile-144x144.png" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
-        
+
         {/* ✅ Structured Data - Organization */}
         <script
           type="application/ld+json"
@@ -134,7 +140,7 @@ export default function RootLayout({ children }) {
             })
           }}
         />
-        
+
         {/* ✅ Structured Data - Local Business */}
         <script
           type="application/ld+json"
@@ -177,7 +183,7 @@ export default function RootLayout({ children }) {
             })
           }}
         />
-        
+
         {/* ✅ Structured Data - Service List */}
         <script
           type="application/ld+json"
@@ -283,12 +289,12 @@ export default function RootLayout({ children }) {
             })
           }}
         />
-        
-       
-        
+
+
+
         {/* ✅ Performance Optimization */}
         <link rel="dns-prefetch" href="https://api.globiumclouds.com" />
-        
+
       </head>
       <body className="antialiased">
         <AuthProvider>

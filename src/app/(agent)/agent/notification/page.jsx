@@ -1,7 +1,7 @@
 // app/(agent)/agent/notification/page.jsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, BellRing, CheckCircle, Clock, AlertCircle, Info, Loader, Filter, Search, X } from "lucide-react";
 import { useAgent } from "@/context/AgentContext";
@@ -13,19 +13,18 @@ export default function AgentNotificationPage() {
 
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [markingAsRead, setMarkingAsRead] = useState(null);
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedNotification, setSelectedNotification] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [deleting, setDeleting] = useState(null);
+  const loadedRef = useRef(false);
 
-  useEffect(() => {
-    if (isLoggedIn && agent) {
-      loadNotifications();
-    }
-  }, [isLoggedIn, agent]);
-
-  const loadNotifications = async () => {
+  // Load notifications only once on mount
+  const loadNotifications = useCallback(async () => {
+    if (!agent?._id) return;
+    
     try {
-      setLoading(true);
       const [specificNotifications, allNotifications] = await Promise.all([
         agentNotificationService.fetchNotificationsForAgent(agent._id || agent.agentId),
         agentNotificationService.fetchUserNotifications()
@@ -40,61 +39,69 @@ export default function AgentNotificationPage() {
       setNotifications(combinedNotifications);
     } catch (error) {
       console.error("Error loading notifications:", error);
-      
-      const fallbackData = [
-        {
-          _id: 'mock-1',
-          status: 'pending',
-          title: 'New Car Detailing Booking',
-          message: 'BMW X5 detailing scheduled for tomorrow at 10 AM.',
-          isRead: false,
-          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-          data: { vehicle: 'BMW X5', service: 'Full Detail' },
-          notificationType: 'specific'
-        },
-        {
-          _id: 'mock-2',
-          status: 'complete',
-          title: 'Service Reminder Completed',
-          message: 'Toyota Camry ceramic coating maintenance check completed.',
-          isRead: false,
-          createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-          data: { vehicle: 'Toyota Camry', service: 'Ceramic Coating' },
-          notificationType: 'specific'
-        },
-        {
-          _id: 'mock-3',
-          status: 'announcement',
-          title: 'New Training Available',
-          message: 'Advanced ceramic coating training session next Tuesday.',
-          isRead: true,
-          createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-          data: { training: 'Advanced Ceramic Coating' },
-          notificationType: 'all'
-        }
-      ];
-      
-      setNotifications(fallbackData);
+      setNotifications([]);
     } finally {
       setLoading(false);
     }
+  }, [agent?._id, agent?.agentId]);
+
+  // Load notifications only once when agent is ready
+  useEffect(() => {
+    if (isLoggedIn && agent && !loadedRef.current) {
+      loadedRef.current = true;
+      loadNotifications();
+    }
+  }, [isLoggedIn, agent, loadNotifications]);
+
+  const isNotificationRead = (notification) => {
+    return notification.readBy && notification.readBy.includes(agent._id);
   };
 
-  const markAsRead = async (notificationId) => {
+  const handleNotificationClick = async (notification) => {
+    setSelectedNotification(notification);
+    setIsModalOpen(true);
+
+    // Mark as read when opening the notification detail
+    if (!isNotificationRead(notification)) {
+      try {
+        await agentNotificationService.markAsRead(notification._id);
+        setNotifications(prev =>
+          prev.map(notif =>
+            notif._id === notification._id
+              ? {
+                  ...notif,
+                  readBy: notif.readBy ? [...notif.readBy, agent._id] : [agent._id]
+                }
+              : notif
+          )
+        );
+        // Update selected notification as well
+        setSelectedNotification(prev => ({
+          ...prev,
+          readBy: prev.readBy ? [...prev.readBy, agent._id] : [agent._id]
+        }));
+      } catch (error) {
+        console.error("Error marking notification as read:", error);
+      }
+    }
+  };
+
+  const deleteNotification = async (notificationId) => {
     try {
-      setMarkingAsRead(notificationId);
-      await agentNotificationService.markAsRead(notificationId);
+      setDeleting(notificationId);
+      await agentNotificationService.deleteNotification(notificationId);
       setNotifications(prev =>
-        prev.map(notif =>
-          notif._id === notificationId
-            ? { ...notif, isRead: true }
-            : notif
-        )
+        prev.filter(notif => notif._id !== notificationId)
       );
+      // Close modal if the deleted notification was in modal
+      if (selectedNotification?._id === notificationId) {
+        setIsModalOpen(false);
+        setSelectedNotification(null);
+      }
     } catch (error) {
-      console.error("Error marking notification as read:", error);
+      console.error("Error deleting notification:", error);
     } finally {
-      setMarkingAsRead(null);
+      setDeleting(null);
     }
   };
 
@@ -169,11 +176,12 @@ export default function AgentNotificationPage() {
     );
   }
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  const unreadCount = notifications.filter(n => !isNotificationRead(n)).length;
   const filteredNotifications = notifications.filter(notification => {
+    const isRead = isNotificationRead(notification);
     const matchesFilter = filter === 'all' ||
-      (filter === 'unread' && !notification.isRead) ||
-      (filter === 'read' && notification.isRead);
+      (filter === 'unread' && !isRead) ||
+      (filter === 'read' && isRead);
 
     const matchesSearch = searchTerm === '' ||
       notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -302,7 +310,10 @@ export default function AgentNotificationPage() {
             filteredNotifications.map((notification) => (
               <div
                 key={notification._id}
-                className={`p-4 ${!notification.isRead ? 'bg-blue-50' : ''}`}
+                onClick={() => handleNotificationClick(notification)}
+                className={`p-4 cursor-pointer transition-colors ${
+                  !isNotificationRead(notification) ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-gray-50'
+                }`}
               >
                 <div className="flex items-start gap-3">
                   <div className={`p-2 rounded-lg ${getStatusColor(notification.status).split(' ')[1]}`}>
@@ -322,7 +333,7 @@ export default function AgentNotificationPage() {
                         <span className={`text-xs font-medium px-2 py-1 rounded ${getStatusColor(notification.status)}`}>
                           {notification.status}
                         </span>
-                        {!notification.isRead && (
+                        {!isNotificationRead(notification) && (
                           <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
                         )}
                       </div>
@@ -335,32 +346,20 @@ export default function AgentNotificationPage() {
                       {notification.title}
                     </h3>
                     
-                    <p className="text-sm text-gray-600 mb-2">
+                    <p className="text-sm text-gray-600 line-clamp-2">
                       {notification.message}
                     </p>
-                    
-                    {notification.data && (
-                      <div className="mt-2 text-xs text-gray-500 bg-gray-50 p-2 rounded">
-                        {JSON.stringify(notification.data)}
-                      </div>
-                    )}
-                    
-                    <div className="flex items-center justify-between mt-3">
-                      <span className="text-xs text-gray-500">
-                        Submitted: {new Date(notification.createdAt).toLocaleDateString()}
-                      </span>
-                      
-                      {!notification.isRead && (
-                        <button
-                          onClick={() => markAsRead(notification._id)}
-                          disabled={markingAsRead === notification._id}
-                          className="text-xs text-blue-600 hover:text-blue-800 font-medium"
-                        >
-                          {markingAsRead === notification._id ? 'Marking...' : 'Mark as read'}
-                        </button>
-                      )}
-                    </div>
                   </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteNotification(notification._id);
+                    }}
+                    disabled={deleting === notification._id}
+                    className="text-red-600 hover:text-red-800 ml-2 flex-shrink-0 disabled:opacity-50"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
             ))
@@ -370,14 +369,133 @@ export default function AgentNotificationPage() {
         {!loading && filteredNotifications.length > 0 && (
           <div className="p-4 border-t border-gray-200">
             <button
-              onClick={loadNotifications}
+              onClick={() => {
+                setLoading(true);
+                loadNotifications();
+              }}
               className="w-full text-sm text-gray-600 hover:text-gray-800 font-medium"
             >
-              Refresh list
+              Refresh
             </button>
           </div>
         )}
       </div>
+
+      {/* Notification Detail Modal */}
+      {isModalOpen && selectedNotification && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <div className="flex items-center gap-3">
+                <div className={`p-3 rounded-lg ${getStatusColor(selectedNotification.status).split(' ')[1]}`}>
+                  {getStatusIcon(selectedNotification.status)}
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {selectedNotification.title}
+                  </h2>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {new Date(selectedNotification.createdAt).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setSelectedNotification(null);
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-6">
+              {/* Message */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-600 mb-2">Message</h3>
+                <p className="text-gray-900 leading-relaxed">
+                  {selectedNotification.message}
+                </p>
+              </div>
+
+              {/* Details */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-600 mb-2">Type</h3>
+                  <p className="text-gray-900">
+                    <span className={`inline-block text-xs font-medium px-2 py-1 rounded ${
+                      selectedNotification.notificationType === 'specific' 
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {selectedNotification.notificationType === 'specific' ? 'For You' : 'All Agents'}
+                    </span>
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-600 mb-2">Status</h3>
+                  <p className="text-gray-900">
+                    <span className={`inline-block text-xs font-medium px-2 py-1 rounded ${getStatusColor(selectedNotification.status)}`}>
+                      {selectedNotification.status}
+                    </span>
+                  </p>
+                </div>
+              </div>
+
+              {/* Additional Data */}
+              {selectedNotification.data && Object.keys(selectedNotification.data).length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-600 mb-2">Details</h3>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    {Object.entries(selectedNotification.data).map(([key, value]) => (
+                      <div key={key} className="flex justify-between py-2 border-b border-gray-200 last:border-b-0">
+                        <span className="text-sm font-medium text-gray-600 capitalize">
+                          {key.replace(/([A-Z])/g, ' $1').trim()}
+                        </span>
+                        <span className="text-sm text-gray-900">
+                          {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Read Status */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-900">
+                  {isNotificationRead(selectedNotification) 
+                    ? '✓ You have read this notification' 
+                    : 'This notification is unread'}
+                </p>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6 border-t border-gray-200 flex items-center gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setSelectedNotification(null);
+                }}
+                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => deleteNotification(selectedNotification._id)}
+                disabled={deleting === selectedNotification._id}
+                className="px-4 py-2 text-white bg-red-600 hover:bg-red-700 disabled:bg-red-400 rounded-lg font-medium"
+              >
+                {deleting === selectedNotification._id ? 'Deleting...' : 'Delete Notification'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

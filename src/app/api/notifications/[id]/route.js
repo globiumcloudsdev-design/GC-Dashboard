@@ -1,131 +1,166 @@
-// app/api/notifications/[id]/route.js
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Notification from "@/Models/Notification";
-import { verifyToken } from "@/lib/jwt";
+import { verifyAuth } from "@/lib/auth";
+import User from "@/Models/User";
+import { sendPushToUsers } from "@/lib/notificationHelper";
 
-// GET single notification
-export async function GET(req, { params }) {
+// ✅ PATCH: Mark Single OR All as Read
+// PATCH /api/notifications/[id]  → mark single as read
+// PATCH /api/notifications/all   → mark all as read
+export async function PATCH(req, { params }) {
   await connectDB();
 
   try {
-    const authData = await verifyToken(req);
-    
-    if (authData.error) {
-      return NextResponse.json(
-        { message: authData.error },
-        { status: authData.status }
+    const auth = await verifyAuth(req);
+    if (auth.error) return NextResponse.json({ message: auth.error }, { status: auth.status });
+
+    const { id } = await params;
+    const userId = auth.userId;
+
+    // --- CASE 1: Mark ALL as Read ---
+    if (id === "all") {
+      await Notification.updateMany(
+        {
+          $or: [{ targetType: "all" }, { targetUsers: userId }],
+          readBy: { $ne: userId },
+          deletedBy: { $nin: [userId] },
+        },
+        { $addToSet: { readBy: userId } }
       );
+      return NextResponse.json({ message: "All notifications marked as read" }, { status: 200 });
     }
 
-    const { id } = params;
-    const notification = await Notification.findById(id).populate("createdBy", "name email");
-
-    if (!notification) {
-      return NextResponse.json(
-        { message: "Notification not found" },
-        { status: 404 }
-      );
+    // --- CASE 2: Mark SINGLE as Read ---
+    if (!id || id.length !== 24) {
+      return NextResponse.json({ message: "Invalid Notification ID" }, { status: 400 });
     }
 
-    return NextResponse.json(notification, { status: 200 });
-
-  } catch (error) {
-    return NextResponse.json(
-      { message: "Server error", error: error.message },
-      { status: 500 }
+    const updated = await Notification.findByIdAndUpdate(
+      id,
+      { $addToSet: { readBy: userId } },
+      { new: true }
     );
+
+    if (!updated) {
+      return NextResponse.json({ message: "Notification not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ message: "Marked as read" }, { status: 200 });
+  } catch (error) {
+    console.error("PATCH Error:", error);
+    return NextResponse.json({ message: "Error", error: error.message }, { status: 500 });
   }
 }
 
-// UPDATE notification
+// ✅ PUT: Admin → Update Notification Content
 export async function PUT(req, { params }) {
   await connectDB();
 
   try {
-    const authData = await verifyToken(req);
-    
-    if (authData.error) {
-      return NextResponse.json(
-        { message: authData.error },
-        { status: authData.status }
-      );
+    const auth = await verifyAuth(req);
+    if (auth.error) return NextResponse.json({ message: auth.error }, { status: auth.status });
+
+    // Role check
+    let roleName = auth.userRole || "";
+    if (!roleName || roleName === "user") {
+      const dbUser = await User.findById(auth.userId).populate("role");
+      roleName = dbUser?.role?.name || "";
+    }
+    const normalizedRole = roleName.toLowerCase().trim().replace(/[\s_\-]+/g, "");
+    if (normalizedRole !== "admin" && normalizedRole !== "superadmin") {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
     }
 
-    // Check admin permissions
-    const allowedRoles = ["admin", "super_admin"];
-    if (!allowedRoles.includes(authData.user?.role)) {
-      return NextResponse.json(
-        { message: "Unauthorized: Admin access required" },
-        { status: 403 }
-      );
-    }
+    const { id } = await params;
+    const body = await req.json();
+    const { title, message, type, targetType, targetUsers, targetModel } = body;
 
-    const { id } = params;
-    const updateData = await req.json();
-
-    const notification = await Notification.findByIdAndUpdate(
+    const updated = await Notification.findByIdAndUpdate(
       id,
-      updateData,
-      { new: true, runValidators: true }
-    ).populate("createdBy", "name email");
+      {
+        title,
+        message,
+        type,
+        targetType,
+        targetUsers: targetType === "specific" ? targetUsers : [],
+        targetModel: targetType === "specific" ? (targetModel || "Agent") : undefined,
+        isEdited: true,
+        readBy: [], // Reset taake sabko dobara highlight ho
+      },
+      { new: true }
+    );
 
-    if (!notification) {
-      return NextResponse.json(
-        { message: "Notification not found" },
-        { status: 404 }
-      );
+    if (!updated) {
+      return NextResponse.json({ message: "Notification not found" }, { status: 404 });
     }
 
-    return NextResponse.json(
-      { 
-        message: "Notification updated successfully",
-        notification 
-      },
-      { status: 200 }
-    );
+    // Naya Push bhejain taake Agent ko pta chalay update hua hai
+    await sendPushToUsers({
+      title: `(Updated) ${title}`,
+      message: message,
+      targetType: updated.targetType,
+      targetUsers: updated.targetUsers,
+      targetModel: updated.targetModel || "Agent",
+      metadata: { notificationId: updated._id, isUpdate: true }
+    });
+
+    return NextResponse.json({
+      message: "Notification updated successfully",
+      notification: updated
+    }, { status: 200 });
 
   } catch (error) {
-    return NextResponse.json(
-      { message: "Server error", error: error.message },
-      { status: 500 }
-    );
+    console.error("PUT Error:", error);
+    return NextResponse.json({ message: "Update error", error: error.message }, { status: 500 });
   }
 }
 
-// DELETE notification
+// ✅ DELETE: Admin → Hard Delete (permanent), Agent/User → Soft Delete (hide from view)
 export async function DELETE(req, { params }) {
   await connectDB();
 
   try {
-    const authData = await verifyToken(req);
-    
-    if (authData.error) {
-      return NextResponse.json(
-        { message: authData.error },
-        { status: authData.status }
-      );
-    }
+    const auth = await verifyAuth(req);
+    if (auth.error) return NextResponse.json({ message: auth.error }, { status: auth.status });
 
     const { id } = await params;
-    const notification = await Notification.findByIdAndDelete(id);
 
-    if (!notification) {
-      return NextResponse.json(
-        { message: "Notification not found" },
-        { status: 404 }
-      );
+    // Role detect karna - token first, then DB fallback
+    let roleName = auth.userRole || "";
+
+    if (!roleName || roleName === "user" || roleName === "agent") {
+      const dbUser = await User.findById(auth.userId).populate("role");
+      if (dbUser?.role?.name) {
+        roleName = dbUser.role.name;
+      }
     }
 
-    return NextResponse.json(
-      { message: "Notification deleted successfully" },
-      { status: 200 }
-    );
+    // Normalize aggressively: "Super Admin" / "super_admin" / "super-admin" → "superadmin"
+    const normalizedRole = roleName.toLowerCase().trim().replace(/[\s_\-]+/g, "");
+    const isAdmin = normalizedRole === "admin" || normalizedRole === "superadmin";
 
+    if (isAdmin) {
+      // HARD DELETE: Permanently remove from database
+      const deleted = await Notification.findByIdAndDelete(id);
+      if (!deleted) {
+        return NextResponse.json({ message: "Notification not found" }, { status: 404 });
+      }
+      return NextResponse.json({ message: "Permanently deleted" }, { status: 200 });
+    } else {
+      // SOFT DELETE: Hide from this user's view only
+      const result = await Notification.findByIdAndUpdate(
+        id,
+        { $addToSet: { deletedBy: auth.userId } },
+        { new: true }
+      );
+      if (!result) {
+        return NextResponse.json({ message: "Notification not found" }, { status: 404 });
+      }
+      return NextResponse.json({ message: "Removed from your view" }, { status: 200 });
+    }
   } catch (error) {
-    return NextResponse.json(
-      { message: "Server error", error: error.message },
-      { status: 500 }
-    );
+    console.error("DELETE Error:", error);
+    return NextResponse.json({ message: "Delete error", error: error.message }, { status: 500 });
   }
 }

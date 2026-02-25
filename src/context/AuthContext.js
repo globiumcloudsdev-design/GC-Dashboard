@@ -23,15 +23,21 @@ export function AuthProvider({ children }) {
     try {
       const response = await authService.getCurrentUser();
 
-      if (response.success) {       
+      if (response.success) {
         setUser(response.data.user);
         setIsAuthenticated(true);
+        // Ensure token is in localStorage if returned
+        if (response.data.token) {
+          localStorage.setItem('token', response.data.token);
+        }
       } else {
+        localStorage.removeItem('token');
         setUser(null);
         setIsAuthenticated(false);
       }
     } catch (error) {
       console.log("Auth check: User is not authenticated.");
+      localStorage.removeItem('token');
       setUser(null);
       setIsAuthenticated(false);
     } finally {
@@ -45,6 +51,10 @@ export function AuthProvider({ children }) {
       const response = await authService.login(email, password);
 
       if (response.success) {
+        // Save token to localStorage for api interceptor
+        if (response.data.token) {
+          localStorage.setItem('token', response.data.token);
+        }
         setUser(response.data.user);
         setIsAuthenticated(true);
         return { success: true, message: response.message };
@@ -65,6 +75,7 @@ export function AuthProvider({ children }) {
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
+      localStorage.removeItem('token');
       setUser(null);
       setIsAuthenticated(false);
       router.replace("/login");
@@ -77,6 +88,10 @@ export function AuthProvider({ children }) {
 
   const hasPermission = (module, action) => {
     if (!user) return false;
+
+    // Super Admin has all permissions
+    if (user.role?.name === 'super_admin' || user.role === 'super_admin') return true;
+
     // Prefer role-level permission if present (role may be populated on the user object)
     try {
       const rolePerm = user.role && user.role.permissions && user.role.permissions[module] ? !!user.role.permissions[module]?.[action] : null;

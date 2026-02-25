@@ -261,8 +261,14 @@ import { calculatePayrollLogic } from "@/lib/payrollUtils";
 import Shift from "@/Models/Shift";
 
 // -------------------------------------------------------------------------
+<<<<<<< HEAD
 // CALCULATION LOGIC - Wrapper for backward compatibility
 // -------------------------------------------------------------------------
+=======
+// CALCULATION LOGIC - Now imported from utils
+// -------------------------------------------------------------------------
+// Keeping a wrapper for backward compatibility
+>>>>>>> 9b9a343d88fc6a1e0f58f8ee4b853db9ddf556f7
 async function calculatePayrollLogicWrapper(agentId, month, year, informedOverrides = {}, manualSalesOverride = null) {
   // Call the centralized utility function
   const result = await calculatePayrollLogic(agentId, month, year, informedOverrides, manualSalesOverride);
@@ -298,10 +304,14 @@ async function calculatePayrollLogicWrapper(agentId, month, year, informedOverri
       netSalary: Math.round(result.netSalary),
       allowanceCutReason: result.allowanceCutReason || ""
     },
+<<<<<<< HEAD
     processedRecords: result.processedRecords,
     completedBookings: result.completedBookings,
     completedProjects: result.completedProjects,
     description: result.description // ADD THIS
+=======
+    processedRecords: result.processedRecords
+>>>>>>> 9b9a343d88fc6a1e0f58f8ee4b853db9ddf556f7
   };
 }
 
@@ -409,8 +419,13 @@ export async function POST(request) {
          }
 
          // Perform Calculation again to be safe
+<<<<<<< HEAD
          const calc = await calculatePayrollLogicWrapper(agentId, month, year, informedOverrides, manualSalesOverride);
          const { stats, financials, processedRecords, agent, description } = calc;
+=======
+         const calc =await calculatePayrollLogicWrapper(agentId, month, year, informedOverrides, manualSalesOverride);
+         const { stats, financials, processedRecords, agent } = calc;
+>>>>>>> 9b9a343d88fc6a1e0f58f8ee4b853db9ddf556f7
 
          // A. Update Attendance "isInformed" status permanently
          const updates = [];

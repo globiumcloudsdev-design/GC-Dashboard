@@ -25,14 +25,38 @@ export const agentNotificationService = {
         }
     },
 
-    // Mark as read functionality
+    // Mark as read functionality - PATCH endpoint
     async markAsRead(notificationId) {
         try {
-            const response = await api.patch(`/notifications/${notificationId}/read`);
+            const response = await api.patch(`/notifications/${notificationId}`);
             return response.data;
         }
         catch (error) {
             console.error("❌ Mark as read error:", error.response?.data || error.message);
+            throw error;
+        }
+    },
+
+    // Mark all notifications as read
+    async markAllAsRead() {
+        try {
+            const response = await api.post('/notifications/mark-all-read');
+            return response.data;
+        }
+        catch (error) {
+            console.error("❌ Mark all as read error:", error.response?.data || error.message);
+            throw error;
+        }
+    },
+
+    // Delete/Dismiss notification (soft delete for agents, hard delete for super_admin)
+    async deleteNotification(notificationId) {
+        try {
+            const response = await api.delete(`/notifications/${notificationId}`);
+            return response.data;
+        }
+        catch (error) {
+            console.error("❌ Delete notification error:", error.response?.data || error.message);
             throw error;
         }
     }

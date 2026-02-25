@@ -54,6 +54,9 @@ export default function HeroSection() {
           animate="visible"
           className="max-w-4xl pb-32"
         >
+
+
+<br /> <br />
           {/* Trust Badge */}
           <motion.div 
             variants={itemVariants}
@@ -73,7 +76,7 @@ export default function HeroSection() {
             LIMITLESS <br />
             <span className="relative inline-block mt-2">
               CLOUD
-              <span className="z-10 mx-3 mt-12 px-4 sm:px-6 py-1  bg-gradient-to-r from-[#10B5DB] to-[#0a7a9a] rounded-2xl italic">
+              <span className="absolute z-10 mx-3  px-4 sm:px-6 py-1  bg-gradient-to-r from-[#10B5DB] to-[#0a7a9a] rounded-2xl  italic">
                 INNOVATION
               </span>
             </span>
