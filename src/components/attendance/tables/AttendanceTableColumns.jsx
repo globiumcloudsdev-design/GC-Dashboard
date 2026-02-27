@@ -1,3 +1,157 @@
+// // src/components/attendance/tables/AttendanceTableColumns.jsx
+// "use client";
+// import React from "react";
+// import { Button } from "@/components/ui/button";
+// import { Badge } from "@/components/ui/badge";
+// import { Eye, Edit, Trash2 } from "lucide-react";
+// import { formatToPakistaniDate, formatToPakistaniTime } from "@/utils/TimeFuntions";
+
+// export const getAttendanceColumns = ({
+//   canEditAttendance,
+//   canDeleteAttendance,
+//   handleEditAttendance,
+//   handleDeleteAttendance,
+//   handleViewAttendance,
+// }) => {
+//   const getStatusBadge = (status, isInformed) => {
+//     const variants = {
+//       present: "bg-green-100 text-green-800 border-green-200",
+//       absent: "bg-red-100 text-red-800 border-red-200",
+//       leave: "bg-blue-100 text-blue-800 border-blue-200",
+//       "half-day": "bg-yellow-100 text-yellow-800 border-yellow-200",
+//       holiday: "bg-purple-100 text-purple-800 border-purple-200",
+//       "weekly-off": "bg-gray-100 text-gray-800 border-gray-200",
+//       weekly_off: "bg-gray-100 text-gray-800 border-gray-200",
+//       late: "bg-orange-100 text-orange-800 border-orange-200",
+//       early_checkout: "bg-pink-100 text-pink-800 border-pink-200",
+//       overtime: "bg-indigo-100 text-indigo-800 border-indigo-200",
+//     };
+
+//     return (
+//       <Badge
+//         variant="outline"
+//         className={`${variants[status] || "bg-gray-100 text-gray-800"} px-2 py-1 text-xs`}
+//       >
+//         {status?.replace(/_/g, " ").replace(/-/g, " ").toUpperCase()}
+//         {isInformed && <span className="ml-1 text-xs font-normal">(Informed)</span>}
+//       </Badge>
+//     );
+//   };
+
+//   return [
+//     {
+//       label: "Agent",
+//       minWidth: "200px",
+//       render: (a) => (
+//         <div>
+//           <div className="font-medium">
+//             {a.user
+//               ? `${a.user?.firstName || ""} ${a.user?.lastName || ""}`
+//               : a.agent?.agentName || "—"}
+//           </div>
+//           <div className="text-xs text-muted-foreground">
+//             {a.user ? a.user.email : a.agent?.agentId}
+//           </div>
+//         </div>
+//       ),
+//     },
+//     {
+//       label: "Date",
+//       minWidth: "120px",
+//       render: (a) => formatToPakistaniDate(a.date || a.createdAt),
+//     },
+//     {
+//       label: "Status",
+//       minWidth: "100px",
+//       render: (a) => getStatusBadge(a.status, a.isInformed),
+//     },
+//     {
+//       label: "Check-In",
+//       minWidth: "100px",
+//       render: (a) =>
+//         a.checkInTime ? formatToPakistaniTime(a.checkInTime) : "—",
+//     },
+//     {
+//       label: "Check-Out",
+//       minWidth: "100px",
+//       render: (a) =>
+//         a.checkOutTime ? formatToPakistaniTime(a.checkOutTime) : "—",
+//     },
+//     {
+//       label: "Work Hours",
+//       minWidth: "100px",
+//       render: (a) => {
+//         if (!a.checkInTime || !a.checkOutTime) return "—";
+//         const checkInTime = new Date(a.checkInTime);
+//         const checkOutTime = new Date(a.checkOutTime);
+        
+//         if (isNaN(checkInTime.getTime()) || isNaN(checkOutTime.getTime())) return (
+//           <div className="text-sm text-muted-foreground">—</div>
+//         );
+
+//         const diff = checkOutTime - checkInTime;
+//         if (diff < 0) return "—"; // Handle error cases
+
+//         const hours = Math.floor(diff / (1000 * 60 * 60));
+//         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+//         return `${hours}h ${minutes}m`;
+//       },
+//     },
+//     ...(canEditAttendance || canDeleteAttendance
+//       ? [
+//           {
+//             label: "Actions",
+//             minWidth: "200px",
+//             render: (a) => (
+//               <div className="flex gap-2">
+//                 <Button
+//                   variant="outline"
+//                   size="sm"
+//                   onClick={() => handleViewAttendance(a)}
+//                   title="View attendance details"
+//                 >
+//                   <Eye className="h-4 w-4" />
+//                 </Button>
+//                 {canEditAttendance && (
+//                   <Button
+//                     variant="outline"
+//                     size="sm"
+//                     onClick={() => handleEditAttendance(a)}
+//                   >
+//                     <Edit className="h-4 w-4" />
+//                   </Button>
+//                 )}
+//                 {canDeleteAttendance && (
+//                   <Button
+//                     variant="destructive"
+//                     size="sm"
+//                     onClick={() => handleDeleteAttendance(a._id)}
+//                   >
+//                     <Trash2 className="h-4 w-4" />
+//                   </Button>
+//                 )}
+//               </div>
+//             ),
+//           },
+//         ]
+//       : [
+//           {
+//             label: "Actions",
+//             minWidth: "100px",
+//             render: (a) => (
+//               <Button
+//                 variant="outline"
+//                 size="sm"
+//                 onClick={() => handleViewAttendance(a)}
+//                 title="View attendance details"
+//               >
+//                 <Eye className="h-4 w-4" />
+//               </Button>
+//             ),
+//           },
+//         ]),
+//   ];
+// };
 
 // src/components/attendance/tables/AttendanceTableColumns.jsx
 "use client";
@@ -38,7 +192,7 @@ export const getAttendanceColumns = ({
   handleDeleteAttendance,
   handleViewAttendance,
 }) => {
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (status, isInformed) => {
     const variants = {
       present: "bg-green-100 text-green-800 border-green-200",
       absent: "bg-red-100 text-red-800 border-red-200",
@@ -53,13 +207,12 @@ export const getAttendanceColumns = ({
     };
 
     return (
-      <Badge variant="outline" className={`${variants[status] || "bg-gray-100 text-gray-800"} px-2 py-1 text-xs`}>
-        {status?.replace(/_/g, ' ').replace(/-/g, ' ').toUpperCase()}
-        {isInformed && (
-          <span className="ml-1 text-xs font-normal">
-            (Informed)
-          </span>
-        )}
+      <Badge
+        variant="outline"
+        className={`${variants[status] || "bg-gray-100 text-gray-800"} px-2 py-1 text-xs`}
+      >
+        {status?.replace(/_/g, " ").replace(/-/g, " ").toUpperCase()}
+        {isInformed && <span className="ml-1 text-xs font-normal">(Informed)</span>}
       </Badge>
     );
   };
@@ -105,7 +258,7 @@ export const getAttendanceColumns = ({
     {
       label: "Status",
       minWidth: "120px",
-      render: (a) => getStatusBadge(a.status),
+      render: (a) => getStatusBadge(a.status, a.isInformed),
     },
     {
       label: "Check-In",
