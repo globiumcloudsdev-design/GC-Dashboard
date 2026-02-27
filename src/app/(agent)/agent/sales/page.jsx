@@ -27,6 +27,8 @@ import PerformanceMetrics from "@/components/sales/PerformanceMetrics";
 import TimeRangeSelector from "@/components/sales/TimeRangeSelector";
 import MonthlyTargetProgress from "@/components/sales/MonthlyTargetProgress";
 import MonthSelector from "@/components/sales/MonthSelector";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 const SalesScreen = () => {
@@ -709,53 +711,61 @@ const SalesScreen = () => {
     );
   }
 
-  if (loading && !refreshing) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="text-center">
-          <div className="w-12 h-12 border-3 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading sales data...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
-      {/* Header Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div className="flex-1">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-            Sales Dashboard
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Track your performance and revenue metrics
-          </p>
-        </div>
+    <div className="min-h-screen bg-[#F8FAFC] pb-10">
+      {/* --- PREMIUM HERO HEADER --- */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 px-6 pt-12 pb-20 mt-4 rounded-[40px] shadow-2xl shadow-indigo-950/20 mb-8 max-w-7xl mx-auto">
+        {/* Decorative Elements */}
+        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-blue-600/10 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-500/10 rounded-full blur-[100px]" />
 
-        {/* Refresh Button */}
-        <button
-          onClick={() => fetchSalesData(true)}
-          disabled={refreshing}
-          className="flex items-center gap-2 bg-white border border-gray-300 rounded-lg px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors"
-        >
-          <RefreshCw
-            className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
-          />
-          {refreshing ? "Refreshing..." : "Refresh Data"}
-        </button>
+        <div className="relative max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="p-1 px-3 rounded-full bg-blue-500/10 backdrop-blur-md text-[9px] font-bold text-blue-400 uppercase tracking-[0.3em] border border-blue-500/20">
+                Performance Analytics
+              </div>
+            </div>
+            <h1 className="text-4xl md:text-6xl font-bold text-white tracking-tight">
+              Sales{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-indigo-200 to-cyan-200">
+                Dashboard
+              </span>
+            </h1>
+            <p className="text-blue-100/40 font-medium text-sm md:text-base max-w-md leading-relaxed">
+              Real-time synchronization of lead metrics and conversion tracking
+              powered by industrial analytics.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Button
+              onClick={() => fetchSalesData(true)}
+              disabled={refreshing}
+              className="h-14 px-8 rounded-2xl bg-white text-slate-900 font-bold hover:bg-blue-50 transition-all shadow-2xl shadow-blue-500/20 border-none group"
+            >
+              <RefreshCw
+                className={cn(
+                  "mr-2 h-4 w-4 text-blue-600",
+                  refreshing && "animate-spin",
+                )}
+              />
+              <span className="tracking-tight">
+                {refreshing ? "Updating..." : "Refresh Data"}
+              </span>
+            </Button>
+          </div>
+        </div>
       </div>
 
-      {/* Main Content */}
-      <div className="space-y-6">
-        {/* Monthly Progress & Selector Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Monthly Progress */}
+      <div className="max-w-7xl mx-auto px-6 space-y-6">
+        {/* Monthly Progress, Month Selector & Performance Metrics Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Monthly Progress (Left Column) */}
           <div className="lg:col-span-2">
             <MonthlyTargetProgress
               theme={theme}
               currentMonth={selectedMonth}
-              // Pass actual data as props
               achievedDigits={targetProgress.achievedDigits}
               achievedAmount={targetProgress.achievedAmount}
               digitTarget={targetProgress.digitTarget}
@@ -765,8 +775,12 @@ const SalesScreen = () => {
             />
           </div>
 
-          {/* Month Selector */}
-          <div className="lg:col-span-1">
+          {/* Right Column (Month Selector & Performance) */}
+          <div className="lg:col-span-1 flex flex-col gap-6">
+            <PerformanceMetrics
+              data={bookingStats?.overview || {}}
+              theme={theme}
+            />
             <MonthSelector
               currentMonth={selectedMonth}
               onMonthChange={setSelectedMonth}
@@ -791,68 +805,76 @@ const SalesScreen = () => {
         {/* Booking Stats */}
         <AnimatePresence>
           {bookingStats && (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <BarChart3 className="h-5 w-5 text-blue-600" />
+            <div className="bg-white rounded-[40px] shadow-xl shadow-slate-200/50 border-none p-6 md:p-8 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 opacity-[0.03] rounded-bl-full group-hover:scale-110 transition-transform" />
+
+              <div className="flex items-center gap-4 mb-8">
+                <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg shadow-blue-200">
+                  <BarChart3 className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900">
+                  <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">
                     Sales Statistics
                   </h2>
-                  <p className="text-gray-600 text-sm">
-                    Overview of your booking performance
+                  <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-0.5">
+                    Live Booking Performance Metrics
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
                   {
                     label: "Total Sales",
                     value: bookingStats.overview?.totalBookings || 0,
                     icon: TrendingUp,
-                    color: "text-blue-600",
-                    bgColor: "bg-blue-50",
+                    grad: "from-blue-600 to-indigo-700",
                   },
                   {
                     label: "Completed",
                     value: bookingStats.overview?.completedBookings || 0,
                     icon: CheckCircle,
-                    color: "text-green-600",
-                    bgColor: "bg-green-50",
+                    grad: "from-emerald-500 to-teal-600",
                   },
                   {
                     label: "Pending",
                     value: bookingStats.overview?.pendingBookings || 0,
                     icon: Clock,
-                    color: "text-orange-600",
-                    bgColor: "bg-orange-50",
+                    grad: "from-amber-500 to-orange-600",
                   },
                   {
                     label: "Cancelled",
                     value: bookingStats.overview?.cancelledBookings || 0,
                     icon: XCircle,
-                    color: "text-red-600",
-                    bgColor: "bg-red-50",
+                    grad: "from-rose-500 to-red-600",
                   },
                 ].map((item, index) => (
-                  <div
+                  <motion.div
                     key={item.label}
-                    className="bg-gray-50 rounded-lg p-3 border border-gray-100"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="relative p-5 rounded-[40px] bg-slate-50/50 border border-slate-100/50 group/item hover:bg-white hover:shadow-xl hover:shadow-slate-200/40 transition-all duration-300"
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className={`p-1.5 rounded-md ${item.bgColor}`}>
-                        <item.icon className={`h-4 w-4 ${item.color}`} />
+                    <div className="flex items-center justify-between mb-4">
+                      <div
+                        className={cn(
+                          "p-2 rounded-xl text-white shadow-md",
+                          "bg-gradient-to-br " + item.grad,
+                        )}
+                      >
+                        <item.icon className="h-4 w-4" />
                       </div>
                     </div>
                     <div>
-                      <p className="text-xl font-bold text-gray-900">
+                      <p className="text-2xl font-black text-slate-900 tracking-tight">
                         {item.value}
                       </p>
-                      <p className="text-gray-600 text-sm">{item.label}</p>
+                      <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-1">
+                        {item.label}
+                      </p>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             </div>
@@ -888,22 +910,22 @@ const SalesScreen = () => {
           {!salesOverview &&
             promoCodes.length === 0 &&
             recentBookings.length === 0 && (
-              <div className="text-center py-8">
-                <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 max-w-sm mx-auto">
-                  <BarChart3 className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                    No Data Available
-                  </h3>
-                  <p className="text-gray-600 text-sm mb-4">
-                    No sales data available for the selected period
-                  </p>
-                  <button
-                    onClick={() => fetchSalesData(true)}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium text-sm hover:bg-blue-700 transition-colors"
-                  >
-                    Try Again
-                  </button>
+              <div className="text-center py-20 bg-white rounded-[40px] shadow-xl shadow-slate-200/50 border-2 border-dashed border-slate-100 max-w-lg mx-auto">
+                <div className="bg-slate-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <BarChart3 className="h-10 w-10 text-slate-200" />
                 </div>
+                <h3 className="text-xl font-black text-slate-900 mb-2">
+                  No Sales Data
+                </h3>
+                <p className="text-slate-500 font-medium text-sm mb-8 max-w-xs mx-auto">
+                  We couldn't find any sales records for the selected period.
+                </p>
+                <Button
+                  onClick={() => fetchSalesData(true)}
+                  className="bg-slate-900 hover:bg-black text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg transition-all"
+                >
+                  Force Sync Now
+                </Button>
               </div>
             )}
         </AnimatePresence>

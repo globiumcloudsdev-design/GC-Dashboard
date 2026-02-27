@@ -271,9 +271,9 @@ const HomeScreen = () => {
 
         let currencySymbol = currency || "PKR";
         if (agentTargetType === "digit") {
-          currencySymbol = "$";
+          currencySymbol = "PKR";
         } else if (currencySymbol === "USD") {
-          currencySymbol = "$";
+          currencySymbol = "PKR";
         }
 
         return {
@@ -609,33 +609,35 @@ const HomeScreen = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight leading-none mb-2">
+            <h1 className="text-3xl md:text-5xl font-bold text-slate-800 tracking-tighter leading-tight mb-2">
               Welcome back,{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#10B5DB] to-blue-600">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-indigo-600 to-blue-700">
                 {agent?.agentName || agent?.name || "Employee"}
               </span>
               !
             </h1>
-            <p className="text-slate-500 font-medium text-base">
-              Here's what's happening in{" "}
-              <span className="text-slate-900 font-bold">{currentMonth}</span>
+            <p className="text-slate-500 font-medium text-sm md:text-base flex items-center gap-2">
+              Performance overview for{" "}
+              <span className="text-slate-900 font-bold bg-slate-100 px-3 py-1 rounded-full text-xs uppercase tracking-widest">
+                {currentMonth}
+              </span>
             </p>
           </motion.div>
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="flex items-center gap-4 bg-white/50 backdrop-blur-md p-2 rounded-2xl border border-white shadow-sm"
+            className="flex items-center gap-4 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm"
           >
             <div className="flex flex-col items-end px-4">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">
                 System Status
               </span>
-              <span className="flex items-center gap-2 text-sm font-bold text-emerald-600">
+              <span className="flex items-center gap-2 text-xs font-bold text-emerald-600 mt-0.5">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </span>
-                Live & Operational
+                Active Service
               </span>
             </div>
           </motion.div>
@@ -716,33 +718,31 @@ const HomeScreen = () => {
                 <div className="hidden lg:block h-16 w-[1px] bg-slate-200/60 mx-4" />
               )}
 
-              {!isAtOffice && locationAccuracy && (
-                <div className="flex flex-col items-end">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
-                    Position Accuracy
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-1.5 w-24 bg-slate-100 rounded-full overflow-hidden">
-                      <div
-                        className={cn(
-                          "h-full rounded-full",
-                          locationAccuracy < 100
-                            ? "bg-emerald-500"
-                            : locationAccuracy < 500
-                              ? "bg-amber-500"
-                              : "bg-red-500",
-                        )}
-                        style={{
-                          width: `${Math.max(10, 100 - locationAccuracy / 10)} %`,
-                        }}
-                      />
-                    </div>
-                    <span className="text-sm font-black text-slate-700">
-                      {locationAccuracy.toFixed(0)}m
-                    </span>
+              <div className="flex flex-col items-end">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-1.5">
+                  Position Fidelity
+                </span>
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-1.5 w-24 bg-slate-100 rounded-full overflow-hidden">
+                    <div
+                      className={cn(
+                        "h-full rounded-full transition-all duration-1000",
+                        locationAccuracy < 100
+                          ? "bg-emerald-500"
+                          : locationAccuracy < 500
+                            ? "bg-amber-500"
+                            : "bg-red-500",
+                      )}
+                      style={{
+                        width: `${Math.max(10, 100 - locationAccuracy / 10)}%`,
+                      }}
+                    />
                   </div>
+                  <span className="text-xs font-bold text-slate-700">
+                    {locationAccuracy.toFixed(0)}m
+                  </span>
                 </div>
-              )}
+              </div>
             </div>
           </div>
         </motion.div>
@@ -789,14 +789,14 @@ const HomeScreen = () => {
                 </div>
 
                 <div className="mt-auto">
-                  <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em] mb-1">
+                  <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-2 px-1">
                     {stat.title}
                   </h4>
-                  <div className="flex flex-col">
-                    <span className="text-2xl font-black text-slate-900 tracking-tighter leading-none mb-1">
+                  <div className="flex flex-col px-1">
+                    <span className="text-3xl font-bold text-slate-900 tracking-tighter leading-none mb-1.5">
                       {stat.value}
                     </span>
-                    <span className="text-[11px] font-bold text-slate-500 bg-slate-100/50 w-fit px-2 py-0.5 rounded-md mt-0.5">
+                    <span className="text-[10px] font-bold text-slate-500 bg-slate-100 w-fit px-2 py-0.5 rounded-full uppercase tracking-tighter">
                       {stat.subtitle}
                     </span>
                   </div>
@@ -837,11 +837,11 @@ const HomeScreen = () => {
                     <Activity className="h-6 w-6 text-[#10B5DB]" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-black text-slate-900 tracking-tight">
+                    <h3 className="text-xl font-bold text-slate-900 tracking-tight leading-none">
                       Recent Activity
                     </h3>
-                    <p className="text-slate-500 text-xs font-bold">
-                      Your latest performance updates
+                    <p className="text-[10px] font-bold text-slate-400 mt-1.5 uppercase tracking-widest">
+                      Latest Operations Update
                     </p>
                   </div>
                 </div>
@@ -899,12 +899,12 @@ const HomeScreen = () => {
                           onClick={goToSales}
                         >
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3">
-                            <h4 className="text-base font-black text-slate-800 group-hover/card:text-blue-600 transition-colors">
+                            <h4 className="text-base font-bold text-slate-800 group-hover/card:text-blue-600 transition-colors tracking-tight">
                               {activity.message}
                             </h4>
                             <span
                               className={cn(
-                                "text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border self-start sm:self-center",
+                                "text-[9px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-full border self-start sm:self-center",
                                 activity.status?.toLowerCase() === "completed"
                                   ? "bg-emerald-50 text-emerald-600 border-emerald-100"
                                   : "bg-blue-50 text-blue-600 border-blue-100",
@@ -917,10 +917,10 @@ const HomeScreen = () => {
                           <div className="flex items-center gap-6">
                             {activity.amount && (
                               <div className="flex items-center gap-1.5">
-                                <span className="text-xs font-bold text-slate-400">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                                   Total:
                                 </span>
-                                <span className="text-sm font-black text-emerald-600">
+                                <span className="text-sm font-bold text-emerald-600">
                                   {activity.amount}
                                 </span>
                               </div>
@@ -956,11 +956,11 @@ const HomeScreen = () => {
                       <Bell className="h-6 w-6 text-amber-500" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-black text-slate-900 tracking-tight">
+                      <h3 className="text-xl font-bold text-slate-900 tracking-tight leading-none">
                         Notice Board
                       </h3>
-                      <p className="text-slate-500 text-xs font-bold">
-                        Company announcements
+                      <p className="text-[10px] font-bold text-slate-400 mt-1.5 uppercase tracking-widest">
+                        Internal Dispatches
                       </p>
                     </div>
                   </div>
@@ -1141,7 +1141,7 @@ const HomeScreen = () => {
                 <div className="p-2.5 bg-indigo-50 rounded-xl">
                   <Zap className="h-5 w-5 text-indigo-600" />
                 </div>
-                <h3 className="text-lg font-black text-slate-900 tracking-tight">
+                <h3 className="text-lg font-bold text-slate-900 tracking-tight leading-none">
                   Quick Actions
                 </h3>
               </div>

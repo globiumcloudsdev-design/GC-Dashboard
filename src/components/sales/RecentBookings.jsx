@@ -1,177 +1,176 @@
+// components/sales/RecentBookings.jsx
 "use client";
 
-import React, { useState } from 'react';
-import SaleDetailsModal from './SaleDetailsModal';
+import React, { useState } from "react";
+import SaleDetailsModal from "./SaleDetailsModal";
+import { ShoppingBag, ChevronRight, Clock, Calendar } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-const getStatusColor = (status) => {
-  switch ((status || '').toLowerCase()) {
-    case 'completed':
-    case 'confirmed': return '#10B981';
-    case 'pending': return '#F59E0B';
-    case 'cancelled':
-    case 'canceled': return '#EF4444';
-    case 'rescheduled': return '#6366F1';
-    default: return '#6B7280';
+const getStatusStyles = (status) => {
+  switch ((status || "").toLowerCase()) {
+    case "completed":
+    case "confirmed":
+    case "success":
+      return {
+        bg: "bg-emerald-50",
+        text: "text-emerald-700",
+        dot: "bg-emerald-500",
+      };
+    case "pending":
+      return { bg: "bg-amber-50", text: "text-amber-700", dot: "bg-amber-500" };
+    case "cancelled":
+    case "canceled":
+      return { bg: "bg-rose-50", text: "text-rose-700", dot: "bg-rose-500" };
+    case "rescheduled":
+      return {
+        bg: "bg-indigo-50",
+        text: "text-indigo-700",
+        dot: "bg-indigo-500",
+      };
+    default:
+      return { bg: "bg-slate-50", text: "text-slate-600", dot: "bg-slate-500" };
   }
 };
 
 const formatDate = (dateString) => {
-  if (!dateString) return '-';
-  return new Date(dateString).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  if (!dateString) return "-";
+  return new Date(dateString).toLocaleDateString("en-US", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 };
 
-const formatDateTime = (dateString) => {
-  if (!dateString) return '-';
-  return new Date(dateString).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
-};
-
-const formatCurrency = (amount) => {
-  if (!amount && amount !== 0) return '₹0';
-  return `₹${Number(amount).toLocaleString('en-IN')}`;
-};
-
-const RecentBookings = ({ bookings = [], theme = {}, agent = null }) => {
-  const colors = {
-    text: theme.colors?.text || '#000',
-    textSecondary: theme.colors?.textSecondary || '#666',
-    primary: theme.colors?.primary || '#1D4ED8',
-    surface: theme.colors?.surface || '#fff',
-    success: theme.colors?.success || '#10B981',
-    border: theme.colors?.border || '#ddd',
-  };
-
+const RecentBookings = ({ bookings = [], agent = null }) => {
   const [selectedBooking, setSelectedBooking] = useState(null);
 
-  const openBookingDetails = (booking) => setSelectedBooking(booking);
-  const closeModal = () => setSelectedBooking(null);
-
-  // Helper to format currency based on agent's target type
-  const formatCurrency = (amount) => {
-    if (!amount && amount !== 0) return '0';
-    
-    let currencySymbol = agent?.targetCurrency || 'PKR';
-    
-    // If target type is 'digit', use Dollar ($)
-    if (agent?.monthlyTargetType === 'digit') {
-      currencySymbol = '$';
-    } 
-    // If target type is 'amount', use targetCurrency (already set as default)
-    // If target type is 'both' or 'none', use targetCurrency
-    
-    // Convert common codes to symbols if needed
-    if (currencySymbol === 'USD') currencySymbol = '$';
-    else if (currencySymbol === 'EUR') currencySymbol = '€';
-    else if (currencySymbol === 'GBP') currencySymbol = '£';
-    // For PKR, we keep 'PKR' or use 'Rs' if preferred, but user said "Currency ki Price us Currency mein ayegi"
-    
-    return `${currencySymbol} ${Number(amount).toLocaleString('en-IN')}`;
+  const formatCurrencyValue = (amount) => {
+    if (!amount && amount !== 0) return "0";
+    let currencySymbol = agent?.targetCurrency || "PKR";
+    if (agent?.monthlyTargetType === "digit") currencySymbol = "PKR";
+    if (currencySymbol === "USD") currencySymbol = "PKR";
+    return `${currencySymbol} ${Number(amount).toLocaleString()}`;
   };
-
-
 
   return (
     <>
-      <section style={{ marginBottom: 24 }}>
-        <h2 style={{
-          fontSize: "18px",
-          fontWeight: 700,
-          marginBottom: 16,
-          color: colors.text,
-          textAlign: "left",
-        }}>
-          Recent Sales ({bookings.length})
-        </h2>
+      <div className="bg-white rounded-[40px] shadow-xl shadow-slate-200/50 border border-slate-100/50 p-8 relative overflow-hidden group transition-all duration-300">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500 opacity-[0.03] rounded-bl-full transition-transform group-hover:scale-110" />
+
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-lg group-hover:rotate-3 transition-transform">
+              <ShoppingBag className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-slate-800 tracking-tight leading-none">
+                Activity Feed
+              </h2>
+              <p className="text-slate-400 text-[9px] font-bold uppercase tracking-[0.3em] mt-1.5 px-0.5">
+                Last {bookings.length} Operations
+              </p>
+            </div>
+          </div>
+        </div>
 
         {!bookings.length ? (
-          <p style={{
-            fontSize: "14px",
-            color: colors.textSecondary,
-            textAlign: "center",
-          }}>
-            No recent sales
-          </p>
-        ) : (
-          bookings.map((item) => (
-            <div
-              key={item._id || item.bookingId}
-              onClick={() => openBookingDetails(item)}
-              style={{
-                width: "100%",
-                padding: "16px",
-                borderRadius: "12px",
-                marginBottom: "12px",
-                backgroundColor: colors.surface,
-                boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-                cursor: "pointer",
-              }}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => { if (e.key === 'Enter') openBookingDetails(item); }}
-            >
-              <div style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: 8,
-              }}>
-                <p style={{ fontSize: "14px", fontWeight: 600, color: colors.text }}>
-                  {item.type === 'project' ? `📁 ${item.title || 'Project'}` : `#${item.bookingId || '-'}`}
-                </p>
-                <div style={{
-                  padding: "4px 8px",
-                  borderRadius: 6,
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  color: "#fff",
-                  backgroundColor: getStatusColor(item.status),
-                }}>
-                  {(item.status || '-').toUpperCase()}
-                </div>
-              </div>
-
-              <div style={{
-                display: "flex",
-                justifyContent: "space-between",
-                fontSize: "13px",
-                color: colors.textSecondary,
-                flexWrap: "wrap",
-                gap: "8px",
-              }}>
-                <p>{formatDate(item.createdAt)}</p>
-                <p>
-                  {item.type === 'project' 
-                    ? (item.category || 'Project')
-                    : `${item.formData?.firstName || '-'} ${item.formData?.lastName || ''}`
-                  }
-                </p>
-                {(agent?.monthlyTargetType === 'amount' || agent?.monthlyTargetType === 'both') && (
-                  <p style={{ fontWeight: 600, color: colors.primary }}>
-                    {formatCurrency(item.type === 'project' ? (item.price || item.amount || 0) : (item.totalPrice || item.amount || item.totalAmount || 0))}
-                  </p>
-                )}
-              </div>
-
-              {item.type === 'project' && item.shortDescription && (
-                <p style={{ fontSize: "12px", color: colors.textSecondary, marginTop: 6 }}>
-                  {item.shortDescription}
-                </p>
-              )}
-              {item.type !== 'project' && item.promoCode && (
-                <p style={{ fontSize: "12px", color: colors.textSecondary, marginTop: 6 }}>
-                  Promo: {item.promoCode}
-                </p>
-              )}
+          <div className="py-16 text-center">
+            <div className="w-16 h-16 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto mb-5 rotate-6">
+              <Clock className="text-slate-200" size={32} />
             </div>
-          ))
+            <p className="text-slate-400 font-bold text-xs uppercase tracking-[0.2em]">
+              No recent activities
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4">
+            {bookings.map((item) => {
+              const status = getStatusStyles(item.status);
+              return (
+                <div
+                  key={item._id || item.bookingId}
+                  onClick={() => setSelectedBooking(item)}
+                  className="group/item flex items-center justify-between p-5 rounded-[32px] bg-slate-50/50 border border-slate-100/50 hover:bg-white hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-300 cursor-pointer"
+                >
+                  <div className="flex items-center gap-5">
+                    <div
+                      className={cn(
+                        "p-3.5 rounded-2xl transition-all duration-300 group-hover/item:scale-110 group-hover/item:rotate-3 shadow-sm",
+                        status.bg,
+                        status.text,
+                      )}
+                    >
+                      {item.type === "project" ? (
+                        <ShoppingBag size={22} className="opacity-90" />
+                      ) : (
+                        <Calendar size={22} className="opacity-90" />
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-800 group-hover/item:text-blue-600 transition-colors tracking-tight">
+                        {item.type === "project"
+                          ? item.title || "Untitled Project"
+                          : item.customerName ||
+                            `${item.formData?.firstName || "Guest"} ${item.formData?.lastName || ""}`}
+                      </h4>
+                      <div className="flex items-center gap-3 mt-1.5 px-0.5">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.15em]">
+                          {formatDate(item.createdAt)}
+                        </span>
+                        <div
+                          className={cn("w-1 h-1 rounded-full", status.dot)}
+                        />
+                        <span
+                          className={cn(
+                            "text-[10px] font-bold uppercase tracking-[0.1em] italic",
+                            status.text,
+                          )}
+                        >
+                          {item.status || "Pending"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-6">
+                    {(agent?.monthlyTargetType === "amount" ||
+                      agent?.monthlyTargetType === "both" ||
+                      !agent?.monthlyTargetType) && (
+                      <div className="text-right hidden sm:block">
+                        <p className="text-base font-black text-slate-900 tracking-tighter">
+                          {formatCurrencyValue(
+                            item.type === "project"
+                              ? item.price || item.amount || 0
+                              : item.totalPrice ||
+                                  item.amount ||
+                                  item.totalAmount ||
+                                  0,
+                          )}
+                        </p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-0.5 opacity-60">
+                          Net
+                        </p>
+                      </div>
+                    )}
+                    <div className="p-2.5 bg-white rounded-2xl shadow-sm border border-slate-100 group-hover/item:bg-slate-900 group-hover/item:text-white transition-all duration-300">
+                      <ChevronRight size={18} />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         )}
-      </section>
+      </div>
 
       <SaleDetailsModal
         isOpen={!!selectedBooking}
-        onClose={closeModal}
+        onClose={() => setSelectedBooking(null)}
         saleData={selectedBooking}
         currencySymbol={
-          agent?.monthlyTargetType === 'digit' ? '$' : (agent?.targetCurrency || 'PKR')
+          agent?.monthlyTargetType === "digit"
+            ? "$"
+            : agent?.targetCurrency || "PKR"
         }
       />
     </>

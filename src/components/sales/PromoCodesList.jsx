@@ -1,190 +1,79 @@
-import React from 'react';
-
-const styles = {
-  section: { marginBottom: 24 },
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 12 },
-  noData: { textAlign: 'center', fontStyle: 'italic', padding: 20 },
-  promoCard: {
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-    boxShadow: '0 4px 12px rgba(0,0,0,0.10)',
-    display: 'flex',
-    flexDirection: 'column',
-    width: '50%',
-    boxSizing: 'border-box',
-  },
-  promoHeader: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-    gap: 8,
-  },
-  promoCode: { fontSize: 16, fontWeight: 'bold' },
-  discount: { fontSize: 14, fontWeight: 600, color: '#10B981' },
-  statsRow: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-    gap: 8,
-  },
-  stat: {
-    alignItems: 'center',
-    flex: '1 1 45%',
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  statValue: { fontSize: 16, fontWeight: 'bold', marginBottom: 2 },
-  statLabel: { fontSize: 12, textAlign: 'center' },
-  usageRow: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginTop: 8,
-    paddingTop: 8,
-    borderTop: '1px solid #E5E7EB',
-    gap: 8,
-  },
-  usageText: { fontSize: 11 },
-};
+// components/sales/PromoCodesList.jsx
+import React from "react";
+import { Ticket, Percent, Activity, Box } from "lucide-react";
 
 const PromoCodesList = ({ promoCodes = [], theme = {} }) => {
-  const colors = {
-    text: theme.colors?.text || '#000',
-    textSecondary: theme.colors?.textSecondary || '#666',
-    primary: theme.colors?.primary || '#1D4ED8',
-    surface: theme.colors?.surface || '#fff',
-  };
-
   if (!promoCodes.length) {
     return (
-      <section style={styles.section}>
-        <h2 style={{ ...styles.sectionTitle, color: colors.text }}>
-          Promo Codes Performance (0)
-        </h2>
-        <p style={{ ...styles.noData, color: colors.textSecondary }}>
-          No promo codes found
-        </p>
-      </section>
+      <div className="bg-white rounded-[40px] shadow-xl shadow-slate-200/50 border-none p-8 text-center h-full flex flex-col items-center justify-center">
+        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+          <Ticket className="text-slate-200" size={32} />
+        </div>
+        <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest">
+          No promo codes active
+        </h3>
+      </div>
     );
   }
 
   return (
-    // <section style={styles.section}>
-    //   <h2 style={{ ...styles.sectionTitle, color: colors.text }}>
-    //     Promo Codes Performance ({promoCodes.length})
-    //   </h2>
-    //   {promoCodes.map((item) => (
-    //     <div
-    //       key={item.promoCodeId?.toString() || item.promoCode}
-    //       style={{ ...styles.promoCard, backgroundColor: colors.surface }}
-    //     >
-    //       <div style={styles.promoHeader}>
-    //         <p style={{ ...styles.promoCode, color: colors.primary }}>
-    //           {item.promoCode || 'N/A'}
-    //         </p>
-    //         <p style={styles.discount}>
-    //           {item.discountPercentage ?? 0}% OFF
-    //         </p>
-    //       </div>
+    <div className="bg-white rounded-[40px] shadow-xl shadow-slate-200/50 border-none p-8 relative overflow-hidden group h-full">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 opacity-[0.03] rounded-bl-full transition-transform group-hover:scale-110" />
 
-    //       <div style={styles.statsRow}>
-    //         <div style={styles.stat}>
-    //           <p style={{ ...styles.statValue, color: colors.text }}>
-    //             {item.totalBookings ?? 0}
-    //           </p>
-    //           <p style={{ ...styles.statLabel, color: colors.textSecondary }}>
-    //             Bookings
-    //           </p>
-    //         </div>
-    //       </div>
-
-    //       <div style={styles.usageRow}>
-    //         <p style={{ ...styles.usageText, color: colors.textSecondary }}>
-    //           Used: {item.usedCount ?? 0} times
-    //         </p>
-    //         {item.maxUsage != null && (
-    //           <p style={{ ...styles.usageText, color: colors.textSecondary }}>
-    //             Limit: {item.maxUsage}
-    //           </p>
-    //         )}
-    //       </div>
-    //     </div>
-    //   ))}
-    // </section>
-
-    <section style={{ marginBottom: 24 }}>
-  <h2 style={{
-    fontSize: "18px",
-    fontWeight: 700,
-    marginBottom: 16,
-    color: colors.text,
-    textAlign: "left",
-  }}>
-    Promo Codes Performance ({promoCodes.length})
-  </h2>
-
-  {promoCodes.map((item) => (
-    <div
-      key={item.promoCodeId?.toString() || item.promoCode}
-      style={{
-        width: "100%",
-        maxWidth: 1000,
-        margin: "0 auto 12px auto",
-        padding: "16px",
-        borderRadius: "12px",
-        backgroundColor: colors.surface,
-        boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-      }}
-    >
-      {/* Header */}
-      <div style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: 8,
-        flexWrap: "wrap",
-        gap: 8,
-      }}>
-        <p style={{ fontSize: "16px", fontWeight: 600, color: colors.primary }}>
-          {item.promoCode || 'N/A'}
-        </p>
-        <p style={{ fontSize: "14px", fontWeight: 500, color: colors.textSecondary }}>
-          {item.discountPercentage ?? 0}% OFF
-        </p>
-      </div>
-
-      {/* Stats */}
-      <div style={{
-        display: "flex",
-        justifyContent: "center",
-        marginBottom: 8,
-      }}>
-        <div style={{ textAlign: "center" }}>
-          <p style={{ fontSize: "14px", fontWeight: 600, color: colors.text }}>
-            {item.totalBookings ?? 0}
+      <div className="flex items-center gap-4 mb-8">
+        <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl shadow-lg shadow-blue-200">
+          <Ticket className="h-6 w-6 text-white" />
+        </div>
+        <div>
+          <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">
+            Promo Performance
+          </h2>
+          <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-0.5">
+            {promoCodes.length} Registered Codes
           </p>
-          <p style={{ fontSize: "12px", color: colors.textSecondary }}>Bookings</p>
         </div>
       </div>
 
-      {/* Usage */}
-      <div style={{
-        display: "flex",
-        justifyContent: "space-between",
-        fontSize: "12px",
-        color: colors.textSecondary,
-      }}>
-        <p>Used: {item.usedCount ?? 0} times</p>
-        {item.maxUsage != null && <p>Limit: {item.maxUsage}</p>}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {promoCodes.map((item) => (
+          <div
+            key={item.promoCodeId?.toString() || item.promoCode}
+            className="p-5 rounded-3xl bg-slate-50/50 border border-slate-100/50 hover:bg-white hover:shadow-xl hover:shadow-slate-200/40 transition-all duration-300 group/item"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
+                  <Percent size={14} />
+                </div>
+                <span className="text-sm font-black text-slate-900 tracking-tight">
+                  {item.promoCode || "N/A"}
+                </span>
+              </div>
+              <span className="text-[10px] font-black bg-emerald-100 text-emerald-600 px-2 py-1 rounded-lg uppercase tracking-widest">
+                {item.discountPercentage ?? 0}% Off
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between py-3 border-t border-slate-100/50 mt-2">
+              <div className="flex items-center gap-2">
+                <Activity size={12} className="text-slate-400" />
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  Usage: {item.usedCount || 0}
+                </span>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-black text-slate-900 tracking-tight">
+                  {item.totalBookings ?? 0}
+                </p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">
+                  Bookings
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
-  ))}
-</section>
-
   );
 };
 
