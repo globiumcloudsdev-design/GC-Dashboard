@@ -13,19 +13,27 @@
 //   handleDeleteAttendance,
 //   handleViewAttendance,
 // }) => {
-//   const getStatusBadge = (status) => {
+//   const getStatusBadge = (status, isInformed) => {
 //     const variants = {
-//       present: "bg-green-100 text-green-800",
-//       absent: "bg-red-100 text-red-800",
-//       leave: "bg-blue-100 text-blue-800",
-//       "half-day": "bg-yellow-100 text-yellow-800",
-//       holiday: "bg-purple-100 text-purple-800",
-//       "weekly-off": "bg-gray-100 text-gray-800",
+//       present: "bg-green-100 text-green-800 border-green-200",
+//       absent: "bg-red-100 text-red-800 border-red-200",
+//       leave: "bg-blue-100 text-blue-800 border-blue-200",
+//       "half-day": "bg-yellow-100 text-yellow-800 border-yellow-200",
+//       holiday: "bg-purple-100 text-purple-800 border-purple-200",
+//       "weekly-off": "bg-gray-100 text-gray-800 border-gray-200",
+//       weekly_off: "bg-gray-100 text-gray-800 border-gray-200",
+//       late: "bg-orange-100 text-orange-800 border-orange-200",
+//       early_checkout: "bg-pink-100 text-pink-800 border-pink-200",
+//       overtime: "bg-indigo-100 text-indigo-800 border-indigo-200",
 //     };
 
 //     return (
-//       <Badge className={variants[status] || ""}>
-//         {status?.replace('-', ' ').toUpperCase()}
+//       <Badge
+//         variant="outline"
+//         className={`${variants[status] || "bg-gray-100 text-gray-800"} px-2 py-1 text-xs`}
+//       >
+//         {status?.replace(/_/g, " ").replace(/-/g, " ").toUpperCase()}
+//         {isInformed && <span className="ml-1 text-xs font-normal">(Informed)</span>}
 //       </Badge>
 //     );
 //   };
@@ -55,7 +63,7 @@
 //     {
 //       label: "Status",
 //       minWidth: "100px",
-//       render: (a) => getStatusBadge(a.status),
+//       render: (a) => getStatusBadge(a.status, a.isInformed),
 //     },
 //     {
 //       label: "Check-In",
@@ -184,7 +192,7 @@ export const getAttendanceColumns = ({
   handleDeleteAttendance,
   handleViewAttendance,
 }) => {
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (status, isInformed) => {
     const variants = {
       present: "bg-green-100 text-green-800 border-green-200",
       absent: "bg-red-100 text-red-800 border-red-200",
@@ -199,13 +207,12 @@ export const getAttendanceColumns = ({
     };
 
     return (
-      <Badge variant="outline" className={`${variants[status] || "bg-gray-100 text-gray-800"} px-2 py-1 text-xs`}>
-        {status?.replace(/_/g, ' ').replace(/-/g, ' ').toUpperCase()}
-        {isInformed && (
-          <span className="ml-1 text-xs font-normal">
-            (Informed)
-          </span>
-        )}
+      <Badge
+        variant="outline"
+        className={`${variants[status] || "bg-gray-100 text-gray-800"} px-2 py-1 text-xs`}
+      >
+        {status?.replace(/_/g, " ").replace(/-/g, " ").toUpperCase()}
+        {isInformed && <span className="ml-1 text-xs font-normal">(Informed)</span>}
       </Badge>
     );
   };
@@ -251,7 +258,7 @@ export const getAttendanceColumns = ({
     {
       label: "Status",
       minWidth: "120px",
-      render: (a) => getStatusBadge(a.status),
+      render: (a) => getStatusBadge(a.status, a.isInformed),
     },
     {
       label: "Check-In",
