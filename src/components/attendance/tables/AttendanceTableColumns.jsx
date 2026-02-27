@@ -76,9 +76,10 @@
 //         if (!a.checkInTime || !a.checkOutTime) return "—";
 //         const checkInTime = new Date(a.checkInTime);
 //         const checkOutTime = new Date(a.checkOutTime);
-
-//         // Handle invalid dates
-//         if (isNaN(checkInTime.getTime()) || isNaN(checkOutTime.getTime())) return "—";
+        
+//         if (isNaN(checkInTime.getTime()) || isNaN(checkOutTime.getTime())) return (
+//           <div className="text-sm text-muted-foreground">—</div>
+//         );
 
 //         const diff = checkOutTime - checkInTime;
 //         if (diff < 0) return "—"; // Handle error cases
@@ -149,15 +150,18 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Eye,
-  Edit,
-  Trash2,
-  MoreVertical,
-  FileText,
-  Download,
-  CheckCircle,
+import { 
+  Eye, 
+  Edit, 
+  Trash2, 
+  MoreVertical, 
+  FileText, 
+  Download, 
+  CheckCircle, 
   XCircle,
+  Info,
+  Bell,
+  BellOff
 } from "lucide-react";
 import {
   formatToPakistaniDate,
@@ -195,11 +199,13 @@ export const getAttendanceColumns = ({
     };
 
     return (
-      <Badge
-        variant="outline"
-        className={`${variants[status] || "bg-gray-100 text-gray-800"} px-2 py-1 text-xs`}
-      >
-        {status?.replace(/_/g, " ").replace(/-/g, " ").toUpperCase()}
+      <Badge variant="outline" className={`${variants[status] || "bg-gray-100 text-gray-800"} px-2 py-1 text-xs`}>
+        {status?.replace(/_/g, ' ').replace(/-/g, ' ').toUpperCase()}
+        {isInformed && (
+          <span className="ml-1 text-xs font-normal">
+            (Informed)
+          </span>
+        )}
       </Badge>
     );
   };
@@ -321,6 +327,48 @@ export const getAttendanceColumns = ({
                 <Eye className="h-4 w-4 mr-2" />
                 View Details
               </DropdownMenuItem>
+              
+              {/* Informed Actions - Only for Late/Absent */}
+              {(a.status === 'late' || a.status === 'absent') && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={() => {
+                      if (handleMarkInformed) {
+                        handleMarkInformed(a._id, !a.isInformed);
+                      } else {
+                        toast.info("Mark informed feature coming soon!");
+                      }
+                    }}
+                    className={`cursor-pointer ${a.isInformed ? 'text-orange-600' : 'text-green-600'}`}
+                  >
+                    {a.isInformed ? (
+                      <>
+                        <BellOff className="h-4 w-4 mr-2" />
+                        Mark as Uninformed
+                      </>
+                    ) : (
+                      <>
+                        <Bell className="h-4 w-4 mr-2" />
+                        Mark as Informed
+                      </>
+                    )}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => {
+                      toast.info(`This ${a.status} is ${a.isInformed ? 'informed' : 'uninformed'}`);
+                    }}
+                    className="cursor-pointer text-blue-600"
+                  >
+                    <Info className="h-4 w-4 mr-2" />
+                    {a.isInformed 
+                      ? "Informed - No penalty" 
+                      : "Uninformed - Penalty applies"}
+                  </DropdownMenuItem>
+                </>
+              )}
+              
+              {/* Edit/Delete Actions */}
 
               {/* Download as PDF */}
               <DropdownMenuItem
@@ -374,12 +422,12 @@ export const getAttendanceColumns = ({
                   )} */}
                 </>
               )}
-
-              {/* Additional Actions Separator */}
-              <DropdownMenuSeparator />
-
+              
               {/* Quick Actions */}
-              <DropdownMenuItem
+              <DropdownMenuSeparator />
+              
+              {/* Mark as Present */}
+              <DropdownMenuItem 
                 onClick={() => {
                   // Mark as present/absent quick actions
                   toast.info("Quick action feature coming soon!");
@@ -389,8 +437,9 @@ export const getAttendanceColumns = ({
                 <CheckCircle className="h-4 w-4 mr-2" />
                 Mark as Present
               </DropdownMenuItem>
-
-              <DropdownMenuItem
+              
+              {/* Mark as Absent */}
+              <DropdownMenuItem 
                 onClick={() => {
                   toast.info("Quick action feature coming soon!");
                 }}

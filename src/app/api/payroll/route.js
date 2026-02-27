@@ -15,6 +15,46 @@ import { createAndSendNotification } from "@/lib/notificationHelper";
 // -------------------------------------------------------------------------
 // Keeping a wrapper for backward compatibility
 async function calculatePayrollLogicWrapper(agentId, month, year, informedOverrides = {}, manualSalesOverride = null) {
+  // Call the centralized utility function
+//   const result = await calculatePayrollLogic(agentId, month, year, informedOverrides, manualSalesOverride);
+  
+  // Transform result to match expected format
+//   return {
+//     agent: result.agent,
+//     stats: {
+//       totalDaysInMonth: result.totalDaysInMonth,
+//       workingDays: result.workingDays,
+//       presentDays: result.presentDays,
+//       totalLates: result.totalLates,
+//       uninformedLates: result.uninformedLates,
+//       informedLates: result.informedLates,
+//       latePenaltyCount: result.latePenaltyCount,
+//       uninformedAbsents: result.uninformedAbsents,
+//       informedAbsents: result.informedAbsents,
+//       convertedAbsents: result.convertedAbsents,
+//       totalDeductableAbsentDays: result.uninformedAbsents + result.informedAbsents + result.convertedAbsents,
+//       salesCount: result.salesCount,
+//       revenue: result.revenue
+//     },
+//     financials: {
+//       basicSalary: result.basicSalary,
+//       perDaySalary: result.perDaySalary,
+//       attendanceAllowance: result.attendanceAllowance,
+//       lateDeductionAmount: Math.round(result.lateDeductionAmount),
+//       absentDeductionAmount: Math.round(result.absentDeductionAmount),
+//       earnedAllowance: result.earnedAllowance,
+//       earnedIncentive: result.earnedIncentive,
+//       grossSalary: result.grossSalary,
+//       totalDeduction: Math.round(result.totalDeduction),
+//       netSalary: Math.round(result.netSalary),
+//       allowanceCutReason: result.allowanceCutReason || ""
+//     },
+//     processedRecords: result.processedRecords,
+//     completedBookings: result.completedBookings,
+//     completedProjects: result.completedProjects,
+//     description: result.description, // ADD THIS
+//     processedRecords: result.processedRecords
+//   };
     // Call the centralized utility function
     const result = await calculatePayrollLogic(agentId, month, year, informedOverrides, manualSalesOverride);
 
@@ -240,4 +280,110 @@ export async function POST(request) {
         console.error("Payroll Error:", error);
         return NextResponse.json({ success: false, message: error.message }, { status: 500 });
     }
+
+//     // 1. CALCULATE (Preview)
+//     if (action === 'calculate') {
+//         const calculation = await calculatePayrollLogicWrapper(agentId, month, year, informedOverrides, manualSalesOverride);
+//         return NextResponse.json({ success: true, data: calculation });
+//     }
+
+//     // 2. GENERATE (Save)
+//     if (action === 'generate') {
+//          // Check if already exists
+//          const exists = await Payroll.findOne({ agent: agentId, month, year });
+//          if (exists) {
+//              return NextResponse.json({ success: false, message: "Payroll already generated for this month" }, { status: 400 });
+//          }
+
+//          // Perform Calculation again to be safe
+//          const calc =await calculatePayrollLogicWrapper(agentId, month, year, informedOverrides, manualSalesOverride);
+//          const { stats, financials, processedRecords, agent } = calc;
+
+//          // A. Update Attendance "isInformed" status permanently
+//          const updates = [];
+//          if (informedOverrides) {
+//              for (const [id, val] of Object.entries(informedOverrides)) {
+//                  // Skip virtual IDs (gap filled days)
+//                  if (id.startsWith('virtual-')) continue;
+                 
+//                  updates.push({
+//                      updateOne: {
+//                          filter: { _id: id },
+//                          update: { $set: { isInformed: val } }
+//                      }
+//                  });
+//              }
+//          }
+//          if (updates.length > 0) {
+//              await Attendance.bulkWrite(updates);
+//          }
+
+//          // B. Create Payroll Record with description
+//          const newPayroll = await Payroll.create({
+//              agent: agentId,
+//              month,
+//              year,
+//              basicSalary: financials.basicSalary,
+//              attendanceAllowance: financials.attendanceAllowance,
+//              perSaleIncentive: agent.perSaleIncentive || 0,
+//              totalDaysInMonth: stats.totalDaysInMonth,
+//              workingDays: stats.workingDays,
+//              presentDays: stats.presentDays,
+//              totalLates: stats.totalLates,
+             
+//              // Save detailed stats with informed breakdown
+//              uninformedLates: stats.uninformedLates,
+//              informedLates: stats.informedLates,
+//              uninformedAbsents: stats.uninformedAbsents,
+//              informedAbsents: stats.informedAbsents,
+//              convertedAbsents: stats.convertedAbsents,
+//              absentDays: stats.uninformedAbsents + stats.informedAbsents,
+//              latePenaltyCount: stats.latePenaltyCount,
+             
+//              // Sales stats
+//              targetType: stats.targetType || 'none',
+//              salesCount: stats.salesCount || 0,
+//              revenue: stats.revenue || 0,
+//              completedBookingsCount: calc.completedBookings?.length || 0,
+//              completedProjectsCount: calc.completedProjects?.length || 0,
+
+//              perDaySalary: financials.perDaySalary,
+//              lateDeductionAmount: financials.lateDeductionAmount,
+//              absentDeductionAmount: financials.absentDeductionAmount,
+             
+//              earnedAllowance: financials.earnedAllowance,
+//              earnedIncentive: financials.earnedIncentive,
+//              grossSalary: financials.grossSalary,
+//              totalDeduction: financials.totalDeduction,
+//              netSalary: financials.netSalary,
+             
+//              status: 'generated',
+//              notes: financials.allowanceCutReason ? `Allowance Cut: ${financials.allowanceCutReason}` : "",
+//              description: description || "", // ADD THIS
+//              generatedBy: null
+//          });
+
+//          // C. Send Notification
+//          await Notification.create({
+//             title: `Salary Generated for ${month}/${year}`,
+//             message: `Your salary for ${month}/${year} has been generated. Net Salary: PKR ${financials.netSalary.toLocaleString()}`,
+//             type: "success",
+//             targetType: "specific",
+//             targetModel: "Agent",
+//             targetUsers: [agentId]
+//          });
+
+//          return NextResponse.json({ 
+//              success: true, 
+//              message: "Payroll generated successfully", 
+//              data: newPayroll 
+//          });
+//     }
+
+//     return NextResponse.json({ success: false, message: "Invalid action" });
+
+//   } catch (error) {
+//     console.error("Payroll Error:", error);
+//     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+//   }
 }

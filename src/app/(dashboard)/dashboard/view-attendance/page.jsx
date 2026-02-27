@@ -598,13 +598,106 @@ export default function AdminAttendancePage() {
     setShowViewModal(true);
   };
 
+  // const handleEditAttendance = (attendance) => {
+  //   const formatDateOnly = (val) => {
+  //     if (!val) return "";
+  //     try {
+  //       const date = new Date(val);
+  //       return date.toLocaleDateString("en-CA", { timeZone: "Asia/Karachi" });
+  //     } catch {
+  //       return "";
+  //     }
+  //   };
+
+  //   const formatTimeOnly = (val) => {
+  //     if (!val) return "";
+  //     try {
+  //       const date = new Date(val);
+  //       const options = {
+  //         hour: "2-digit",
+  //         minute: "2-digit",
+  //         hour12: false,
+  //         timeZone: "Asia/Karachi",
+  //       };
+  //       const timeString = date.toLocaleTimeString("en-GB", options);
+  //       return timeString;
+  //     } catch (error) {
+  //       console.error("Error formatting time:", error, val);
+  //       return "";
+  //     }
+  //   };
+
+  // //   setEditingAttendance(attendance);
+
+  //   let attendanceDate = "";
+  //   if (attendance.date) {
+  //     attendanceDate = formatDateOnly(attendance.date);
+  //   } else if (attendance.checkInTime) {
+  //     attendanceDate = formatDateOnly(attendance.checkInTime);
+  //   } else {
+  //     const now = new Date();
+  //     attendanceDate = now.toLocaleDateString("en-CA", {
+  //       timeZone: "Asia/Karachi",
+  //     });
+  //   }
+
+  //   setManualForm({
+  //     userType: attendance.user ? "user" : "agent",
+  //     userId: attendance.user?._id || "",
+  //     agentId: attendance.agent?._id || "",
+  //     shiftId: attendance.shift?._id || "",
+  //     date: attendanceDate,
+  //     status: attendance.status,
+  //     checkInTime: formatTimeOnly(attendance.checkInTime),
+  //     checkOutTime: formatTimeOnly(attendance.checkOutTime),
+  //     notes: attendance.notes || "",
+  //   });
+  //   setShowEditModal(true);
+  // };
+
+  // const handleUpdateAttendance = async (e) => {
+  //   e.preventDefault();
+  //   try {
+  //     setLoading(prev => ({ ...prev, edit: true }));
+
+  //     const originalStatus = editingAttendance?.status;
+  //     const isManuallySettingStatus = manualForm.status !== originalStatus;
+
+  //     // Send times as HH:MM format (API expects this format)
+  //     const updateData = {
+  //       attendanceId: editingAttendance._id,
+  //       status: isManuallySettingStatus ? manualForm.status : null,
+  //       checkInTime: manualForm.checkInTime || null,
+  //       checkOutTime: manualForm.checkOutTime || null,
+  //       shiftId: manualForm.shiftId || null,
+  //       notes: manualForm.notes || ""
+  //     };
+
+  //     const response = await adminService.updateAttendance(updateData);
+  //     console.log("🎯 DEBUG: API Response:", response);
+  //     if (response.success) {
+  //       toast.success("Attendance updated successfully");
+  //       setShowEditModal(false);
+  //       fetchAttendance();
+  //     } else {
+  //       toast.error(response.message || "Error updating attendance");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error updating attendance:", error);
+  //     toast.error("Error updating attendance");
+  //   } finally {
+  //     setLoading(prev => ({ ...prev, edit: false }));
+  //   }
+  // };
+
+  // Update the handleEditAttendance function
   const handleEditAttendance = (attendance) => {
     const formatDateOnly = (val) => {
       if (!val) return "";
       try {
         const date = new Date(val);
         return date.toLocaleDateString("en-CA", { timeZone: "Asia/Karachi" });
-      } catch {
+      } catch (error) {
         return "";
       }
     };
@@ -636,9 +729,7 @@ export default function AdminAttendancePage() {
       attendanceDate = formatDateOnly(attendance.checkInTime);
     } else {
       const now = new Date();
-      attendanceDate = now.toLocaleDateString("en-CA", {
-        timeZone: "Asia/Karachi",
-      });
+      attendanceDate = now.toLocaleDateString("en-CA", { timeZone: "Asia/Karachi" });
     }
 
     setManualForm({
@@ -651,18 +742,21 @@ export default function AdminAttendancePage() {
       checkInTime: formatTimeOnly(attendance.checkInTime),
       checkOutTime: formatTimeOnly(attendance.checkOutTime),
       notes: attendance.notes || "",
+      isInformed: attendance.isInformed || false,
     });
     setShowEditModal(true);
   };
 
+  // Update handleUpdateAttendance to include isInformed
   const handleUpdateAttendance = async (e) => {
     e.preventDefault();
     try {
-      setLoading((prev) => ({ ...prev, edit: true }));
+      setLoading(prev => ({ ...prev, edit: true }));
 
       const originalStatus = editingAttendance?.status;
       const isManuallySettingStatus = manualForm.status !== originalStatus;
 
+      // Send times as HH:MM format (API expects this format)
       const updateData = {
         attendanceId: editingAttendance._id,
         status: isManuallySettingStatus ? manualForm.status : null,
@@ -670,9 +764,11 @@ export default function AdminAttendancePage() {
         checkOutTime: manualForm.checkOutTime || null,
         shiftId: manualForm.shiftId || null,
         notes: manualForm.notes || "",
+        isInformed: manualForm.isInformed // Add this line
       };
 
       const response = await adminService.updateAttendance(updateData);
+      console.log("🎯 DEBUG: API Response:", response);
       if (response.success) {
         toast.success("Attendance updated successfully");
         setShowEditModal(false);
@@ -684,7 +780,7 @@ export default function AdminAttendancePage() {
       console.error("Error updating attendance:", error);
       toast.error("Error updating attendance");
     } finally {
-      setLoading((prev) => ({ ...prev, edit: false }));
+      setLoading(prev => ({ ...prev, edit: false }));
     }
   };
 
@@ -699,7 +795,7 @@ export default function AdminAttendancePage() {
       if (response.success) {
         toast.success(
           response.message ||
-            "Shift-based auto attendance processed successfully",
+          "Shift-based auto attendance processed successfully",
         );
         setShowShiftAutoModal(false);
         fetchAttendance();
@@ -865,36 +961,36 @@ export default function AdminAttendancePage() {
 
     const stats = agentSummaryStats
       ? {
-          total: agentSummaryStats.total,
-          present: agentSummaryStats.present,
-          late: agentSummaryStats.late,
-          halfDay: agentSummaryStats.half_day,
-          absent: agentSummaryStats.absent,
-          earlyCheckout: agentSummaryStats.early_checkout,
-          overtime: agentSummaryStats.overtime,
-          leave: agentSummaryStats.leave,
-          approvedLeave: agentSummaryStats.approved_leave,
-          pendingLeave: agentSummaryStats.pending_leave,
-          holiday: agentSummaryStats.holiday,
-          weeklyOff: agentSummaryStats.weekly_off,
-        }
+        total: agentSummaryStats.total,
+        present: agentSummaryStats.present,
+        late: agentSummaryStats.late,
+        halfDay: agentSummaryStats.half_day,
+        absent: agentSummaryStats.absent,
+        earlyCheckout: agentSummaryStats.early_checkout,
+        overtime: agentSummaryStats.overtime,
+        leave: agentSummaryStats.leave,
+        approvedLeave: agentSummaryStats.approved_leave,
+        pendingLeave: agentSummaryStats.pending_leave,
+        holiday: agentSummaryStats.holiday,
+        weeklyOff: agentSummaryStats.weekly_off,
+      }
       : {
-          total: attendance.length,
-          present: attendance.filter((a) => a.status === "present").length,
-          late: attendance.filter((a) => a.status === "late").length,
-          halfDay: attendance.filter((a) => a.status === "half_day").length,
-          absent: attendance.filter((a) => a.status === "absent").length,
-          earlyCheckout: attendance.filter((a) => a.status === "early_checkout")
-            .length,
-          overtime: attendance.filter((a) => a.status === "overtime").length,
-          leave: attendance.filter((a) => a.status === "leave").length,
-          approvedLeave: attendance.filter((a) => a.status === "approved_leave")
-            .length,
-          pendingLeave: attendance.filter((a) => a.status === "pending_leave")
-            .length,
-          holiday: attendance.filter((a) => a.status === "holiday").length,
-          weeklyOff: attendance.filter((a) => a.status === "weekly_off").length,
-        };
+        total: attendance.length,
+        present: attendance.filter((a) => a.status === "present").length,
+        late: attendance.filter((a) => a.status === "late").length,
+        halfDay: attendance.filter((a) => a.status === "half_day").length,
+        absent: attendance.filter((a) => a.status === "absent").length,
+        earlyCheckout: attendance.filter((a) => a.status === "early_checkout")
+          .length,
+        overtime: attendance.filter((a) => a.status === "overtime").length,
+        leave: attendance.filter((a) => a.status === "leave").length,
+        approvedLeave: attendance.filter((a) => a.status === "approved_leave")
+          .length,
+        pendingLeave: attendance.filter((a) => a.status === "pending_leave")
+          .length,
+        holiday: attendance.filter((a) => a.status === "holiday").length,
+        weeklyOff: attendance.filter((a) => a.status === "weekly_off").length,
+      };
 
     const allPresent =
       stats.present +
@@ -1533,13 +1629,13 @@ export default function AdminAttendancePage() {
                 <span>Leave</span>
                 {leaveRequests.filter((r) => r.status === "pending").length >
                   0 && (
-                  <Badge
-                    variant="destructive"
-                    className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 p-0 text-[10px] sm:text-xs flex items-center justify-center"
-                  >
-                    {leaveRequests.filter((r) => r.status === "pending").length}
-                  </Badge>
-                )}
+                    <Badge
+                      variant="destructive"
+                      className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 p-0 text-[10px] sm:text-xs flex items-center justify-center"
+                    >
+                      {leaveRequests.filter((r) => r.status === "pending").length}
+                    </Badge>
+                  )}
               </TabsTrigger>
             )}
             {canViewHolidays && (
