@@ -46,6 +46,8 @@
 
 :root {
   --radius: 0.625rem;
+  /* Tell Radix UI to not add padding-right by making it think the scrollbar is 0px */
+  --removed-body-scroll-bar-size: 0px !important;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -144,6 +146,24 @@
   }
   html {
     scroll-behavior: smooth;
+    /* Always reserve space for the scrollbar to prevent page layout jumps */
+    scrollbar-gutter: stable !important;
+    overflow-y: scroll !important;
+  }
+
+  /* FORCE: Disable all Radix UI auto-padding and auto-margin that shift the UI */
+  body[data-radix-scroll-lock],
+  body[style*="overflow: hidden"],
+  html[style*="overflow: hidden"] {
+    padding-right: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  /* Lock the fixed header during scroll lock to prevent it from moving 1px */
+  header.fixed {
+    padding-right: 0px !important;
+    margin-right: 0px !important;
+    transition: none !important; /* Disable transition during lock if needed */
   }
 }
 
@@ -153,13 +173,15 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #F8FAFC;
+  /* Keep track transparent to avoid the 'white gap' and match the page theme */
+  background: transparent !important;
 }
 
 ::-webkit-scrollbar-thumb {
   background: #10B5DB;
   background-clip: padding-box;
-  border: 4px solid #F8FAFC;
+  /* Use a transparent border to keep the thumb sleek but preserve the gutter space */
+  border: 4px solid transparent;
   border-radius: 100px;
 }
 
