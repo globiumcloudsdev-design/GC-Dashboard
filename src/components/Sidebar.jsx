@@ -183,20 +183,43 @@ export default function Sidebar({ collapsed, setCollapsed }) {
   const pathname = usePathname();
   const isMobile = useMediaQuery({ maxWidth: 1023 });
 
+  const {
+    user,
+    loading: authLoading,
+    hasPermission,
+    logout,
+    checkAuthStatus,
+  } = useAuth();
+
   useEffect(() => {
     setOpenMobile(false);
-  }, [pathname]);
 
-  const { user, loading: authLoading, hasPermission, logout } = useAuth();
+    // Auto-heal: If we are in dashboard but user is missing, force a check
+    if (!authLoading && !user && pathname.startsWith("/dashboard")) {
+      checkAuthStatus?.();
+    }
+  }, [pathname, user, authLoading, checkAuthStatus]);
 
-  // Optimized permission filtering - wait for auth to load
+  // Ultra-reactive allowed sections calculation
   const allowedSections = useMemo(() => {
-    if (authLoading) return []; // Don't render until auth is ready
+    // 1. If still strictly loading from auth provider, return empty
+    if (authLoading) return [];
+
+    // 2. If no user, only show public items (without permission requirement)
+    if (!user) {
+      return MENU_SECTIONS.map((section) => ({
+        ...section,
+        items: section.items.filter((item) => !item.permission),
+      })).filter((section) => section.items.length > 0);
+    }
+
+    // 3. Calculate filtered sections based on the robust hasPermission logic
     return MENU_SECTIONS.map((section) => ({
       ...section,
       items: section.items.filter((item) => {
         if (!item.permission) return true;
-        if (!user) return false;
+
+        // Double check using direct hasPermission from AuthContext
         return hasPermission(
           item.permission.module,
           item.permission.action || "view",

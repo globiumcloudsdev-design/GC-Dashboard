@@ -31,10 +31,14 @@ export default function LoginPage() {
 
     try {
       const result = await login(email, password);
-      console.log('Login Res', result);
-      
-      if (result.success) router.push("/dashboard");
-      else setError(result.message);
+      if (result.success) {
+        // Small delay to ensure AuthContext state is fully synced
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 150);
+      } else {
+        setError(result.message);
+      }
     } catch (error) {
       setError("An unexpected error occurred");
     } finally {

@@ -54,7 +54,7 @@ const TeamMember = ({ name, role, profileImage, linkedin, github, index }) => {
       className="group relative py-8 px-2 md:py-12 md:px-4"
     >
       {/* Premium Glow Effect */}
-      <div className="absolute inset-x-8 md:inset-x-12 top-20 md:top-24 bottom-20 md:bottom-24 bg-gradient-to-tr from-[#10B5DB]/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-1000 blur-[100px] -z-10" />
+      <div className="absolute inset-x-8 md:inset-x-12 top-20 md:top-24 bottom-20 md:bottom-24 bg-linear-to-tr from-[#10B5DB]/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-1000 blur-[100px] -z-10" />
 
       <motion.div
         whileHover={{ y: -10 }}
@@ -93,11 +93,11 @@ const TeamMember = ({ name, role, profileImage, linkedin, github, index }) => {
               <div className="absolute inset-0 bg-gradient-to-tr from-[#10B5DB]/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
             </motion.div>
           ) : (
-            <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-[#1b252d] to-[#0A0F14] flex items-center justify-center">
+            <div className="absolute inset-0 w-full h-full bg-linear-to-br from-[#1b252d] to-[#0A0F14] flex items-center justify-center">
               <span className="text-white text-9xl font-black opacity-5 transform -rotate-12 select-none">
                 {initials}
               </span>
-              <div className="absolute w-24 h-24 rounded-full bg-gradient-to-tr from-[#10B5DB] to-[#0A8CA5] flex items-center justify-center shadow-2xl">
+              <div className="absolute w-24 h-24 rounded-full bg-linear-to-tr from-[#10B5DB] to-[#0A8CA5] flex items-center justify-center shadow-2xl">
                 <span className="text-white text-4xl font-black">
                   {initials}
                 </span>
@@ -123,13 +123,13 @@ const TeamMember = ({ name, role, profileImage, linkedin, github, index }) => {
 
             <h3 className="text-3xl md:text-4xl font-black leading-tight text-white mb-2 tracking-tight">
               {name.split(" ")[0]} <br />
-              <span className="text-[#10B5DB]">
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-[#10B5DB] to-[#0A8CA5]">
                 {name.split(" ").slice(1).join(" ")}
               </span>
             </h3>
 
             <motion.div
-              className="w-12 h-1 bg-gradient-to-r from-[#10B5DB] to-transparent rounded-full"
+              className="w-12 h-1 bg-linear-to-r from-[#10B5DB] to-transparent rounded-full"
               whileInView={{ width: 48 }}
               transition={{ duration: 0.8 }}
             />
@@ -236,7 +236,7 @@ export default function TeamSection() {
           </div>
           <h2 className="text-4xl md:text-6xl lg:text-7xl font-black text-gray-900 leading-none">
             OUR{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#10B5DB] to-[#0A8CA5]">
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-[#10B5DB] to-[#0A8CA5]">
               EXPERTS
             </span>
           </h2>
@@ -292,7 +292,7 @@ export default function TeamSection() {
                 768: { slidesPerView: 2 },
                 1024: { slidesPerView: 3 },
               }}
-              className="team-swiper !pb-20"
+              className="team-swiper pb-20!"
             >
               {teamMembers.map((member, index) => (
                 <SwiperSlide key={member._id} className="max-w-[420px]">
