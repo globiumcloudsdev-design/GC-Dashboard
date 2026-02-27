@@ -398,79 +398,83 @@ export default function AttendanceScreen() {
      RENDER
   ══════════════════════════════════════════════ */
   return (
-    <div className="min-h-screen bg-[#f0f4ff]">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-indigo-50/30">
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           HERO HEADER
       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-violet-700 via-indigo-600 to-blue-600">
-        {/* decorative blobs */}
-        <div className="absolute -top-12 -right-12 w-52 h-52 rounded-full bg-white/5 blur-2xl" />
-        <div className="absolute top-8 -left-8  w-36 h-36 rounded-full bg-violet-400/20 blur-xl" />
-        <div className="absolute bottom-0 right-1/3  w-28 h-28 rounded-full bg-blue-400/15 blur-xl" />
+      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-950 via-slate-900 to-black pb-12 rounded-[40px] mx-4 mt-4 shadow-2xl shadow-indigo-950/20">
+        {/* Animated Decorative Elements */}
+        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-indigo-600/20 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 rounded-full blur-[100px]" />
 
-        <div className="relative px-5 pt-12 pb-7">
+        <div className="relative px-6 pt-14 pb-4">
           {/* Top row */}
-          <div className="flex items-start justify-between mb-6">
-            <div>
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <GreetIcon className="h-4 w-4 text-violet-200" />
-                <span className="text-violet-200 text-xs font-semibold tracking-wide uppercase">
+          <div className="flex items-start justify-between mb-8">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-white/10 backdrop-blur flex items-center justify-center border border-white/10">
+                  <GreetIcon className="h-4 w-4 text-white" />
+                </div>
+                <span className="text-slate-300 text-[10px] font-bold tracking-widest uppercase">
                   {greeting}
                 </span>
               </div>
-              <h1 className="text-[26px] font-extrabold text-white leading-tight tracking-tight">
+              <h1 className="text-3xl font-black text-white leading-tight tracking-tight">
                 My Attendance
               </h1>
-              <p className="text-violet-200/80 text-xs mt-1">
+              <div className="flex items-center gap-2 text-slate-400 text-xs font-medium">
+                <Calendar className="h-3 w-3" />
                 {new Date().toLocaleDateString("en-US", {
-                  weekday: "long",
                   day: "numeric",
                   month: "long",
                   year: "numeric",
                 })}
-              </p>
+              </div>
             </div>
 
             {/* Icon buttons */}
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center gap-3 mt-1">
               <button
                 onClick={() => router.push("/agent/dashboard")}
-                className="w-9 h-9 rounded-2xl bg-white/10 backdrop-blur hover:bg-white/20 active:scale-95 transition-all flex items-center justify-center"
+                className="w-11 h-11 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/15 active:scale-90 transition-all flex items-center justify-center group"
+                title="Go Home"
               >
-                <Home className="h-4 w-4 text-white" />
+                <Home className="h-5 w-5 text-white/80 group-hover:text-white transition-colors" />
               </button>
               <button
                 onClick={onRefresh}
                 disabled={refreshing}
-                className="w-9 h-9 rounded-2xl bg-white/10 backdrop-blur hover:bg-white/20 active:scale-95 transition-all flex items-center justify-center disabled:opacity-50"
+                className="w-11 h-11 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/15 active:scale-90 transition-all flex items-center justify-center disabled:opacity-50 group"
+                title="Refresh Data"
               >
                 <RefreshCw
-                  className={`h-4 w-4 text-white ${refreshing ? "animate-spin" : ""}`}
+                  className={`h-5 w-5 text-white/80 group-hover:text-white transition-colors ${refreshing ? "animate-spin" : ""}`}
                 />
               </button>
             </div>
           </div>
 
           {/* Info chips */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2.5">
             {/* Shift chip */}
             {agentShift ? (
-              <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm border border-white/15 rounded-full px-3 py-1.5">
-                <Clock className="h-3 w-3 text-violet-200" />
-                <span className="text-white text-[11px] font-semibold">
-                  {agentShift.name}
-                </span>
-                <span className="text-violet-300 text-[11px]">·</span>
-                <span className="text-violet-200 text-[11px]">
-                  {agentShift.startTime} – {agentShift.endTime}
-                </span>
+              <div className="flex items-center gap-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-4 py-2 hover:bg-white/10 transition-colors">
+                <Clock className="h-3.5 w-3.5 text-blue-400" />
+                <div className="flex flex-col">
+                  <span className="text-white text-[10px] font-bold leading-none mb-0.5">
+                    {agentShift.name}
+                  </span>
+                  <span className="text-slate-400 text-[9px] font-medium leading-none">
+                    {agentShift.startTime} – {agentShift.endTime}
+                  </span>
+                </div>
               </div>
             ) : (
               !loading && (
-                <div className="flex items-center gap-1.5 bg-orange-400/20 border border-orange-300/30 rounded-full px-3 py-1.5">
-                  <AlertCircle className="h-3 w-3 text-orange-200" />
-                  <span className="text-orange-100 text-[11px] font-semibold">
-                    No shift assigned
+                <div className="flex items-center gap-2 bg-rose-500/10 border border-rose-500/20 rounded-2xl px-4 py-2">
+                  <AlertCircle className="h-3.5 w-3.5 text-rose-400" />
+                  <span className="text-rose-200 text-[10px] font-bold">
+                    No Shift Assigned
                   </span>
                 </div>
               )
@@ -478,46 +482,61 @@ export default function AttendanceScreen() {
 
             {/* Location chip */}
             <div
-              className={`flex items-center gap-1.5 border rounded-full px-3 py-1.5 backdrop-blur-sm ${
+              className={`flex items-center gap-2 border rounded-2xl px-4 py-2 backdrop-blur-md transition-all ${
                 loading
-                  ? "bg-white/8 border-white/10"
+                  ? "bg-white/5 border-white/5"
                   : distance === null
-                    ? "bg-red-500/20 border-red-300/30"
+                    ? "bg-rose-500/10 border-rose-500/20"
                     : inRange
-                      ? "bg-emerald-400/20 border-emerald-300/30"
-                      : "bg-orange-400/20 border-orange-300/30"
+                      ? "bg-emerald-500/10 border-emerald-500/20"
+                      : "bg-amber-500/10 border-amber-500/20"
               }`}
             >
               <Navigation
-                className={`h-3 w-3 ${
+                className={`h-3.5 w-3.5 ${
                   loading
-                    ? "text-white/50"
+                    ? "text-white/30"
                     : inRange
-                      ? "text-emerald-200"
+                      ? "text-emerald-400"
                       : distance === null
-                        ? "text-red-200"
-                        : "text-orange-200"
+                        ? "text-rose-400"
+                        : "text-amber-400"
                 }`}
               />
-              <span
-                className={`text-[11px] font-semibold ${
-                  loading
-                    ? "text-white/60"
-                    : inRange
-                      ? "text-emerald-100"
-                      : distance === null
-                        ? "text-red-100"
-                        : "text-orange-100"
-                }`}
-              >
-                {loading
-                  ? "Checking…"
-                  : distance === null
-                    ? "Location off"
-                    : inRange
-                      ? `In range · ${distance.toFixed(0)}m`
-                      : `Out of range · ${distance.toFixed(0)}m`}
-              </span>
+              <div className="flex flex-col">
+                <span
+                  className={`text-[9px] font-bold uppercase tracking-wider ${
+                    loading
+                      ? "text-white/40"
+                      : inRange
+                        ? "text-emerald-400/80"
+                        : distance === null
+                          ? "text-rose-400/80"
+                          : "text-amber-400/80"
+                  }`}
+                >
+                  Location Status
+                </span>
+                <span
+                  className={`text-[10px] font-bold ${
+                    loading
+                      ? "text-white/60"
+                      : inRange
+                        ? "text-emerald-100"
+                        : distance === null
+                          ? "text-rose-100"
+                          : "text-amber-100"
+                  }`}
+                >
+                  {loading
+                    ? "Checking…"
+                    : distance === null
+                      ? "Unavailable"
+                      : inRange
+                        ? `In Range (${distance.toFixed(0)}m)`
+                        : `Out Range (${distance.toFixed(0)}m)`}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -567,7 +586,7 @@ export default function AttendanceScreen() {
         {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
             CHECK IN / OUT CARD
         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-        <div className="bg-white rounded-3xl shadow-md border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden relative z-10 transition-all hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)]">
           {loading ? (
             <div className="px-5 py-8 flex flex-col items-center gap-3">
               <div className="w-12 h-12 rounded-2xl bg-indigo-100 flex items-center justify-center">
@@ -597,19 +616,23 @@ export default function AttendanceScreen() {
               <button
                 onClick={handleCheckIn}
                 disabled={!canIn}
-                className={`w-full py-4 rounded-2xl font-bold text-[15px] flex items-center justify-center gap-2.5 transition-all duration-200 ${
+                className={`w-full py-4.5 rounded-[22px] font-black text-[16px] flex items-center justify-center gap-3 transition-all duration-300 relative overflow-hidden group ${
                   canIn
-                    ? "bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 text-white shadow-lg shadow-green-300/50 hover:shadow-green-400/60 hover:-translate-y-0.5 active:translate-y-0 active:shadow-md"
-                    : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    ? "bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white shadow-xl shadow-emerald-200/50 hover:shadow-emerald-300/60 hover:-translate-y-1 active:scale-95"
+                    : "bg-slate-100 text-slate-400 cursor-not-allowed"
                 }`}
               >
+                {/* Button Shine Effect */}
+                <div className="absolute top-0 -left-full w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:left-full transition-all duration-700" />
+
                 {checking ? (
                   <>
                     <Loader2 className="h-5 w-5 animate-spin" /> Checking In…
                   </>
                 ) : (
                   <>
-                    <LogIn className="h-5 w-5" /> Check In Now
+                    <LogIn className="h-5 w-5 group-hover:translate-x-1 transition-transform" />{" "}
+                    Start Working
                   </>
                 )}
               </button>
@@ -661,19 +684,22 @@ export default function AttendanceScreen() {
               <button
                 onClick={handleCheckOut}
                 disabled={!canOut}
-                className={`w-full py-4 rounded-2xl font-bold text-[15px] flex items-center justify-center gap-2.5 transition-all duration-200 ${
+                className={`w-full py-4.5 rounded-[22px] font-black text-[16px] flex items-center justify-center gap-3 transition-all duration-300 relative overflow-hidden group ${
                   canOut
-                    ? "bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 text-white shadow-lg shadow-red-300/50 hover:shadow-red-400/60 hover:-translate-y-0.5 active:translate-y-0 active:shadow-md"
-                    : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    ? "bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 text-white shadow-xl shadow-rose-200/50 hover:shadow-rose-300/60 hover:-translate-y-1 active:scale-95"
+                    : "bg-slate-100 text-slate-400 cursor-not-allowed"
                 }`}
               >
+                <div className="absolute top-0 -left-full w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:left-full transition-all duration-700" />
+
                 {checking ? (
                   <>
                     <Loader2 className="h-5 w-5 animate-spin" /> Checking Out…
                   </>
                 ) : (
                   <>
-                    <LogOut className="h-5 w-5" /> Check Out Now
+                    <LogOut className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />{" "}
+                    Finish Working
                   </>
                 )}
               </button>
@@ -748,19 +774,18 @@ export default function AttendanceScreen() {
           {/* Month picker */}
           <button
             onClick={() => setFilterModal(true)}
-            className="bg-white rounded-3xl p-4 shadow-sm border border-gray-100 hover:border-indigo-200 hover:shadow-md active:scale-[0.98] transition-all text-left group"
+            className="bg-white rounded-[32px] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-slate-100 hover:border-indigo-200 hover:shadow-indigo-100/50 active:scale-95 transition-all text-left"
           >
-            <div className="w-9 h-9 rounded-2xl bg-indigo-100 flex items-center justify-center mb-3 group-hover:bg-indigo-200 transition-colors">
-              <BarChart3 className="h-4 w-4 text-indigo-600" />
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-50 flex items-center justify-center mb-4">
+              <BarChart3 className="h-5 w-5 text-indigo-600" />
             </div>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-0.5">
-              Monthly View
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+              Analytics
             </p>
-            <p className="text-sm font-extrabold text-gray-800 group-hover:text-indigo-700 transition-colors leading-tight">
+            <p className="text-[15px] font-black text-slate-800 leading-tight">
               {getMonthName(currentFilter.month)}
-              <br />
-              <span className="text-xs font-semibold text-gray-400">
-                {currentFilter.year}
+              <span className="block text-[11px] font-bold text-slate-400 mt-1">
+                Year · {currentFilter.year}
               </span>
             </p>
           </button>
@@ -768,23 +793,59 @@ export default function AttendanceScreen() {
           {/* Leave request */}
           <button
             onClick={handleLeaveClick}
-            className="relative bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 rounded-3xl p-4 shadow-lg shadow-violet-300/40 hover:shadow-violet-400/50 hover:-translate-y-0.5 active:translate-y-0 transition-all text-left overflow-hidden"
+            className="group relative bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 rounded-[32px] p-5 shadow-xl shadow-indigo-200/40 hover:shadow-indigo-400/30 hover:-translate-y-1 active:scale-95 transition-all text-left overflow-hidden"
           >
-            <div className="absolute -top-3 -right-3 w-16 h-16 rounded-full bg-white/8" />
-            <div className="absolute bottom-1 right-2 w-10 h-10 rounded-full bg-white/5" />
+            <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
             <div className="relative">
-              <div className="w-9 h-9 rounded-2xl bg-white/15 flex items-center justify-center mb-3">
-                <ClipboardList className="h-4 w-4 text-white" />
+              <div className="w-11 h-11 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center mb-4 border border-white/10">
+                <ClipboardList className="h-5 w-5 text-white" />
               </div>
-              <p className="text-[10px] font-bold text-violet-200 uppercase tracking-wide mb-0.5">
-                Request
+              <p className="text-[10px] font-black text-indigo-100 uppercase tracking-widest mb-1">
+                Requests
               </p>
-              <p className="text-sm font-extrabold text-white leading-tight">
-                Leave Day
+              <p className="text-[15px] font-black text-white leading-tight">
+                Apply Leave
+                <span className="block text-[11px] font-bold text-indigo-200/70 mt-1">
+                  New request
+                </span>
               </p>
             </div>
           </button>
         </div>
+
+        {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            MONTHLY SUMMARY & STATISTICS
+        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+        {filteredSummary && (
+          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+            {/* Header */}
+            <div className="px-5 pt-4 pb-3 flex items-center justify-between border-b border-gray-50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center">
+                  <BarChart3 className="h-5 w-5 text-indigo-600" />
+                </div>
+                <div>
+                  <h2 className="font-bold text-gray-800 text-sm leading-none">
+                    Overview
+                  </h2>
+                  <p className="text-[10px] text-gray-400 font-medium mt-1">
+                    Performance this month
+                  </p>
+                </div>
+              </div>
+              <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 rounded-full px-3 py-1.5 border border-indigo-100">
+                {getMonthName(currentFilter.month)} {currentFilter.year}
+              </span>
+            </div>
+
+            <div className="px-5 pb-5 pt-4">
+              <AttendanceSummary
+                monthlySummary={filteredSummary}
+                filter={currentFilter}
+              />
+            </div>
+          </div>
+        )}
 
         {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
             LEAVE REQUESTS PANEL
@@ -795,21 +856,22 @@ export default function AttendanceScreen() {
             className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50/70 active:bg-gray-100/70 transition-colors"
           >
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-fuchsia-100 to-purple-100 flex items-center justify-center">
-                <ClipboardList className="h-4 w-4 text-fuchsia-600" />
+              <div className="w-10 h-10 rounded-2xl bg-fuchsia-50 flex items-center justify-center">
+                <ClipboardList className="h-5 w-5 text-fuchsia-600" />
               </div>
-              <span className="font-bold text-gray-800 text-sm">
-                Leave Requests
-              </span>
+              <div className="text-left">
+                <span className="font-bold text-gray-800 text-sm block leading-none">
+                  My Leaves
+                </span>
+                <p className="text-[10px] text-gray-400 font-medium mt-1">
+                  History & status
+                </p>
+              </div>
             </div>
             <div
-              className={`w-7 h-7 rounded-xl flex items-center justify-center transition-colors ${showLeaveList ? "bg-gray-100" : "bg-gray-50"}`}
+              className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${showLeaveList ? "bg-gray-100 rotate-180" : "bg-gray-50"}`}
             >
-              {showLeaveList ? (
-                <ChevronUp className="h-4 w-4 text-gray-500" />
-              ) : (
-                <ChevronDown className="h-4 w-4 text-gray-500" />
-              )}
+              <ChevronDown className="h-4 w-4 text-gray-500" />
             </div>
           </button>
 
@@ -829,35 +891,6 @@ export default function AttendanceScreen() {
             )}
           </AnimatePresence>
         </div>
-
-        {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            MONTHLY SUMMARY
-        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-        {filteredSummary && (
-          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-            {/* Header */}
-            <div className="px-5 pt-4 pb-3 flex items-center justify-between border-b border-gray-50">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
-                  <TrendingUp className="h-4 w-4 text-blue-600" />
-                </div>
-                <h2 className="font-bold text-gray-800 text-sm">
-                  Monthly Summary
-                </h2>
-              </div>
-              <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 rounded-full px-3 py-1 border border-indigo-100">
-                {getMonthName(currentFilter.month)} {currentFilter.year}
-              </span>
-            </div>
-
-            <div className="px-5 pb-5 pt-4">
-              <AttendanceSummary
-                monthlySummary={filteredSummary}
-                filter={currentFilter}
-              />
-            </div>
-          </div>
-        )}
 
         {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
             LOCATION STATUS

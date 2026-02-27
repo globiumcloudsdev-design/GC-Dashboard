@@ -129,21 +129,28 @@ export default function AttendanceSummary({ monthlySummary }) {
   return (
     <div className="space-y-5">
       {/* ── Big 3 stat tiles ── */}
-      <div className="grid grid-cols-3 gap-2.5">
+      <div className="grid grid-cols-3 gap-3">
         {[
-          { status: "present", val: present },
-          { status: "late", val: late },
-          { status: "absent", val: absent },
-        ].map(({ status, val }) => {
+          {
+            status: "present",
+            val: present,
+            grad: "from-emerald-500 to-teal-600",
+          },
+          { status: "late", val: late, grad: "from-amber-400 to-orange-500" },
+          { status: "absent", val: absent, grad: "from-rose-500 to-red-600" },
+        ].map(({ status, val, grad }) => {
           const c = getCfg(status);
           return (
             <div
               key={status}
-              className={`rounded-3xl border ${c.tile} p-3 text-center`}
+              className={`rounded-[24px] bg-gradient-to-br ${grad} p-4 text-center shadow-lg shadow-black/5 relative overflow-hidden group`}
             >
-              <p className="text-2xl leading-none mb-1.5">{c.icon}</p>
-              <p className={`text-xl font-extrabold ${c.num}`}>{val}</p>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mt-0.5">
+              <div className="absolute top-0 right-0 w-12 h-12 bg-white/10 rounded-full -mr-4 -mt-4 blur-xl group-hover:scale-150 transition-transform" />
+              <p className="text-xl leading-none mb-2">{c.icon}</p>
+              <p className="text-2xl font-black text-white leading-none">
+                {val}
+              </p>
+              <p className="text-[9px] font-black text-white/70 uppercase tracking-widest mt-2">
                 {c.label}
               </p>
             </div>
@@ -152,24 +159,32 @@ export default function AttendanceSummary({ monthlySummary }) {
       </div>
 
       {/* ── Detail grid ── */}
-      <div className="grid grid-cols-2 gap-2.5">
+      <div className="grid grid-cols-2 gap-3">
         <div
-          className={`rounded-2xl border ${rateBg} px-3 py-2.5 flex items-center justify-between`}
+          className={`rounded-2xl border ${rateBg} px-4 py-3 flex items-center justify-between shadow-sm`}
         >
-          <p className="text-[11px] font-bold text-gray-500">Attendance Rate</p>
-          <p className={`text-sm font-extrabold ${rateColor}`}>{rate}%</p>
+          <p className="text-[11px] font-bold text-slate-500/80 uppercase tracking-wider">
+            Rate
+          </p>
+          <p className={`text-base font-black ${rateColor}`}>{rate}%</p>
         </div>
-        <div className="bg-blue-50 border border-blue-200 rounded-2xl px-3 py-2.5 flex items-center justify-between">
-          <p className="text-[11px] font-bold text-gray-500">Working Days</p>
-          <p className="text-sm font-extrabold text-blue-600">{working}</p>
+        <div className="bg-blue-50/50 border border-blue-100 rounded-2xl px-4 py-3 flex items-center justify-between shadow-sm">
+          <p className="text-[11px] font-bold text-slate-500/80 uppercase tracking-wider">
+            Working
+          </p>
+          <p className="text-base font-black text-blue-600">{working}</p>
         </div>
-        <div className="bg-purple-50 border border-purple-200 rounded-2xl px-3 py-2.5 flex items-center justify-between">
-          <p className="text-[11px] font-bold text-gray-500">Holidays</p>
-          <p className="text-sm font-extrabold text-purple-600">{holiday}</p>
+        <div className="bg-purple-50/50 border border-purple-100 rounded-2xl px-4 py-3 flex items-center justify-between shadow-sm">
+          <p className="text-[11px] font-bold text-slate-500/80 uppercase tracking-wider">
+            Holidays
+          </p>
+          <p className="text-base font-black text-purple-600">{holiday}</p>
         </div>
-        <div className="bg-pink-50 border border-pink-200 rounded-2xl px-3 py-2.5 flex items-center justify-between">
-          <p className="text-[11px] font-bold text-gray-500">Leave Days</p>
-          <p className="text-sm font-extrabold text-pink-600">{leave}</p>
+        <div className="bg-pink-50/50 border border-pink-100 rounded-2xl px-4 py-3 flex items-center justify-between shadow-sm">
+          <p className="text-[11px] font-bold text-slate-500/80 uppercase tracking-wider">
+            Leaves
+          </p>
+          <p className="text-base font-black text-pink-600">{leave}</p>
         </div>
       </div>
 

@@ -15,7 +15,7 @@ import {
   ArrowUpRight,
   CheckCircle,
   Clock,
-  XCircle
+  XCircle,
 } from "lucide-react";
 import { ThemeContext } from "@/context/ThemeContext";
 import { useAgent } from "@/context/AgentContext";
@@ -52,8 +52,8 @@ const SalesScreen = () => {
     achievedAmount: 0,
     digitTarget: 0,
     amountTarget: 0,
-    targetType: 'none',
-    currency: 'PKR'
+    targetType: "none",
+    currency: "PKR",
   });
 
   // Animation variants
@@ -62,114 +62,151 @@ const SalesScreen = () => {
     visible: (custom = 0) => ({
       opacity: 1,
       y: 0,
-      transition: { duration: 0.4, delay: custom * 0.1, ease: "easeOut" }
-    })
+      transition: { duration: 0.4, delay: custom * 0.1, ease: "easeOut" },
+    }),
   };
 
   // Get current month on mount
   useEffect(() => {
     const currentDate = new Date();
     const months = [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December",
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
     ];
     const currentMonth = `${months[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
     setSelectedMonth(currentMonth);
   }, []);
 
   // Calculate date range - FIXED VERSION
-  const getDateRange = useCallback(
-    (range, month = null) => {
-      const now = new Date();
-      let start, end;
+  const getDateRange = useCallback((range, month = null) => {
+    const now = new Date();
+    let start, end;
 
-      // Agar specific month select kiya gaya hai to usi month ka data show karein
-      if (month) {
-        const [monthName, year] = month.split(" ");
-        const monthIndex = [
-          "January", "February", "March", "April", "May", "June",
-          "July", "August", "September", "October", "November", "December",
-        ].indexOf(monthName);
+    // Agar specific month select kiya gaya hai to usi month ka data show karein
+    if (month) {
+      const [monthName, year] = month.split(" ");
+      const monthIndex = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+      ].indexOf(monthName);
 
-        if (monthIndex !== -1) {
-          // Specific month ke start aur end dates
-          start = new Date(year, monthIndex, 1);
-          end = new Date(year, monthIndex + 1, 0, 23, 59, 59);
-          
-          return {
-            startDate: start.toISOString().split("T")[0],
-            endDate: end.toISOString().split("T")[0],
-            month: month,
-            monthName: monthName,
-            year: parseInt(year),
-            monthIndex: monthIndex
-          };
-        }
+      if (monthIndex !== -1) {
+        // Specific month ke start aur end dates
+        start = new Date(year, monthIndex, 1);
+        end = new Date(year, monthIndex + 1, 0, 23, 59, 59);
+
+        return {
+          startDate: start.toISOString().split("T")[0],
+          endDate: end.toISOString().split("T")[0],
+          month: month,
+          monthName: monthName,
+          year: parseInt(year),
+          monthIndex: monthIndex,
+        };
       }
+    }
 
-      // Agar koi specific month nahi hai, to timeRange ke basis par calculate karein
-      switch (range) {
-        case "day":
-          start = new Date(now);
-          start.setDate(now.getDate() - 1);
-          break;
-        case "week":
-          start = new Date(now);
-          start.setDate(now.getDate() - 7);
-          break;
-        case "month":
-          start = new Date(now);
-          start.setMonth(now.getMonth() - 1);
-          break;
-        case "year":
-          start = new Date(now);
-          start.setFullYear(now.getFullYear() - 1);
-          break;
-        default:
-          start = new Date(now);
-          start.setMonth(now.getMonth() - 1);
-      }
+    // Agar koi specific month nahi hai, to timeRange ke basis par calculate karein
+    switch (range) {
+      case "day":
+        start = new Date(now);
+        start.setDate(now.getDate() - 1);
+        break;
+      case "week":
+        start = new Date(now);
+        start.setDate(now.getDate() - 7);
+        break;
+      case "month":
+        start = new Date(now);
+        start.setMonth(now.getMonth() - 1);
+        break;
+      case "year":
+        start = new Date(now);
+        start.setFullYear(now.getFullYear() - 1);
+        break;
+      default:
+        start = new Date(now);
+        start.setMonth(now.getMonth() - 1);
+    }
 
-      end = new Date(now);
-      
-      return {
-        startDate: start.toISOString().split("T")[0],
-        endDate: end.toISOString().split("T")[0],
-        month: month || `${months[now.getMonth()]} ${now.getFullYear()}`,
-        isSpecificMonth: false
-      };
-    },
-    []
-  );
+    end = new Date(now);
+
+    return {
+      startDate: start.toISOString().split("T")[0],
+      endDate: end.toISOString().split("T")[0],
+      month: month || `${months[now.getMonth()]} ${now.getFullYear()}`,
+      isSpecificMonth: false,
+    };
+  }, []);
 
   // Helper function to calculate month dates
   const getMonthDates = (monthString) => {
     if (!monthString) {
       const now = new Date();
       const months = [
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December",
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
       ];
       monthString = `${months[now.getMonth()]} ${now.getFullYear()}`;
     }
-    
+
     const [monthName, year] = monthString.split(" ");
     const monthIndex = [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December",
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
     ].indexOf(monthName);
-    
+
     if (monthIndex === -1) {
       const now = new Date();
       return {
         start: new Date(now.getFullYear(), now.getMonth(), 1),
-        end: new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
+        end: new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59),
       };
     }
-    
+
     return {
       start: new Date(year, monthIndex, 1),
-      end: new Date(year, monthIndex + 1, 0, 23, 59, 59)
+      end: new Date(year, monthIndex + 1, 0, 23, 59, 59),
     };
   };
 
@@ -188,8 +225,8 @@ const SalesScreen = () => {
           achievedAmount: 0,
           digitTarget: 0,
           amountTarget: 0,
-          targetType: 'none',
-          currency: 'PKR'
+          targetType: "none",
+          currency: "PKR",
         });
         setLoading(false);
         setRefreshing(false);
@@ -229,40 +266,63 @@ const SalesScreen = () => {
         const selectedMonthDates = getMonthDates(selectedMonth);
         console.log("📆 Selected month dates:", {
           start: selectedMonthDates.start.toLocaleDateString(),
-          end: selectedMonthDates.end.toLocaleDateString()
+          end: selectedMonthDates.end.toLocaleDateString(),
         });
 
         // Get all bookings for target calculations
-        const allBookingsResponse = await agentSalesService.getAgentBookings(agentId, {
-          limit: 1000
-        });
+        const allBookingsResponse = await agentSalesService.getAgentBookings(
+          agentId,
+          {
+            limit: 1000,
+          },
+        );
 
         // Extract bookings data from response
         let allBookings = [];
-        if (allBookingsResponse?.data?.bookings && Array.isArray(allBookingsResponse.data.bookings)) {
+        if (
+          allBookingsResponse?.data?.bookings &&
+          Array.isArray(allBookingsResponse.data.bookings)
+        ) {
           allBookings = allBookingsResponse.data.bookings;
-        } else if (allBookingsResponse?.bookings && Array.isArray(allBookingsResponse.bookings)) {
+        } else if (
+          allBookingsResponse?.bookings &&
+          Array.isArray(allBookingsResponse.bookings)
+        ) {
           allBookings = allBookingsResponse.bookings;
         }
 
         console.log(`📦 Total bookings fetched: ${allBookings.length}`);
 
         // Filter SELECTED month's bookings
-        const selectedMonthBookings = allBookings.filter(booking => {
+        const selectedMonthBookings = allBookings.filter((booking) => {
           if (!booking.createdAt) return false;
           const bookingDate = new Date(booking.createdAt);
-          return bookingDate >= selectedMonthDates.start && bookingDate <= selectedMonthDates.end;
+          return (
+            bookingDate >= selectedMonthDates.start &&
+            bookingDate <= selectedMonthDates.end
+          );
         });
 
-        console.log(`📅 Selected month (${selectedMonth}) bookings: ${selectedMonthBookings.length}`);
+        console.log(
+          `📅 Selected month (${selectedMonth}) bookings: ${selectedMonthBookings.length}`,
+        );
 
         // Filter selected month's completed bookings
-        const selectedMonthCompletedBookings = selectedMonthBookings.filter(booking => {
-          const status = (booking.status || '').toString().toLowerCase();
-          return status === 'completed' || status === 'approved' || status === 'success' || status === 'confirmed';
-        });
+        const selectedMonthCompletedBookings = selectedMonthBookings.filter(
+          (booking) => {
+            const status = (booking.status || "").toString().toLowerCase();
+            return (
+              status === "completed" ||
+              status === "approved" ||
+              status === "success" ||
+              status === "confirmed"
+            );
+          },
+        );
 
-        console.log(`✅ Selected month completed bookings: ${selectedMonthCompletedBookings.length}`);
+        console.log(
+          `✅ Selected month completed bookings: ${selectedMonthCompletedBookings.length}`,
+        );
 
         // Also fetch projects for the selected month to include in amount targets
         let projectData = [];
@@ -270,7 +330,9 @@ const SalesScreen = () => {
           // Fetch ALL projects for this agent (not filtered by date)
           // We'll filter by completion status instead
           console.log(`🔍 Fetching ALL projects for agent: ${agentId}`);
-          const projectsRes = await fetch(`/api/projects?assignedAgent=${agentId}&limit=1000`);
+          const projectsRes = await fetch(
+            `/api/projects?assignedAgent=${agentId}&limit=1000`,
+          );
           const projectsJson = await projectsRes.json();
           console.log(`📦 Projects API response:`, projectsJson);
           if (projectsJson && projectsJson.success) {
@@ -278,18 +340,27 @@ const SalesScreen = () => {
           } else if (projectsJson && Array.isArray(projectsJson)) {
             projectData = projectsJson;
           }
-          
+
           // Now filter by selected month based on updatedAt or completedAt
-          projectData = projectData.filter(p => {
+          projectData = projectData.filter((p) => {
             // Use completedAt if available, otherwise updatedAt
-            const relevantDate = p.completedAt ? new Date(p.completedAt) : new Date(p.updatedAt);
-            const isInSelectedMonth = relevantDate >= selectedMonthDates.start && relevantDate <= selectedMonthDates.end;
+            const relevantDate = p.completedAt
+              ? new Date(p.completedAt)
+              : new Date(p.updatedAt);
+            const isInSelectedMonth =
+              relevantDate >= selectedMonthDates.start &&
+              relevantDate <= selectedMonthDates.end;
             return isInSelectedMonth;
           });
-          
-          console.log(`📦 Projects in selected month (${selectedMonth}): ${projectData.length} projects`);
+
+          console.log(
+            `📦 Projects in selected month (${selectedMonth}): ${projectData.length} projects`,
+          );
         } catch (projErr) {
-          console.error('❌ Failed to fetch projects for agent target calculations', projErr);
+          console.error(
+            "❌ Failed to fetch projects for agent target calculations",
+            projErr,
+          );
         }
 
         console.log(`📦 Projects fetched for month: ${projectData.length}`);
@@ -299,28 +370,28 @@ const SalesScreen = () => {
         let achievedAmount = 0;
 
         // Get agent's target information
-        const agentTargetType = agent.monthlyTargetType || 'none';
+        const agentTargetType = agent.monthlyTargetType || "none";
         const digitTarget = agent.monthlyDigitTarget || 0;
         const amountTarget = agent.monthlyAmountTarget || 0;
-        const currency = agent.targetCurrency || 'PKR';
+        const currency = agent.targetCurrency || "PKR";
 
         console.log("🎯 Agent target info:", {
           type: agentTargetType,
           digitTarget,
           amountTarget,
-          currency
+          currency,
         });
 
-        if (agentTargetType === 'digit' || agentTargetType === 'both') {
+        if (agentTargetType === "digit" || agentTargetType === "both") {
           achievedDigits = selectedMonthCompletedBookings.length;
         }
 
-        if (agentTargetType === 'amount') {
+        if (agentTargetType === "amount") {
           // For 'amount' target: sum amounts from completed projects only
           const completedProjects = Array.isArray(projectData)
-            ? projectData.filter(p => {
-                const status = (p.status || '').toString().toLowerCase();
-                return status === 'completed' || status === 'delivered';
+            ? projectData.filter((p) => {
+                const status = (p.status || "").toString().toLowerCase();
+                return status === "completed" || status === "delivered";
               })
             : [];
 
@@ -330,12 +401,12 @@ const SalesScreen = () => {
           }, 0);
 
           console.log("💰 Achieved amount (projects only):", achievedAmount);
-        } else if (agentTargetType === 'both') {
+        } else if (agentTargetType === "both") {
           // For 'both' target: digits from bookings, revenue from projects ONLY
           const completedProjects = Array.isArray(projectData)
-            ? projectData.filter(p => {
-                const status = (p.status || '').toString().toLowerCase();
-                return status === 'completed' || status === 'delivered';
+            ? projectData.filter((p) => {
+                const status = (p.status || "").toString().toLowerCase();
+                return status === "completed" || status === "delivered";
               })
             : [];
 
@@ -344,13 +415,20 @@ const SalesScreen = () => {
             return sum + (isNaN(amt) ? 0 : amt);
           }, 0);
 
-          console.log("💰 Both target - Digits from bookings, Revenue from projects:", { 
-            achievedDigits, 
-            achievedAmount, 
-            totalProjects: projectData.length,
-            completedProjects: completedProjects.length,
-            completedProjectDetails: completedProjects.map(p => ({ title: p.title, price: p.price, status: p.status }))
-          });
+          console.log(
+            "💰 Both target - Digits from bookings, Revenue from projects:",
+            {
+              achievedDigits,
+              achievedAmount,
+              totalProjects: projectData.length,
+              completedProjects: completedProjects.length,
+              completedProjectDetails: completedProjects.map((p) => ({
+                title: p.title,
+                price: p.price,
+                status: p.status,
+              })),
+            },
+          );
         }
 
         console.log("📊 Achieved values for selected month:", {
@@ -358,7 +436,7 @@ const SalesScreen = () => {
           achievedDigits,
           achievedAmount,
           digitTarget,
-          amountTarget
+          amountTarget,
         });
 
         // Update target progress state
@@ -368,7 +446,7 @@ const SalesScreen = () => {
           digitTarget,
           amountTarget,
           targetType: agentTargetType,
-          currency
+          currency,
         });
 
         // Now fetch other data in parallel
@@ -383,7 +461,7 @@ const SalesScreen = () => {
           agentSalesService.getAgentBookings(agentId, {
             ...dateParams,
             limit: 10,
-            sort: '-createdAt'
+            sort: "-createdAt",
           }),
           agentSalesService.getAgentBookingStats(agentId, dateParams),
         ]);
@@ -391,16 +469,20 @@ const SalesScreen = () => {
         console.log("📋 API Responses received");
 
         // Process overview response
-        if (overviewResponse.status === 'fulfilled' && overviewResponse.value?.data) {
+        if (
+          overviewResponse.status === "fulfilled" &&
+          overviewResponse.value?.data
+        ) {
           setSalesOverview(overviewResponse.value.data);
 
           // Extract promo codes from overview
-          const promoCodesFromResponse = overviewResponse.value.data.promoCodeAnalytics ||
+          const promoCodesFromResponse =
+            overviewResponse.value.data.promoCodeAnalytics ||
             overviewResponse.value.data.promoCodeData ||
             overviewResponse.value.data.promo_codes ||
             [];
           setPromoCodes(promoCodesFromResponse);
-          
+
           console.log("📈 Overview data set");
         } else {
           console.warn("❌ Overview API failed or returned no data");
@@ -409,7 +491,10 @@ const SalesScreen = () => {
         }
 
         // Process conversion response
-        if (conversionResponse.status === 'fulfilled' && conversionResponse.value?.data) {
+        if (
+          conversionResponse.status === "fulfilled" &&
+          conversionResponse.value?.data
+        ) {
           setPerformanceMetrics(conversionResponse.value.data);
           console.log("📊 Performance metrics set");
         } else {
@@ -418,8 +503,9 @@ const SalesScreen = () => {
         }
 
         // Process recent bookings response and also include recent projects
-        if (recentBookingsResponse.status === 'fulfilled') {
-          const recentData = recentBookingsResponse.value?.data?.bookings ||
+        if (recentBookingsResponse.status === "fulfilled") {
+          const recentData =
+            recentBookingsResponse.value?.data?.bookings ||
             recentBookingsResponse.value?.bookings ||
             [];
 
@@ -427,71 +513,96 @@ const SalesScreen = () => {
           let recentProjects = [];
           try {
             // Fetch ALL projects for agent, then filter by date on frontend
-            console.log(`🔍 Fetching ALL projects for recent sales, agent: ${agentId}`);
-            const projectsRes = await fetch(`/api/projects?assignedAgent=${agentId}&limit=1000`);
+            console.log(
+              `🔍 Fetching ALL projects for recent sales, agent: ${agentId}`,
+            );
+            const projectsRes = await fetch(
+              `/api/projects?assignedAgent=${agentId}&limit=1000`,
+            );
             const projectsJson = await projectsRes.json();
             console.log(`📦 Recent projects API response:`, projectsJson);
-            
+
             if (projectsJson && projectsJson.success) {
               recentProjects = projectsJson.data || [];
             } else if (Array.isArray(projectsJson)) {
               recentProjects = projectsJson;
             }
-            
+
             // Filter by date range using updatedAt or completedAt
             const startDate = new Date(dateParams.startDate);
             const endDate = new Date(dateParams.endDate);
-            recentProjects = recentProjects.filter(p => {
-              const relevantDate = p.completedAt ? new Date(p.completedAt) : new Date(p.updatedAt);
+            recentProjects = recentProjects.filter((p) => {
+              const relevantDate = p.completedAt
+                ? new Date(p.completedAt)
+                : new Date(p.updatedAt);
               return relevantDate >= startDate && relevantDate <= endDate;
             });
-            
-            console.log(`📦 Recent projects filtered: ${recentProjects.length} projects`);
+
+            console.log(
+              `📦 Recent projects filtered: ${recentProjects.length} projects`,
+            );
           } catch (projErr) {
-            console.error('❌ Failed to fetch recent projects', projErr);
+            console.error("❌ Failed to fetch recent projects", projErr);
           }
 
           // Normalize projects to booking-like objects for RecentBookings component
-          const mappedProjects = (recentProjects || []).map(p => ({
+          const mappedProjects = (recentProjects || []).map((p) => ({
             ...p,
             _id: p._id || p.id,
-            createdAt: p.createdAt || p.updatedAt || p.completedAt || new Date().toISOString(),
-            formData: { firstName: p.title || 'Project' },
+            createdAt:
+              p.createdAt ||
+              p.updatedAt ||
+              p.completedAt ||
+              new Date().toISOString(),
+            formData: { firstName: p.title || "Project" },
             amount: p.price || p.amount || 0,
-            type: 'project'
+            type: "project",
           }));
 
-          const combinedRecent = [...recentData.map(r => ({ ...r, type: r.type || 'booking' })), ...mappedProjects]
+          const combinedRecent = [
+            ...recentData.map((r) => ({ ...r, type: r.type || "booking" })),
+            ...mappedProjects,
+          ]
             .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
             .slice(0, 10);
 
           setRecentBookings(combinedRecent);
-          console.log("📦 Recent bookings (including projects) set:", combinedRecent.length);
+          console.log(
+            "📦 Recent bookings (including projects) set:",
+            combinedRecent.length,
+          );
         } else {
           console.warn("❌ Recent bookings API failed");
           setRecentBookings([]);
         }
 
         // Process stats response and merge project stats
-        if (statsResponse.status === 'fulfilled' && statsResponse.value?.data) {
+        if (statsResponse.status === "fulfilled" && statsResponse.value?.data) {
           const statsData = statsResponse.value.data;
           const overview = statsData.overview || {};
 
           // Combine project counts/amounts into overview
-          const projectsCount = Array.isArray(projectData) ? projectData.length : 0;
+          const projectsCount = Array.isArray(projectData)
+            ? projectData.length
+            : 0;
           const completedProjectsList = Array.isArray(projectData)
-            ? projectData.filter(p => {
-                const s = (p.status || '').toString().toLowerCase();
-                return s === 'completed' || s === 'delivered';
+            ? projectData.filter((p) => {
+                const s = (p.status || "").toString().toLowerCase();
+                return s === "completed" || s === "delivered";
               })
             : [];
           const cancelledProjectsCount = Array.isArray(projectData)
-            ? projectData.filter(p => (p.status || '').toString().toLowerCase() === 'cancelled').length
+            ? projectData.filter(
+                (p) =>
+                  (p.status || "").toString().toLowerCase() === "cancelled",
+              ).length
             : 0;
           const pendingProjectsCount = Array.isArray(projectData)
-            ? projectData.filter(p => {
-                const s = (p.status || '').toString().toLowerCase();
-                return s === 'pending' || s === 'in progress' || s === 'on hold';
+            ? projectData.filter((p) => {
+                const s = (p.status || "").toString().toLowerCase();
+                return (
+                  s === "pending" || s === "in progress" || s === "on hold"
+                );
               }).length
             : 0;
 
@@ -503,10 +614,13 @@ const SalesScreen = () => {
           const mergedOverview = {
             ...overview,
             totalBookings: (overview.totalBookings || 0) + projectsCount,
-            completedBookings: (overview.completedBookings || 0) + completedProjectsList.length,
-            pendingBookings: (overview.pendingBookings || 0) + pendingProjectsCount,
-            cancelledBookings: (overview.cancelledBookings || 0) + cancelledProjectsCount,
-            totalRevenue: (overview.totalRevenue || 0) + projectsAmount
+            completedBookings:
+              (overview.completedBookings || 0) + completedProjectsList.length,
+            pendingBookings:
+              (overview.pendingBookings || 0) + pendingProjectsCount,
+            cancelledBookings:
+              (overview.cancelledBookings || 0) + cancelledProjectsCount,
+            totalRevenue: (overview.totalRevenue || 0) + projectsAmount,
           };
 
           setBookingStats({ ...statsData, overview: mergedOverview });
@@ -520,7 +634,6 @@ const SalesScreen = () => {
         if (isRefreshing) {
           toast.success("Sales data refreshed successfully!");
         }
-
       } catch (error) {
         console.error("💥 Error fetching sales data:", error);
 
@@ -528,7 +641,8 @@ const SalesScreen = () => {
         let errorMessage = "Failed to load sales data. Please try again.";
 
         if (error.response) {
-          errorMessage = error.response.data?.message ||
+          errorMessage =
+            error.response.data?.message ||
             error.response.data?.error ||
             `Server error: ${error.response.status}`;
         } else if (error.request) {
@@ -544,13 +658,24 @@ const SalesScreen = () => {
         console.log("🏁 Fetch process completed");
       }
     },
-    [agent, isLoggedIn, agentLoading, timeRange, selectedMonth, getDateRange, toast]
+    [
+      agent,
+      isLoggedIn,
+      agentLoading,
+      timeRange,
+      selectedMonth,
+      getDateRange,
+      toast,
+    ],
   );
 
   // Fetch data when component mounts or when selectedMonth changes
   useEffect(() => {
     if (isLoggedIn && !agentLoading && selectedMonth) {
-      console.log("🔄 Triggering fetch due to selectedMonth change:", selectedMonth);
+      console.log(
+        "🔄 Triggering fetch due to selectedMonth change:",
+        selectedMonth,
+      );
       fetchSalesData();
     }
   }, [fetchSalesData, isLoggedIn, agentLoading, selectedMonth]);
@@ -573,8 +698,12 @@ const SalesScreen = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center bg-white rounded-lg p-6 shadow-sm max-w-sm">
           <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-          <h3 className="text-lg font-semibold text-gray-800 mb-1">Access Required</h3>
-          <p className="text-gray-600 text-sm">Please login to view sales data</p>
+          <h3 className="text-lg font-semibold text-gray-800 mb-1">
+            Access Required
+          </h3>
+          <p className="text-gray-600 text-sm">
+            Please login to view sales data
+          </p>
         </div>
       </div>
     );
@@ -596,7 +725,9 @@ const SalesScreen = () => {
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div className="flex-1">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Sales Dashboard</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+            Sales Dashboard
+          </h1>
           <p className="text-gray-600 mt-1">
             Track your performance and revenue metrics
           </p>
@@ -608,8 +739,10 @@ const SalesScreen = () => {
           disabled={refreshing}
           className="flex items-center gap-2 bg-white border border-gray-300 rounded-lg px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors"
         >
-          <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-          {refreshing ? 'Refreshing...' : 'Refresh Data'}
+          <RefreshCw
+            className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+          />
+          {refreshing ? "Refreshing..." : "Refresh Data"}
         </button>
       </div>
 
@@ -645,11 +778,7 @@ const SalesScreen = () => {
         {/* Sales Overview */}
         <AnimatePresence>
           {salesOverview && (
-            <motion.div
-              initial="hidden"
-              animate="visible"
-              variants={fadeUp}
-            >
+            <motion.div initial="hidden" animate="visible" variants={fadeUp}>
               <SalesOverview
                 data={salesOverview}
                 theme={theme}
@@ -668,8 +797,12 @@ const SalesScreen = () => {
                   <BarChart3 className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900">Sales Statistics</h2>
-                  <p className="text-gray-600 text-sm">Overview of your booking performance</p>
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Sales Statistics
+                  </h2>
+                  <p className="text-gray-600 text-sm">
+                    Overview of your booking performance
+                  </p>
                 </div>
               </div>
 
@@ -680,28 +813,28 @@ const SalesScreen = () => {
                     value: bookingStats.overview?.totalBookings || 0,
                     icon: TrendingUp,
                     color: "text-blue-600",
-                    bgColor: "bg-blue-50"
+                    bgColor: "bg-blue-50",
                   },
                   {
                     label: "Completed",
                     value: bookingStats.overview?.completedBookings || 0,
                     icon: CheckCircle,
                     color: "text-green-600",
-                    bgColor: "bg-green-50"
+                    bgColor: "bg-green-50",
                   },
                   {
                     label: "Pending",
                     value: bookingStats.overview?.pendingBookings || 0,
                     icon: Clock,
                     color: "text-orange-600",
-                    bgColor: "bg-orange-50"
+                    bgColor: "bg-orange-50",
                   },
                   {
                     label: "Cancelled",
                     value: bookingStats.overview?.cancelledBookings || 0,
                     icon: XCircle,
                     color: "text-red-600",
-                    bgColor: "bg-red-50"
+                    bgColor: "bg-red-50",
                   },
                 ].map((item, index) => (
                   <div
@@ -717,9 +850,7 @@ const SalesScreen = () => {
                       <p className="text-xl font-bold text-gray-900">
                         {item.value}
                       </p>
-                      <p className="text-gray-600 text-sm">
-                        {item.label}
-                      </p>
+                      <p className="text-gray-600 text-sm">{item.label}</p>
                     </div>
                   </div>
                 ))}
@@ -729,9 +860,14 @@ const SalesScreen = () => {
         </AnimatePresence>
 
         {/* Promo Codes & Recent Bookings Grid */}
-        <div className={`grid gap-6 ${!(targetProgress.targetType === 'digit' || targetProgress.targetType === 'both') ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1'}`}>
+        <div
+          className={`grid gap-6 ${!(targetProgress.targetType === "digit" || targetProgress.targetType === "both") ? "grid-cols-1 xl:grid-cols-2" : "grid-cols-1"}`}
+        >
           {/* Promo Codes (hidden when target is 'digit' or 'both') */}
-          {!(targetProgress.targetType === 'digit' || targetProgress.targetType === 'both') && (
+          {!(
+            targetProgress.targetType === "digit" ||
+            targetProgress.targetType === "both"
+          ) && (
             <div>
               <PromoCodesList promoCodes={promoCodes} theme={theme} />
             </div>
@@ -739,29 +875,37 @@ const SalesScreen = () => {
 
           {/* Recent Bookings */}
           <div>
-            <RecentBookings bookings={recentBookings} theme={theme} agent={agent} />
+            <RecentBookings
+              bookings={recentBookings}
+              theme={theme}
+              agent={agent}
+            />
           </div>
         </div>
 
         {/* Empty State */}
         <AnimatePresence>
-          {!salesOverview && promoCodes.length === 0 && recentBookings.length === 0 && (
-            <div className="text-center py-8">
-              <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 max-w-sm mx-auto">
-                <BarChart3 className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">No Data Available</h3>
-                <p className="text-gray-600 text-sm mb-4">
-                  No sales data available for the selected period
-                </p>
-                <button
-                  onClick={() => fetchSalesData(true)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium text-sm hover:bg-blue-700 transition-colors"
-                >
-                  Try Again
-                </button>
+          {!salesOverview &&
+            promoCodes.length === 0 &&
+            recentBookings.length === 0 && (
+              <div className="text-center py-8">
+                <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 max-w-sm mx-auto">
+                  <BarChart3 className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                    No Data Available
+                  </h3>
+                  <p className="text-gray-600 text-sm mb-4">
+                    No sales data available for the selected period
+                  </p>
+                  <button
+                    onClick={() => fetchSalesData(true)}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium text-sm hover:bg-blue-700 transition-colors"
+                  >
+                    Try Again
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
         </AnimatePresence>
       </div>
     </div>
