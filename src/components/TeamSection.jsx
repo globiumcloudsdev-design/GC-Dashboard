@@ -4,6 +4,7 @@ import Image from "next/image";
 import { teamService } from "../services/teamService";
 import { FaLinkedinIn, FaGithub } from "react-icons/fa";
 import { motion } from "framer-motion";
+import { sectionReveal } from "@/lib/animations";
 
 // Swiper Imports
 import { Swiper, SwiperSlide } from "swiper/react";
