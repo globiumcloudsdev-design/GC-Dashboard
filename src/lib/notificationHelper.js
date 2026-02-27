@@ -139,39 +139,58 @@ async function sendViaFCM(tokens, title, body, data = {}) {
 }
 
 /**
- * Users ko push notification bhejta hai
- * FCM + Expo Push dono support karta hai
+ * Push notification bhejta hai — FCM + Expo dono support karta hai
+ * - targetType "all"      → Agent + User dono ko
+ * - targetType "agent"    → Sirf Agents ko
+ * - targetType "user"     → Sirf Users ko
+ * - targetType "specific" → targetUsers array mein jo IDs hain unko
  */
 export async function sendPushToUsers({
     title,
     message,
     targetType,
-    targetUsers,
+    targetUsers = [],
     targetModel = "Agent",
     metadata = {}
 }) {
     try {
-        let query = {};
-        if (targetType === "all" || targetType === "agent") {
-            query = { isActive: true };
-        } else {
-            query = { _id: { $in: targetUsers } };
+        const AgentModel = (await import("@/Models/Agent")).default;
+
+        let allTokens = [];
+
+        if (targetType === "all") {
+            // Dono collections se tokens lo
+            const [agents, users] = await Promise.all([
+                AgentModel.find({ isActive: true }).select("pushTokens").lean(),
+                User.find({ isActive: true }).select("pushTokens").lean(),
+            ]);
+            allTokens = [
+                ...agents.flatMap(a => a.pushTokens || []),
+                ...users.flatMap(u => u.pushTokens || []),
+            ];
+        } else if (targetType === "agent") {
+            const agents = await AgentModel.find({ isActive: true }).select("pushTokens").lean();
+            allTokens = agents.flatMap(a => a.pushTokens || []);
+        } else if (targetType === "user") {
+            const users = await User.find({ isActive: true }).select("pushTokens").lean();
+            allTokens = users.flatMap(u => u.pushTokens || []);
+        } else if (targetType === "specific") {
+            // targetModel decides which collection
+            const Model = targetModel === "User" ? User : AgentModel;
+            const recipients = await Model.find({ _id: { $in: targetUsers } }).select("pushTokens").lean();
+            allTokens = recipients.flatMap(r => r.pushTokens || []);
         }
 
-        const ModelToUse = targetModel === "User"
-            ? User
-            : (await import("@/Models/Agent")).default;
+        // Deduplicate tokens
+        const uniqueTokens = [...new Set(allTokens.filter(Boolean))];
 
-        const recipients = await ModelToUse.find(query).select("pushTokens");
-        const allTokens = recipients.flatMap(u => u.pushTokens || []);
-
-        if (allTokens.length === 0) {
-            console.log('⚠️ Koi push token nahi mila');
+        if (uniqueTokens.length === 0) {
+            console.log("⚠️ Koi push token nahi mila — koi device register nahi hai");
             return false;
         }
 
-        console.log(`📤 Sending to ${allTokens.length} token(s) via FCM/Expo...`);
-        return await sendViaFCM(allTokens, title, message, metadata);
+        console.log(`📤 Sending push to ${uniqueTokens.length} unique token(s) [targetType: ${targetType}]`);
+        return await sendViaFCM(uniqueTokens, title, message, metadata);
 
     } catch (error) {
         console.error("❌ sendPushToUsers Error:", error);

@@ -5,58 +5,66 @@ const NotificationSchema = new mongoose.Schema(
     title: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
     },
     message: {
       type: String,
-      required: true
+      required: true,
     },
-    readBy: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User"
-    }],
-    deletedBy: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User"
-    }],
+    // Both User._id and Agent._id values can appear here.
+    // We store them as plain ObjectIds (no refPath) because they can come
+    // from two different collections.  The read-status API resolves names
+    // by querying both User and Agent collections.
+    readBy: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+      },
+    ],
+    deletedBy: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+      },
+    ],
     type: {
       type: String,
       enum: ["info", "warning", "success", "error", "announcement"],
-      default: "info"
+      default: "info",
     },
     targetType: {
       type: String,
       enum: ["all", "user", "agent", "specific"],
-      required: true
+      required: true,
     },
-    targetUsers: [{
-      type: mongoose.Schema.Types.ObjectId,
-      refPath: "targetModel"
-    }],
+    targetUsers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        refPath: "targetModel",
+      },
+    ],
     targetModel: {
       type: String,
       enum: ["User", "Agent"],
       required: function () {
         return this.targetType === "specific";
-      }
+      },
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // Admin user
-      // required: true
+      ref: "User", // Admin user who created it
     },
     isActive: {
       type: Boolean,
-      default: true
+      default: true,
     },
     isEdited: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
   {
-    timestamps: true
+    timestamps: true,
   }
 );
 
-export default mongoose.models.Notification || mongoose.model("Notification", NotificationSchema);
+export default mongoose.models.Notification ||
+  mongoose.model("Notification", NotificationSchema);

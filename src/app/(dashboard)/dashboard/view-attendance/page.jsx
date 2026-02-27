@@ -5,18 +5,54 @@ import { adminService } from "@/services/adminService";
 import { shiftService } from "@/services/shiftService";
 import { attendanceService } from "@/services/attendanceService";
 import { weeklyOffService } from "@/services/weeklyOffService";
-import { formatTime, formatDate, formatDateTime, calculateWorkingHours } from "@/utils/timezone";
+import {
+  formatTime,
+  formatDate,
+  formatDateTime,
+  calculateWorkingHours,
+} from "@/utils/timezone";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Loader2, Calendar, CheckCircle, XCircle, Clock, Plus, Trash2,
-  PlayCircle, Edit, Download, X, RefreshCw, UserPlus, FileText, PartyPopper,
-  CalendarDays, Search, Menu, Filter, Eye, UserCheck, CalculatorIcon,
+  Loader2,
+  Calendar,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Plus,
+  Trash2,
+  PlayCircle,
+  Edit,
+  Download,
+  X,
+  RefreshCw,
+  UserPlus,
+  FileText,
+  PartyPopper,
+  CalendarDays,
+  Search,
+  Menu,
+  Filter,
+  Eye,
+  UserCheck,
+  CalculatorIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import ViewAttendanceModal from "@/components/ViewAttendanceModal";
@@ -49,7 +85,10 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { formatToPakistaniDate, formatToPakistaniTime } from "@/utils/TimeFuntions";
+import {
+  formatToPakistaniDate,
+  formatToPakistaniTime,
+} from "@/utils/TimeFuntions";
 
 export default function AdminAttendancePage() {
   const { hasPermission } = useAuth();
@@ -71,7 +110,7 @@ export default function AdminAttendancePage() {
     auto: false,
     edit: false,
     shiftAuto: false,
-    payroll: false
+    payroll: false,
   });
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -85,26 +124,26 @@ export default function AdminAttendancePage() {
     date: "",
     month: "",
     fromDate: "",
-    toDate: ""
+    toDate: "",
   });
   const [activeTab, setActiveTab] = useState("attendance");
   const [showFilters, setShowFilters] = useState(true); // Default show filters
 
   // Permission checks
-  const canViewAttendance = hasPermission('attendance', 'view');
-  const canCreateAttendance = hasPermission('attendance', 'create');
-  const canEditAttendance = hasPermission('attendance', 'edit');
-  const canDeleteAttendance = hasPermission('attendance', 'delete');
-  const canViewLeave = hasPermission('leaveRequest', 'view');
-  const canCreateLeave = hasPermission('leaveRequest', 'create');
-  const canApproveLeave = hasPermission('leaveRequest', 'approve');
-  const canViewHolidays = hasPermission('holiday', 'view');
-  const canCreateHolidays = hasPermission('holiday', 'create');
-  const canDeleteHolidays = hasPermission('holiday', 'delete');
-  const canViewWeeklyOff = hasPermission('weeklyOff', 'view');
-  const canCreateWeeklyOff = hasPermission('weeklyOff', 'create');
-  const canEditWeeklyOff = hasPermission('weeklyOff', 'edit');
-  const canDeleteWeeklyOff = hasPermission('weeklyOff', 'delete');
+  const canViewAttendance = hasPermission("attendance", "view");
+  const canCreateAttendance = hasPermission("attendance", "create");
+  const canEditAttendance = hasPermission("attendance", "edit");
+  const canDeleteAttendance = hasPermission("attendance", "delete");
+  const canViewLeave = hasPermission("leaveRequest", "view");
+  const canCreateLeave = hasPermission("leaveRequest", "create");
+  const canApproveLeave = hasPermission("leaveRequest", "approve");
+  const canViewHolidays = hasPermission("holiday", "view");
+  const canCreateHolidays = hasPermission("holiday", "create");
+  const canDeleteHolidays = hasPermission("holiday", "delete");
+  const canViewWeeklyOff = hasPermission("weeklyOff", "view");
+  const canCreateWeeklyOff = hasPermission("weeklyOff", "create");
+  const canEditWeeklyOff = hasPermission("weeklyOff", "edit");
+  const canDeleteWeeklyOff = hasPermission("weeklyOff", "delete");
 
   // Modal states
   const [showManualModal, setShowManualModal] = useState(false);
@@ -132,86 +171,87 @@ export default function AdminAttendancePage() {
     const checkScreen = () => {
       setIsSmallScreen(window.innerWidth < 640);
     };
-    if (typeof window !== 'undefined') {
-        checkScreen();
-        window.addEventListener('resize', checkScreen);
-        return () => window.removeEventListener('resize', checkScreen);
+    if (typeof window !== "undefined") {
+      checkScreen();
+      window.addEventListener("resize", checkScreen);
+      return () => window.removeEventListener("resize", checkScreen);
     }
   }, []);
 
   // Filter Helper Functions (Moved from ResponsiveFilters)
   const handleApplyFilters = () => {
-      fetchAttendance();
-      toast.success("Filters applied successfully");
+    fetchAttendance();
+    toast.success("Filters applied successfully");
   };
 
   const handleFilterChange = (key, value) => {
-      setFilters(prev => ({ ...prev, [key]: value }));
+    setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleClearAllFilters = () => {
-      setFilters({
-        userType: "agent",
-        status: "all",
-        shift: "all",
-        date: "",
-        month: "",
-        fromDate: "",
-        toDate: ""
-      });
-      setSearchQuery("");
-      toast.success("All filters cleared");
-    };
+    setFilters({
+      userType: "agent",
+      status: "all",
+      shift: "all",
+      date: "",
+      month: "",
+      fromDate: "",
+      toDate: "",
+    });
+    setSearchQuery("");
+    toast.success("All filters cleared");
+  };
 
-  const hasActiveFilters = filters.status !== 'all' || 
-                            filters.date || 
-                            filters.month || 
-                            filters.fromDate || 
-                            filters.toDate || 
-                            searchQuery;
+  const hasActiveFilters =
+    filters.status !== "all" ||
+    filters.date ||
+    filters.month ||
+    filters.fromDate ||
+    filters.toDate ||
+    searchQuery;
 
   const [manualForm, setManualForm] = useState({
     userType: "agent",
     userId: "",
     agentId: "",
     shiftId: "",
-    date: new Date().toISOString().split('T')[0],
+    date: new Date().toISOString().split("T")[0],
     status: "present",
     checkInTime: "",
     checkOutTime: "",
-    notes: ""
+    notes: "",
   });
 
   const [leaveForm, setLeaveForm] = useState({
     userType: "agent",
     userId: "",
     agentId: "",
-    startDate: new Date().toISOString().split('T')[0],
-    endDate: new Date().toISOString().split('T')[0],
+    startDate: new Date().toISOString().split("T")[0],
+    endDate: new Date().toISOString().split("T")[0],
     leaveType: "casual",
-    reason: ""
+    reason: "",
   });
 
   const [holidayForm, setHolidayForm] = useState({
     name: "",
-    date: new Date().toISOString().split('T')[0],
+    date: new Date().toISOString().split("T")[0],
     description: "",
-    isRecurring: false
+    isRecurring: false,
   });
 
   const [weeklyOffForm, setWeeklyOffForm] = useState({
     day: "sunday",
     name: "Sunday",
-    description: "Weekly off day"
+    description: "Weekly off day",
   });
 
   const [autoForm, setAutoForm] = useState({
-    date: new Date().toISOString().split('T')[0]
+    date: new Date().toISOString().split("T")[0],
   });
 
   const [shiftAutoForm, setShiftAutoForm] = useState({
-    date: new Date().toISOString().split('T')[0],
-    userType: "agent"
+    date: new Date().toISOString().split("T")[0],
+    userType: "agent",
   });
 
   // Fetch functions
@@ -231,12 +271,12 @@ export default function AdminAttendancePage() {
 
   const fetchAttendance = useCallback(async () => {
     try {
-      setLoading(prev => ({ ...prev, attendance: true }));
+      setLoading((prev) => ({ ...prev, attendance: true }));
       const params = {
         page,
         limit,
         ...filters,
-        search: searchQuery
+        search: searchQuery,
       };
       if (filters.fromDate && filters.toDate) {
         params.startDate = filters.fromDate;
@@ -244,11 +284,11 @@ export default function AdminAttendancePage() {
         params.date = "";
         params.month = "";
       } else if (filters.month) {
-        const [year, month] = filters.month.split('-');
+        const [year, month] = filters.month.split("-");
         const startDate = new Date(parseInt(year), parseInt(month) - 1, 1);
         const endDate = new Date(parseInt(year), parseInt(month), 0);
-        params.startDate = startDate.toISOString().split('T')[0];
-        params.endDate = endDate.toISOString().split('T')[0];
+        params.startDate = startDate.toISOString().split("T")[0];
+        params.endDate = endDate.toISOString().split("T")[0];
         params.date = "";
       } else if (filters.date) {
         params.date = filters.date;
@@ -272,13 +312,13 @@ export default function AdminAttendancePage() {
       console.error(err);
       toast.error("Server error while fetching data");
     } finally {
-      setLoading(prev => ({ ...prev, attendance: false }));
+      setLoading((prev) => ({ ...prev, attendance: false }));
     }
   }, [page, limit, filters, searchQuery]);
 
   const fetchLeaveRequests = async () => {
     try {
-      setLoading(prev => ({ ...prev, leave: true }));
+      setLoading((prev) => ({ ...prev, leave: true }));
       const response = await attendanceService.getAllLeaveRequests("all");
       if (response.success) {
         setLeaveRequests(response.data || []);
@@ -287,13 +327,13 @@ export default function AdminAttendancePage() {
       console.error("Error fetching leave requests:", error);
       toast.error("Error loading leave requests");
     } finally {
-      setLoading(prev => ({ ...prev, leave: false }));
+      setLoading((prev) => ({ ...prev, leave: false }));
     }
   };
 
   const fetchHolidays = async () => {
     try {
-      setLoading(prev => ({ ...prev, holidays: true }));
+      setLoading((prev) => ({ ...prev, holidays: true }));
       const response = await attendanceService.getHolidays();
       if (response.success) {
         setHolidays(response.data || []);
@@ -302,13 +342,13 @@ export default function AdminAttendancePage() {
       console.error("Error fetching holidays:", error);
       toast.error("Error loading holidays");
     } finally {
-      setLoading(prev => ({ ...prev, holidays: false }));
+      setLoading((prev) => ({ ...prev, holidays: false }));
     }
   };
 
   const fetchWeeklyOffs = async () => {
     try {
-      setLoading(prev => ({ ...prev, weeklyOff: true }));
+      setLoading((prev) => ({ ...prev, weeklyOff: true }));
       const response = await weeklyOffService.getAll();
       if (response.success) {
         setWeeklyOffs(response.data || []);
@@ -317,7 +357,7 @@ export default function AdminAttendancePage() {
       console.error("Error fetching weekly offs:", error);
       toast.error("Error loading weekly offs");
     } finally {
-      setLoading(prev => ({ ...prev, weeklyOff: false }));
+      setLoading((prev) => ({ ...prev, weeklyOff: false }));
     }
   };
 
@@ -328,23 +368,31 @@ export default function AdminAttendancePage() {
 
   useEffect(() => {
     if (filters.month) {
-      const [year, month] = filters.month.split('-');
+      const [year, month] = filters.month.split("-");
       const yearNum = parseInt(year);
       const monthNum = parseInt(month);
-      const startDateStr = `${yearNum}-${monthNum.toString().padStart(2, '0')}-01`;
+      const startDateStr = `${yearNum}-${monthNum.toString().padStart(2, "0")}-01`;
       const lastDay = new Date(yearNum, monthNum, 0).getDate();
-      const endDateStr = `${yearNum}-${monthNum.toString().padStart(2, '0')}-${lastDay.toString().padStart(2, '0')}`;
-      setFilters(prev => ({
+      const endDateStr = `${yearNum}-${monthNum.toString().padStart(2, "0")}-${lastDay.toString().padStart(2, "0")}`;
+      setFilters((prev) => ({
         ...prev,
         fromDate: startDateStr,
-        toDate: endDateStr
+        toDate: endDateStr,
       }));
     }
   }, [filters.month]);
 
   useEffect(() => {
     setPage(1);
-  }, [filters.status, filters.userType, filters.date, filters.month, filters.fromDate, filters.toDate, searchQuery]);
+  }, [
+    filters.status,
+    filters.userType,
+    filters.date,
+    filters.month,
+    filters.fromDate,
+    filters.toDate,
+    searchQuery,
+  ]);
 
   useEffect(() => {
     if (activeTab === "attendance") {
@@ -362,7 +410,7 @@ export default function AdminAttendancePage() {
   const handleManualAttendance = async (e) => {
     e.preventDefault();
     try {
-      setLoading(prev => ({ ...prev, manual: true }));
+      setLoading((prev) => ({ ...prev, manual: true }));
       const submitData = { ...manualForm, shiftId: manualForm.shiftId || null };
       const response = await adminService.manualAttendance(submitData);
       if (response.success) {
@@ -373,11 +421,11 @@ export default function AdminAttendancePage() {
           userId: "",
           agentId: "",
           shiftId: "",
-          date: new Date().toISOString().split('T')[0],
+          date: new Date().toISOString().split("T")[0],
           status: "present",
           checkInTime: "",
           checkOutTime: "",
-          notes: ""
+          notes: "",
         });
         fetchAttendance();
       } else {
@@ -387,14 +435,14 @@ export default function AdminAttendancePage() {
       console.error("Error submitting manual attendance:", error);
       toast.error("Error updating attendance");
     } finally {
-      setLoading(prev => ({ ...prev, manual: false }));
+      setLoading((prev) => ({ ...prev, manual: false }));
     }
   };
 
   const handleAssignLeave = async (e) => {
     e.preventDefault();
     try {
-      setLoading(prev => ({ ...prev, assign: true }));
+      setLoading((prev) => ({ ...prev, assign: true }));
       const response = await adminService.assignLeave(leaveForm);
       if (response.success) {
         toast.success("Leave assigned successfully");
@@ -407,14 +455,14 @@ export default function AdminAttendancePage() {
       console.error("Error assigning leave:", error);
       toast.error("Error assigning leave");
     } finally {
-      setLoading(prev => ({ ...prev, assign: false }));
+      setLoading((prev) => ({ ...prev, assign: false }));
     }
   };
 
   const handleCreateHoliday = async (e) => {
     e.preventDefault();
     try {
-      setLoading(prev => ({ ...prev, holidays: true }));
+      setLoading((prev) => ({ ...prev, holidays: true }));
       const response = await attendanceService.createHoliday(holidayForm);
       if (response.success) {
         toast.success("Holiday created successfully");
@@ -428,14 +476,14 @@ export default function AdminAttendancePage() {
       console.error("Error creating holiday:", error);
       toast.error("Error creating holiday");
     } finally {
-      setLoading(prev => ({ ...prev, holidays: false }));
+      setLoading((prev) => ({ ...prev, holidays: false }));
     }
   };
 
   const handleCreateWeeklyOff = async (e) => {
     e.preventDefault();
     try {
-      setLoading(prev => ({ ...prev, weeklyOff: true }));
+      setLoading((prev) => ({ ...prev, weeklyOff: true }));
       const response = await weeklyOffService.create(weeklyOffForm);
       if (response.success) {
         toast.success("Weekly off day added successfully");
@@ -448,7 +496,7 @@ export default function AdminAttendancePage() {
       console.error("Error creating weekly off:", error);
       toast.error("Error creating weekly off");
     } finally {
-      setLoading(prev => ({ ...prev, weeklyOff: false }));
+      setLoading((prev) => ({ ...prev, weeklyOff: false }));
     }
   };
 
@@ -456,7 +504,7 @@ export default function AdminAttendancePage() {
     try {
       const response = await weeklyOffService.updateStatus(id, isActive);
       if (response.success) {
-        toast.success(`Weekly off ${isActive ? 'activated' : 'deactivated'}`);
+        toast.success(`Weekly off ${isActive ? "activated" : "deactivated"}`);
         fetchWeeklyOffs();
       } else {
         toast.error(response.message || "Error updating weekly off");
@@ -468,7 +516,8 @@ export default function AdminAttendancePage() {
   };
 
   const handleDeleteWeeklyOff = async (id) => {
-    if (!confirm("Are you sure you want to delete this weekly off day?")) return;
+    if (!confirm("Are you sure you want to delete this weekly off day?"))
+      return;
     try {
       const response = await weeklyOffService.delete(id);
       if (response.success) {
@@ -486,10 +535,15 @@ export default function AdminAttendancePage() {
   const handleAutoAttendance = async (e) => {
     e.preventDefault();
     try {
-      setLoading(prev => ({ ...prev, auto: true }));
-      const response = await attendanceService.processAutoAttendance({ date: autoForm.date, userType: 'agent' });
+      setLoading((prev) => ({ ...prev, auto: true }));
+      const response = await attendanceService.processAutoAttendance({
+        date: autoForm.date,
+        userType: "agent",
+      });
       if (response.success) {
-        toast.success(response.message || "Auto attendance processed successfully");
+        toast.success(
+          response.message || "Auto attendance processed successfully",
+        );
         setShowAutoModal(false);
         fetchAttendance();
       } else {
@@ -499,7 +553,7 @@ export default function AdminAttendancePage() {
       console.error("Error processing auto attendance:", error);
       toast.error("Error processing auto attendance");
     } finally {
-      setLoading(prev => ({ ...prev, auto: false }));
+      setLoading((prev) => ({ ...prev, auto: false }));
     }
   };
 
@@ -522,7 +576,10 @@ export default function AdminAttendancePage() {
 
   const handleLeaveAction = async (requestId, status, comments = "") => {
     try {
-      const response = await attendanceService.updateLeaveRequest(requestId, { status, comments });
+      const response = await attendanceService.updateLeaveRequest(requestId, {
+        status,
+        comments,
+      });
       if (response.success) {
         toast.success(`Leave request ${status}`);
         fetchLeaveRequests();
@@ -543,43 +600,45 @@ export default function AdminAttendancePage() {
 
   const handleEditAttendance = (attendance) => {
     const formatDateOnly = (val) => {
-      if (!val) return '';
+      if (!val) return "";
       try {
         const date = new Date(val);
-        return date.toLocaleDateString('en-CA', { timeZone: 'Asia/Karachi' });
+        return date.toLocaleDateString("en-CA", { timeZone: "Asia/Karachi" });
       } catch {
-        return '';
+        return "";
       }
     };
 
     const formatTimeOnly = (val) => {
-      if (!val) return '';
+      if (!val) return "";
       try {
         const date = new Date(val);
         const options = {
-          hour: '2-digit',
-          minute: '2-digit',
+          hour: "2-digit",
+          minute: "2-digit",
           hour12: false,
-          timeZone: 'Asia/Karachi'
+          timeZone: "Asia/Karachi",
         };
-        const timeString = date.toLocaleTimeString('en-GB', options);
+        const timeString = date.toLocaleTimeString("en-GB", options);
         return timeString;
       } catch (error) {
         console.error("Error formatting time:", error, val);
-        return '';
+        return "";
       }
     };
 
     setEditingAttendance(attendance);
 
-    let attendanceDate = '';
+    let attendanceDate = "";
     if (attendance.date) {
       attendanceDate = formatDateOnly(attendance.date);
     } else if (attendance.checkInTime) {
       attendanceDate = formatDateOnly(attendance.checkInTime);
     } else {
       const now = new Date();
-      attendanceDate = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Karachi' });
+      attendanceDate = now.toLocaleDateString("en-CA", {
+        timeZone: "Asia/Karachi",
+      });
     }
 
     setManualForm({
@@ -591,7 +650,7 @@ export default function AdminAttendancePage() {
       status: attendance.status,
       checkInTime: formatTimeOnly(attendance.checkInTime),
       checkOutTime: formatTimeOnly(attendance.checkOutTime),
-      notes: attendance.notes || ""
+      notes: attendance.notes || "",
     });
     setShowEditModal(true);
   };
@@ -599,7 +658,7 @@ export default function AdminAttendancePage() {
   const handleUpdateAttendance = async (e) => {
     e.preventDefault();
     try {
-      setLoading(prev => ({ ...prev, edit: true }));
+      setLoading((prev) => ({ ...prev, edit: true }));
 
       const originalStatus = editingAttendance?.status;
       const isManuallySettingStatus = manualForm.status !== originalStatus;
@@ -610,7 +669,7 @@ export default function AdminAttendancePage() {
         checkInTime: manualForm.checkInTime || null,
         checkOutTime: manualForm.checkOutTime || null,
         shiftId: manualForm.shiftId || null,
-        notes: manualForm.notes || ""
+        notes: manualForm.notes || "",
       };
 
       const response = await adminService.updateAttendance(updateData);
@@ -625,48 +684,70 @@ export default function AdminAttendancePage() {
       console.error("Error updating attendance:", error);
       toast.error("Error updating attendance");
     } finally {
-      setLoading(prev => ({ ...prev, edit: false }));
+      setLoading((prev) => ({ ...prev, edit: false }));
     }
   };
 
   const handleShiftAutoAttendance = async (e) => {
     e.preventDefault();
     try {
-      setLoading(prev => ({ ...prev, shiftAuto: true }));
-      const response = await attendanceService.processShiftAutoAttendance(shiftAutoForm.date, "agent");
+      setLoading((prev) => ({ ...prev, shiftAuto: true }));
+      const response = await attendanceService.processShiftAutoAttendance(
+        shiftAutoForm.date,
+        "agent",
+      );
       if (response.success) {
-        toast.success(response.message || "Shift-based auto attendance processed successfully");
+        toast.success(
+          response.message ||
+            "Shift-based auto attendance processed successfully",
+        );
         setShowShiftAutoModal(false);
         fetchAttendance();
       } else {
-        toast.error(response.message || "Error processing shift auto attendance");
+        toast.error(
+          response.message || "Error processing shift auto attendance",
+        );
       }
     } catch (error) {
       console.error("Error processing shift auto attendance:", error);
       toast.error("Error processing shift auto attendance");
     } finally {
-      setLoading(prev => ({ ...prev, shiftAuto: false }));
+      setLoading((prev) => ({ ...prev, shiftAuto: false }));
     }
   };
 
   const handleDownloadAttendance = () => {
-    const csvHeaders = ['Agent', 'Shift', 'Check In', 'Check Out', 'Status', 'Date'];
-    const csvData = attendance.map(a => [
-      a.user ? `${a.user.firstName} ${a.user.lastName}` : a.agent?.agentName || '—',
-      a.shift?.name || '—',
-      a.checkInTime ? formatToPakistaniTime(a.checkInTime) : '—',
-      a.checkOutTime ? formatToPakistaniTime(a.checkOutTime) : '—',
+    const csvHeaders = [
+      "Agent",
+      "Shift",
+      "Check In",
+      "Check Out",
+      "Status",
+      "Date",
+    ];
+    const csvData = attendance.map((a) => [
+      a.user
+        ? `${a.user.firstName} ${a.user.lastName}`
+        : a.agent?.agentName || "—",
+      a.shift?.name || "—",
+      a.checkInTime ? formatToPakistaniTime(a.checkInTime) : "—",
+      a.checkOutTime ? formatToPakistaniTime(a.checkOutTime) : "—",
       a.status,
-      formatToPakistaniDate(a.createdAt)
+      formatToPakistaniDate(a.createdAt),
     ]);
-    const csvContent = [csvHeaders, ...csvData].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
+    const csvContent = [csvHeaders, ...csvData]
+      .map((row) => row.map((cell) => `"${cell}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
     if (link.download !== undefined) {
       const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', `attendance_${new Date().toISOString().split('T')[0]}.csv`);
-      link.style.visibility = 'hidden';
+      link.setAttribute("href", url);
+      link.setAttribute(
+        "download",
+        `attendance_${new Date().toISOString().split("T")[0]}.csv`,
+      );
+      link.style.visibility = "hidden";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -674,7 +755,10 @@ export default function AdminAttendancePage() {
   };
 
   const canEditAttendanceRecord = (attendance) => {
-    return !["holiday", "weekly_off"].includes(attendance.status) && !attendance.generated;
+    return (
+      !["holiday", "weekly_off"].includes(attendance.status) &&
+      !attendance.generated
+    );
   };
 
   const getStatusBadge = (status) => {
@@ -689,146 +773,81 @@ export default function AdminAttendancePage() {
       approved_leave: "bg-blue-500 text-white border-blue-600",
       pending_leave: "bg-slate-500 text-white border-slate-600",
       holiday: "bg-purple-500 text-white border-purple-600",
-      weekly_off: "bg-gray-500 text-white border-gray-600"
+      weekly_off: "bg-gray-500 text-white border-gray-600",
     };
     return (
-      <Badge variant="outline" className={`${statusConfig[status] || "bg-gray-500 text-white border-gray-600"} text-xs px-2 py-1`}>
-        {status?.replace(/_/g, ' ')}
+      <Badge
+        variant="outline"
+        className={`${statusConfig[status] || "bg-gray-500 text-white border-gray-600"} text-xs px-2 py-1`}
+      >
+        {status?.replace(/_/g, " ")}
       </Badge>
     );
   };
 
-  // ✅ Stats Cards Component
+  // ✅ Stats Cards Component (CSS-responsive only, no JS breakpoint detection)
   const StatsCards = () => {
-    const [isMobile, setIsMobile] = useState(false);
-
-    useEffect(() => {
-      const checkMobile = () => {
-        setIsMobile(window.innerWidth < 640);
-      };
-
-      checkMobile();
-      window.addEventListener('resize', checkMobile);
-
-      return () => window.removeEventListener('resize', checkMobile);
-    }, []);
-
-    if (isMobile) {
-      return (
-        <div className="space-y-3 mb-6">
-          <div className="grid grid-cols-2 gap-3">
-            <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-              <CardHeader className="p-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-xs font-medium text-blue-800">Total</CardTitle>
-                  <Calendar className="h-3 w-3 text-blue-600" />
-                </div>
-              </CardHeader>
-              <CardContent className="p-3 pt-0">
-                <div className="text-lg font-bold text-blue-700">{total}</div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-              <CardHeader className="p-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-xs font-medium text-green-800">Present</CardTitle>
-                  <CheckCircle className="h-3 w-3 text-green-600" />
-                </div>
-              </CardHeader>
-              <CardContent className="p-3 pt-0">
-                <div className="text-lg font-bold text-green-700">
-                  {attendance.filter(a => a.status === 'present').length}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
-              <CardHeader className="p-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-xs font-medium text-red-800">Absent</CardTitle>
-                  <XCircle className="h-3 w-3 text-red-600" />
-                </div>
-              </CardHeader>
-              <CardContent className="p-3 pt-0">
-                <div className="text-lg font-bold text-red-700">
-                  {attendance.filter(a => a.status === 'absent').length}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200">
-              <CardHeader className="p-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-xs font-medium text-yellow-800">Leave/Off</CardTitle>
-                  <Clock className="h-3 w-3 text-yellow-600" />
-                </div>
-              </CardHeader>
-              <CardContent className="p-3 pt-0">
-                <div className="text-lg font-bold text-yellow-700">
-                  {attendance.filter(a =>
-                    a.status.includes('leave') ||
-                    a.status === 'holiday' ||
-                    a.status === 'weekly_off'
-                  ).length}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      );
-    }
-
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-2">
         <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 shadow-sm overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
-            <CardTitle className="text-sm font-medium text-blue-800">Total Records</CardTitle>
-            <Calendar className="h-4 w-4 text-blue-600" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3 sm:p-4">
+            <CardTitle className="text-xs sm:text-sm font-semibold text-blue-800">
+              Total Records
+            </CardTitle>
+            <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-500 flex-shrink-0" />
           </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold text-blue-700">{total}</div>
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <div className="text-xl sm:text-2xl font-bold text-blue-700">
+              {total}
+            </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200 shadow-sm overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
-            <CardTitle className="text-sm font-medium text-green-800">Present Today</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-600" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3 sm:p-4">
+            <CardTitle className="text-xs sm:text-sm font-semibold text-green-800">
+              Present
+            </CardTitle>
+            <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-500 flex-shrink-0" />
           </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold text-green-700">
-              {attendance.filter(a => a.status === 'present').length}
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <div className="text-xl sm:text-2xl font-bold text-green-700">
+              {attendance.filter((a) => a.status === "present").length}
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200 shadow-sm overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
-            <CardTitle className="text-sm font-medium text-red-800">Absent Today</CardTitle>
-            <XCircle className="h-4 w-4 text-red-600" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3 sm:p-4">
+            <CardTitle className="text-xs sm:text-sm font-semibold text-red-800">
+              Absent
+            </CardTitle>
+            <XCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-red-500 flex-shrink-0" />
           </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold text-red-700">
-              {attendance.filter(a => a.status === 'absent').length}
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <div className="text-xl sm:text-2xl font-bold text-red-700">
+              {attendance.filter((a) => a.status === "absent").length}
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200 shadow-sm overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
-            <CardTitle className="text-sm font-medium text-yellow-800">On Leave/Off</CardTitle>
-            <Clock className="h-4 w-4 text-yellow-600" />
+        <Card className="bg-gradient-to-br from-amber-50 to-yellow-100 border-yellow-200 shadow-sm overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-3 sm:p-4">
+            <CardTitle className="text-xs sm:text-sm font-semibold text-yellow-800">
+              Leave / Off
+            </CardTitle>
+            <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-yellow-500 flex-shrink-0" />
           </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold text-yellow-700">
-              {attendance.filter(a =>
-                a.status.includes('leave') ||
-                a.status === 'holiday' ||
-                a.status === 'weekly_off'
-              ).length}
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <div className="text-xl sm:text-2xl font-bold text-yellow-700">
+              {
+                attendance.filter(
+                  (a) =>
+                    a.status.includes("leave") ||
+                    a.status === "holiday" ||
+                    a.status === "weekly_off",
+                ).length
+              }
             </div>
           </CardContent>
         </Card>
@@ -840,541 +859,206 @@ export default function AdminAttendancePage() {
   const AgentSummaryCards = () => {
     if (!searchQuery || (!attendance.length && !agentSummaryStats)) return null;
 
-    const agentName = attendance[0]?.user 
-      ? `${attendance[0].user.firstName} ${attendance[0].user.lastName}` 
+    const agentName = attendance[0]?.user
+      ? `${attendance[0].user.firstName} ${attendance[0].user.lastName}`
       : attendance[0]?.agent?.agentName || "Agent";
-      
-    const stats = agentSummaryStats ? {
-       total: agentSummaryStats.total,
-       present: agentSummaryStats.present,
-       late: agentSummaryStats.late,
-       halfDay: agentSummaryStats.half_day,
-       absent: agentSummaryStats.absent,
-       earlyCheckout: agentSummaryStats.early_checkout,
-       overtime: agentSummaryStats.overtime,
-       leave: agentSummaryStats.leave,
-       approvedLeave: agentSummaryStats.approved_leave,
-       pendingLeave: agentSummaryStats.pending_leave,
-       holiday: agentSummaryStats.holiday,
-       weeklyOff: agentSummaryStats.weekly_off,
-    } : {
-       total: attendance.length,
-       present: attendance.filter(a => a.status === 'present').length,
-       late: attendance.filter(a => a.status === 'late').length,
-       halfDay: attendance.filter(a => a.status === 'half_day').length,
-       absent: attendance.filter(a => a.status === 'absent').length,
-       earlyCheckout: attendance.filter(a => a.status === 'early_checkout').length,
-       overtime: attendance.filter(a => a.status === 'overtime').length,
-       leave: attendance.filter(a => a.status === 'leave').length,
-       approvedLeave: attendance.filter(a => a.status === 'approved_leave').length,
-       pendingLeave: attendance.filter(a => a.status === 'pending_leave').length,
-       holiday: attendance.filter(a => a.status === 'holiday').length,
-       weeklyOff: attendance.filter(a => a.status === 'weekly_off').length,
-    };
 
-    const allPresent = stats.present + stats.late + stats.halfDay + stats.earlyCheckout + stats.overtime;
+    const stats = agentSummaryStats
+      ? {
+          total: agentSummaryStats.total,
+          present: agentSummaryStats.present,
+          late: agentSummaryStats.late,
+          halfDay: agentSummaryStats.half_day,
+          absent: agentSummaryStats.absent,
+          earlyCheckout: agentSummaryStats.early_checkout,
+          overtime: agentSummaryStats.overtime,
+          leave: agentSummaryStats.leave,
+          approvedLeave: agentSummaryStats.approved_leave,
+          pendingLeave: agentSummaryStats.pending_leave,
+          holiday: agentSummaryStats.holiday,
+          weeklyOff: agentSummaryStats.weekly_off,
+        }
+      : {
+          total: attendance.length,
+          present: attendance.filter((a) => a.status === "present").length,
+          late: attendance.filter((a) => a.status === "late").length,
+          halfDay: attendance.filter((a) => a.status === "half_day").length,
+          absent: attendance.filter((a) => a.status === "absent").length,
+          earlyCheckout: attendance.filter((a) => a.status === "early_checkout")
+            .length,
+          overtime: attendance.filter((a) => a.status === "overtime").length,
+          leave: attendance.filter((a) => a.status === "leave").length,
+          approvedLeave: attendance.filter((a) => a.status === "approved_leave")
+            .length,
+          pendingLeave: attendance.filter((a) => a.status === "pending_leave")
+            .length,
+          holiday: attendance.filter((a) => a.status === "holiday").length,
+          weeklyOff: attendance.filter((a) => a.status === "weekly_off").length,
+        };
+
+    const allPresent =
+      stats.present +
+      stats.late +
+      stats.halfDay +
+      stats.earlyCheckout +
+      stats.overtime;
     const totalWorkingDays = stats.total - stats.holiday - stats.weeklyOff;
 
     // Calculate total days in the selected month
     let totalMonthDays = 31;
     if (filters.month) {
-      const [year, month] = filters.month.split('-');
+      const [year, month] = filters.month.split("-");
       totalMonthDays = new Date(parseInt(year), parseInt(month), 0).getDate();
     } else if (filters.fromDate) {
       const fromDate = new Date(filters.fromDate);
-      totalMonthDays = new Date(fromDate.getFullYear(), fromDate.getMonth() + 1, 0).getDate();
+      totalMonthDays = new Date(
+        fromDate.getFullYear(),
+        fromDate.getMonth() + 1,
+        0,
+      ).getDate();
     }
 
     return (
-      <div className="mb-6 space-y-4">
-        <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-800">
-          <UserCheck className="h-5 w-5 text-blue-600" />
-          Summary for {agentName}
-        </h3>
-        
-        {/* Main Summary Cards - Highlighted */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          {/* All Present */}
-          <Card className="bg-gradient-to-br from-green-500 to-green-600 border-0 shadow-lg">
+      <div className="mb-4 space-y-4">
+        {/* Title */}
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 bg-blue-100 rounded-lg">
+            <UserCheck className="h-4 w-4 text-blue-600" />
+          </div>
+          <h3 className="text-base sm:text-lg font-semibold text-gray-800">
+            Summary for <span className="text-blue-600">{agentName}</span>
+          </h3>
+        </div>
+
+        {/* Top 3 Highlighted Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <Card className="bg-gradient-to-br from-green-500 to-emerald-600 border-0 shadow-md">
             <CardContent className="p-4 text-center">
-              <div className="text-sm font-semibold text-white/90 uppercase tracking-wide mb-2">All Present Days</div>
-              <div className="text-4xl font-bold text-white">{allPresent}</div>
-              <div className="text-xs text-white/80 mt-1">Present, Late, Half Day, Early Out, Overtime</div>
+              <div className="text-xs font-bold text-white/80 uppercase tracking-widest mb-1">
+                All Present Days
+              </div>
+              <div className="text-3xl sm:text-4xl font-bold text-white">
+                {allPresent}
+              </div>
+              <div className="text-[10px] text-white/70 mt-1">
+                Present · Late · Half Day · Early Out · OT
+              </div>
             </CardContent>
           </Card>
-
-          {/* Total Working Days */}
-          <Card className="bg-gradient-to-br from-blue-500 to-blue-600 border-0 shadow-lg">
+          <Card className="bg-gradient-to-br from-blue-500 to-blue-600 border-0 shadow-md">
             <CardContent className="p-4 text-center">
-              <div className="text-sm font-semibold text-white/90 uppercase tracking-wide mb-2">Total Working Days</div>
-              <div className="text-4xl font-bold text-white">{totalWorkingDays}</div>
-              <div className="text-xs text-white/80 mt-1">Excluding Holidays & Weekly Offs</div>
+              <div className="text-xs font-bold text-white/80 uppercase tracking-widest mb-1">
+                Working Days
+              </div>
+              <div className="text-3xl sm:text-4xl font-bold text-white">
+                {totalWorkingDays}
+              </div>
+              <div className="text-[10px] text-white/70 mt-1">
+                Excl. Holidays & Weekly Offs
+              </div>
             </CardContent>
           </Card>
-
-          {/* Total Month Days */}
-          <Card className="bg-gradient-to-br from-cyan-500 to-cyan-600 border-0 shadow-lg">
+          <Card className="bg-gradient-to-br from-cyan-500 to-teal-600 border-0 shadow-md">
             <CardContent className="p-4 text-center">
-              <div className="text-sm font-semibold text-white/90 uppercase tracking-wide mb-2">Total Month Days</div>
-              <div className="text-4xl font-bold text-white">{totalMonthDays}</div>
-              <div className="text-xs text-white/80 mt-1">Days in Selected Month</div>
+              <div className="text-xs font-bold text-white/80 uppercase tracking-widest mb-1">
+                Month Days
+              </div>
+              <div className="text-3xl sm:text-4xl font-bold text-white">
+                {totalMonthDays}
+              </div>
+              <div className="text-[10px] text-white/70 mt-1">
+                Days in Selected Month
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Detailed Breakdown */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-             {/* Present */}
-             <Card className="bg-green-50 border-green-200 shadow-sm">
-                <CardContent className="p-3 text-center">
-                   <div className="text-xs font-medium text-green-800 uppercase tracking-wide mb-1">Present</div>
-                   <div className="text-xl font-bold text-green-700">{stats.present}</div>
-                </CardContent>
-             </Card>
-
-             {/* Late */}
-             <Card className="bg-orange-50 border-orange-200 shadow-sm">
-                <CardContent className="p-3 text-center">
-                   <div className="text-xs font-medium text-orange-800 uppercase tracking-wide mb-1">Late</div>
-                   <div className="text-xl font-bold text-orange-700">{stats.late}</div>
-                </CardContent>
-             </Card>
-             
-             {/* Half Day */}
-             <Card className="bg-yellow-50 border-yellow-200 shadow-sm">
-                <CardContent className="p-3 text-center">
-                   <div className="text-xs font-medium text-yellow-800 uppercase tracking-wide mb-1">Half Day</div>
-                   <div className="text-xl font-bold text-yellow-700">{stats.halfDay}</div>
-                </CardContent>
-             </Card>
-
-             {/* Absent */}
-             <Card className="bg-red-50 border-red-200 shadow-sm">
-                <CardContent className="p-3 text-center">
-                   <div className="text-xs font-medium text-red-800 uppercase tracking-wide mb-1">Absent</div>
-                   <div className="text-xl font-bold text-red-700">{stats.absent}</div>
-                </CardContent>
-             </Card>
-
-             {/* Early Checkout */}
-             <Card className="bg-pink-50 border-pink-200 shadow-sm">
-                <CardContent className="p-3 text-center">
-                   <div className="text-xs font-medium text-pink-800 uppercase tracking-wide mb-1">Early Out</div>
-                   <div className="text-xl font-bold text-pink-700">{stats.earlyCheckout}</div>
-                </CardContent>
-             </Card>
-
-             {/* Overtime */}
-             <Card className="bg-indigo-50 border-indigo-200 shadow-sm">
-                <CardContent className="p-3 text-center">
-                   <div className="text-xs font-medium text-indigo-800 uppercase tracking-wide mb-1">Overtime</div>
-                   <div className="text-xl font-bold text-indigo-700">{stats.overtime}</div>
-                </CardContent>
-             </Card>
-
-             {/* Leave */}
-             <Card className="bg-amber-50 border-amber-200 shadow-sm">
-                <CardContent className="p-3 text-center">
-                   <div className="text-xs font-medium text-amber-800 uppercase tracking-wide mb-1">Leave</div>
-                   <div className="text-xl font-bold text-amber-700">{stats.leave}</div>
-                </CardContent>
-             </Card>
-
-             {/* Approved Leave */}
-             <Card className="bg-blue-50 border-blue-200 shadow-sm">
-                <CardContent className="p-3 text-center">
-                   <div className="text-xs font-medium text-blue-800 uppercase tracking-wide mb-1">Approved</div>
-                   <div className="text-xl font-bold text-blue-700">{stats.approvedLeave}</div>
-                </CardContent>
-             </Card>
-
-             {/* Pending Leave */}
-             <Card className="bg-slate-50 border-slate-200 shadow-sm">
-                <CardContent className="p-3 text-center">
-                   <div className="text-xs font-medium text-slate-800 uppercase tracking-wide mb-1">Pending</div>
-                   <div className="text-xl font-bold text-slate-700">{stats.pendingLeave}</div>
-                </CardContent>
-             </Card>
-
-             {/* Holiday */}
-             <Card className="bg-purple-50 border-purple-200 shadow-sm">
-                <CardContent className="p-3 text-center">
-                   <div className="text-xs font-medium text-purple-800 uppercase tracking-wide mb-1">Holiday</div>
-                   <div className="text-xl font-bold text-purple-700">{stats.holiday}</div>
-                </CardContent>
-             </Card>
-
-             {/* Weekly Off */}
-             <Card className="bg-gray-50 border-gray-200 shadow-sm">
-                <CardContent className="p-3 text-center">
-                   <div className="text-xs font-medium text-gray-800 uppercase tracking-wide mb-1">Weekly Off</div>
-                   <div className="text-xl font-bold text-gray-700">{stats.weeklyOff}</div>
-                </CardContent>
-             </Card>
+        {/* Detailed Breakdown Grid */}
+        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">
+          {[
+            {
+              label: "Present",
+              val: stats.present,
+              color: "text-green-700",
+              bg: "bg-green-50  border-green-200",
+            },
+            {
+              label: "Late",
+              val: stats.late,
+              color: "text-orange-700",
+              bg: "bg-orange-50 border-orange-200",
+            },
+            {
+              label: "Half Day",
+              val: stats.halfDay,
+              color: "text-yellow-700",
+              bg: "bg-yellow-50 border-yellow-200",
+            },
+            {
+              label: "Absent",
+              val: stats.absent,
+              color: "text-red-700",
+              bg: "bg-red-50    border-red-200",
+            },
+            {
+              label: "Early Out",
+              val: stats.earlyCheckout,
+              color: "text-pink-700",
+              bg: "bg-pink-50   border-pink-200",
+            },
+            {
+              label: "Overtime",
+              val: stats.overtime,
+              color: "text-indigo-700",
+              bg: "bg-indigo-50 border-indigo-200",
+            },
+            {
+              label: "Leave",
+              val: stats.leave,
+              color: "text-amber-700",
+              bg: "bg-amber-50  border-amber-200",
+            },
+            {
+              label: "Approved",
+              val: stats.approvedLeave,
+              color: "text-blue-700",
+              bg: "bg-blue-50   border-blue-200",
+            },
+            {
+              label: "Pending",
+              val: stats.pendingLeave,
+              color: "text-slate-700",
+              bg: "bg-slate-50  border-slate-200",
+            },
+            {
+              label: "Holiday",
+              val: stats.holiday,
+              color: "text-purple-700",
+              bg: "bg-purple-50 border-purple-200",
+            },
+            {
+              label: "Weekly Off",
+              val: stats.weeklyOff,
+              color: "text-gray-700",
+              bg: "bg-gray-50   border-gray-200",
+            },
+          ].map(({ label, val, color, bg }) => (
+            <Card key={label} className={`${bg} shadow-sm border`}>
+              <CardContent className="p-2.5 text-center">
+                <div className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1 leading-tight">
+                  {label}
+                </div>
+                <div className={`text-lg font-bold ${color}`}>{val}</div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     );
   };
 
-  // ✅ Responsive Filters Component (FIXED VERSION)
-  const ResponsiveFilters = () => {
-    const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-    const [isSmallScreen, setIsSmallScreen] = useState(false);
 
-    useEffect(() => {
-      const checkScreen = () => {
-        setIsSmallScreen(window.innerWidth < 640);
-      };
 
-      checkScreen();
-      window.addEventListener('resize', checkScreen);
-
-      return () => window.removeEventListener('resize', checkScreen);
-    }, []);
-
-    // Function to apply filters
-    const handleApplyFilters = () => {
-      fetchAttendance();
-      toast.success("Filters applied successfully");
-    };
-
-    // Function to handle filter changes
-    const handleFilterChange = (key, value) => {
-      setFilters(prev => ({ ...prev, [key]: value }));
-    };
-
-    // Clear all filters function
-    const handleClearAllFilters = () => {
-      setFilters({
-        userType: "agent",
-        status: "all",
-        shift: "all",
-        date: "",
-        month: "",
-        fromDate: "",
-        toDate: ""
-      });
-      setSearchQuery("");
-      toast.success("All filters cleared");
-    };
-
-    // Check if any filter is active
-    const hasActiveFilters = filters.status !== 'all' || 
-                            filters.date || 
-                            filters.month || 
-                            filters.fromDate || 
-                            filters.toDate || 
-                            searchQuery;
-
-    return (
-      <div className="space-y-4">
-        {/* Main Search Bar */}
-        <div className="relative w-full">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Search by agent name..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                handleApplyFilters();
-              }
-            }}
-            className="pl-10 w-full"
-          />
-          {searchQuery && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setSearchQuery("");
-                handleApplyFilters();
-              }}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
-            >
-              <X className="h-3 w-3" />
-            </Button>
-          )}
-        </div>
-
-        {/* Quick Filters - Always Visible */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          {/* Shift Filter */}
-          <div className="space-y-1">
-            <Label htmlFor="shift" className="text-xs">Shift</Label>
-            <Select
-              value={filters.shift}
-              onValueChange={(value) => handleFilterChange('shift', value)}
-            >
-              <SelectTrigger id="shift" className="w-full text-sm h-9">
-                <SelectValue placeholder="All Shifts" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Shifts</SelectItem>
-                {shifts.map(shift => (
-                  <SelectItem key={shift._id} value={shift._id}>{shift.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Status Filter */}
-          <div className="space-y-1">
-            <Label htmlFor="status" className="text-xs">Status</Label>
-            <Select
-              value={filters.status}
-              onValueChange={(value) => handleFilterChange('status', value)}
-            >
-              <SelectTrigger id="status" className="w-full text-sm h-9">
-                <SelectValue placeholder="All Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="present">Present</SelectItem>
-                <SelectItem value="late">Late</SelectItem>
-                <SelectItem value="half_day">Half Day</SelectItem>
-                <SelectItem value="absent">Absent</SelectItem>
-                <SelectItem value="leave">Leave</SelectItem>
-                <SelectItem value="holiday">Holiday</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Month Filter */}
-          <div className="space-y-1">
-            <Label htmlFor="month" className="text-xs">Month</Label>
-            <Select
-              value={filters.month}
-              onValueChange={(value) => handleFilterChange('month', value)}
-            >
-              <SelectTrigger id="month" className="w-full text-sm h-9">
-                <SelectValue placeholder="Select Month" />
-              </SelectTrigger>
-              <SelectContent>
-                {Array.from({ length: 12 }, (_, i) => {
-                  const date = new Date();
-                  date.setMonth(date.getMonth() - i);
-                  const value = date.toISOString().slice(0, 7);
-                  const label = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
-                  return <SelectItem key={value} value={value}>{label}</SelectItem>;
-                })}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Date Range - For larger screens */}
-          {!isSmallScreen && (
-            <>
-              <div className="space-y-1">
-                <Label htmlFor="fromDate" className="text-xs">From Date</Label>
-                <Input
-                  id="fromDate"
-                  type="date"
-                  value={filters.fromDate || ''}
-                  onChange={(e) => handleFilterChange('fromDate', e.target.value)}
-                  className="text-sm h-9"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="toDate" className="text-xs">To Date</Label>
-                <Input
-                  id="toDate"
-                  type="date"
-                  value={filters.toDate || ''}
-                  onChange={(e) => handleFilterChange('toDate', e.target.value)}
-                  className="text-sm h-9"
-                />
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Advanced Filters Toggle and Actions */}
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-              className="text-xs"
-            >
-              <Filter className="h-3 w-3 mr-1" />
-              {showAdvancedFilters ? 'Hide Advanced Filters' : 'Show Advanced Filters'}
-            </Button>
-
-            {hasActiveFilters && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClearAllFilters}
-                className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
-              >
-                <X className="h-3 w-3 mr-1" />
-                Clear All
-              </Button>
-            )}
-          </div>
-
-          {/* Apply Filters Button - Always visible */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleApplyFilters}
-            className="text-xs"
-          >
-            <RefreshCw className="h-3 w-3 mr-1" />
-            Apply Filters
-          </Button>
-        </div>
-
-        {/* Advanced Filters Panel */}
-        {showAdvancedFilters && (
-          <div className="border rounded-lg p-4 space-y-4 bg-gray-50/50 animate-in fade-in duration-300">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Date Range (for small screens) */}
-              {isSmallScreen && (
-                <div className="space-y-2 col-span-full">
-                  <Label className="text-xs font-medium">Date Range</Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">From</Label>
-                      <Input
-                        type="date"
-                        value={filters.fromDate || ''}
-                        onChange={(e) => handleFilterChange('fromDate', e.target.value)}
-                        className="text-sm"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">To</Label>
-                      <Input
-                        type="date"
-                        value={filters.toDate || ''}
-                        onChange={(e) => handleFilterChange('toDate', e.target.value)}
-                        className="text-sm"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Specific Date */}
-              <div className="space-y-2">
-                <Label htmlFor="specificDate" className="text-xs font-medium">Specific Date</Label>
-                <Input
-                  id="specificDate"
-                  type="date"
-                  value={filters.date || ''}
-                  onChange={(e) => handleFilterChange('date', e.target.value)}
-                  className="text-sm"
-                />
-              </div>
-
-              {/* More Status Options */}
-              <div className="space-y-2">
-                <Label htmlFor="detailedStatus" className="text-xs font-medium">Detailed Status</Label>
-                <Select
-                  value={filters.status}
-                  onValueChange={(value) => handleFilterChange('status', value)}
-                >
-                  <SelectTrigger id="detailedStatus" className="text-sm">
-                    <SelectValue placeholder="All Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="present">Present</SelectItem>
-                    <SelectItem value="late">Late</SelectItem>
-                    <SelectItem value="half_day">Half Day</SelectItem>
-                    <SelectItem value="absent">Absent</SelectItem>
-                    <SelectItem value="early_checkout">Early Checkout</SelectItem>
-                    <SelectItem value="overtime">Overtime</SelectItem>
-                    <SelectItem value="leave">Leave</SelectItem>
-                    <SelectItem value="approved_leave">Approved Leave</SelectItem>
-                    <SelectItem value="pending_leave">Pending Leave</SelectItem>
-                    <SelectItem value="holiday">Holiday</SelectItem>
-                    <SelectItem value="weekly_off">Weekly Off</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Quick Action Buttons */}
-              <div className="space-y-2">
-                <Label className="text-xs font-medium">Quick Actions</Label>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      handleFilterChange('status', 'present');
-                      toast.success("Showing present records only");
-                    }}
-                    className="text-xs"
-                  >
-                    Show Present
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      handleFilterChange('status', 'absent');
-                      toast.success("Showing absent records only");
-                    }}
-                    className="text-xs"
-                  >
-                    Show Absent
-                  </Button>
-                </div>
-              </div>
-
-              {/* Reset to Default */}
-              <div className="space-y-2">
-                <Label className="text-xs font-medium">Reset Options</Label>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setFilters({
-                      userType: "agent",
-                      status: "all",
-                      shift: "all",
-                      date: "",
-                      month: "",
-                      fromDate: "",
-                      toDate: ""
-                    });
-                    toast.success("Reset to default filters");
-                  }}
-                  className="text-xs w-full"
-                >
-                  Reset to Default
-                </Button>
-              </div>
-            </div>
-
-            {/* Action Buttons at Bottom */}
-            <div className="flex flex-wrap items-center justify-between gap-2 pt-4 border-t">
-              <div className="text-xs text-muted-foreground">
-                Active Filters: {hasActiveFilters ? Object.values(filters).filter(f => f && f !== 'all').length : 0}
-              </div>
-              
-              <div className="flex flex-wrap gap-2">
-                {filters.month && searchQuery && attendance.length > 0 && attendance[0]?.agent && (
-                  <Button
-                    onClick={() => handleCalculatePayroll()}
-                    size="sm"
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs"
-                  >
-                    <CalculatorIcon className="h-3 w-3 mr-1" />
-                    Calculate Salary
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
 
   // ✅ Attendance Table Columns (Desktop)
   const attendanceColumns = getAttendanceColumns({
@@ -1382,18 +1066,20 @@ export default function AdminAttendancePage() {
     canDeleteAttendance,
     handleEditAttendance,
     handleDeleteAttendance: async (id) => {
-      if(!confirm("Are you sure?")) return;
+      if (!confirm("Are you sure?")) return;
       try {
         const res = await attendanceService.delete(id);
-        if(res.success) {
+        if (res.success) {
           toast.success("Record deleted");
           fetchAttendance();
         } else {
           toast.error(res.message);
         }
-      } catch(e) { console.error(e); }
+      } catch (e) {
+        console.error(e);
+      }
     },
-    handleViewAttendance
+    handleViewAttendance,
   });
 
   // ✅ Leave Requests Table Columns
@@ -1401,13 +1087,13 @@ export default function AdminAttendancePage() {
     canApproveLeave,
     setViewingLeave,
     setShowViewLeaveModal,
-    handleLeaveAction
+    handleLeaveAction,
   });
 
   // ✅ Holidays Table Columns
   const holidayColumns = getHolidayColumns({
     canDeleteHolidays,
-    handleDeleteHoliday
+    handleDeleteHoliday,
   });
 
   // ✅ Weekly Offs Table Columns
@@ -1415,7 +1101,7 @@ export default function AdminAttendancePage() {
     canEditWeeklyOff,
     canDeleteWeeklyOff,
     handleToggleWeeklyOff,
-    handleDeleteWeeklyOff
+    handleDeleteWeeklyOff,
   });
 
   // ✅ Pagination Component
@@ -1430,7 +1116,9 @@ export default function AdminAttendancePage() {
           <PaginationItem>
             <PaginationPrevious
               onClick={() => page > 1 && setPage(page - 1)}
-              className={page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              className={
+                page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"
+              }
             />
           </PaginationItem>
 
@@ -1461,14 +1149,26 @@ export default function AdminAttendancePage() {
           <PaginationItem>
             <PaginationNext
               onClick={() => page < totalPages && setPage(page + 1)}
-              className={page === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              className={
+                page === totalPages
+                  ? "pointer-events-none opacity-50"
+                  : "cursor-pointer"
+              }
             />
           </PaginationItem>
 
           <PaginationItem className="ml-2 sm:ml-4">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground hidden sm:inline">Rows:</span>
-              <Select value={limit.toString()} onValueChange={(value) => { setLimit(Number(value)); setPage(1); }}>
+              <span className="text-sm text-muted-foreground hidden sm:inline">
+                Rows:
+              </span>
+              <Select
+                value={limit.toString()}
+                onValueChange={(value) => {
+                  setLimit(Number(value));
+                  setPage(1);
+                }}
+              >
                 <SelectTrigger className="h-8 w-16">
                   <SelectValue />
                 </SelectTrigger>
@@ -1484,7 +1184,8 @@ export default function AdminAttendancePage() {
 
           <PaginationItem className="ml-2 sm:ml-4">
             <div className="text-sm text-muted-foreground hidden md:inline">
-              Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, total)} of {total}
+              Showing {(page - 1) * limit + 1} to{" "}
+              {Math.min(page * limit, total)} of {total}
             </div>
             <div className="text-sm text-muted-foreground md:hidden">
               {page}/{totalPages}
@@ -1538,91 +1239,93 @@ export default function AdminAttendancePage() {
   );
 
   const handleCalculatePayroll = async (overrideValue, overrideId) => {
-      let currentOverrides = { ...informedOverrides };
-      if (overrideId) {
-          currentOverrides[overrideId] = overrideValue;
+    let currentOverrides = { ...informedOverrides };
+    if (overrideId) {
+      currentOverrides[overrideId] = overrideValue;
+    }
+
+    if (!filters.month || !attendance.length) {
+      toast.error("Please filter by Month and ensure data exists.");
+      return;
+    }
+
+    const agentRecord = attendance.find((a) => a?.agent?._id || a?.agent?.id);
+    const agentId = agentRecord?.agent?._id || agentRecord?.agent?.id;
+
+    if (!agentId) {
+      const isUser = attendance.some((a) => a?.user);
+      if (isUser) {
+        toast.error(
+          "Payroll calculation is currently only supported for Agents.",
+        );
+        return;
       }
 
-      if (!filters.month || !attendance.length) {
-          toast.error("Please filter by Month and ensure data exists.");
-          return;
+      toast.error("Please search for a specific agent first.");
+      return;
+    }
+
+    const [year, month] = filters.month.split("-");
+
+    try {
+      setLoading((prev) => ({ ...prev, payroll: true }));
+      const res = await fetch("/api/payroll", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "calculate",
+          agentId,
+          month: parseInt(month),
+          year: parseInt(year),
+          informedOverrides: currentOverrides,
+          salesCount: salesCount,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setPayrollModalData(data.data);
+        setShowPayrollModal(true);
+      } else {
+        toast.error(data.message);
       }
-      
-      const agentRecord = attendance.find(a => a?.agent?._id || a?.agent?.id);
-      const agentId = agentRecord?.agent?._id || agentRecord?.agent?.id;
-
-      if (!agentId) {
-          const isUser = attendance.some(a => a?.user);
-          if (isUser) {
-             toast.error("Payroll calculation is currently only supported for Agents.");
-             return;
-          }
-
-          toast.error("Please search for a specific agent first.");
-          return;
-      }
-
-      const [year, month] = filters.month.split("-");
-
-      try {
-          setLoading(prev => ({ ...prev, payroll: true }));
-          const res = await fetch('/api/payroll', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                  action: 'calculate',
-                  agentId,
-                  month: parseInt(month),
-                  year: parseInt(year),
-                  informedOverrides: currentOverrides,
-                  salesCount: salesCount
-              })
-          });
-          const data = await res.json();
-          if (data.success) {
-              setPayrollModalData(data.data);
-              setShowPayrollModal(true);
-          } else {
-              toast.error(data.message);
-          }
-      } catch (error) {
-          console.error(error);
-          toast.error("Calculation failed");
-      } finally {
-          setLoading(prev => ({ ...prev, payroll: false }));
-      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Calculation failed");
+    } finally {
+      setLoading((prev) => ({ ...prev, payroll: false }));
+    }
   };
 
   const handleGeneratePayroll = async () => {
-      const agentId = attendance[0]?.agent?._id || attendance[0]?.agent?.id;
-      const [year, month] = filters.month.split("-");
+    const agentId = attendance[0]?.agent?._id || attendance[0]?.agent?.id;
+    const [year, month] = filters.month.split("-");
 
-      try {
-          setLoading(prev => ({ ...prev, payroll: true }));
-          const res = await fetch('/api/payroll', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                  action: 'generate',
-                  agentId,
-                  month: parseInt(month),
-                  year: parseInt(year),
-                  informedOverrides,
-                  salesCount: salesCount
-              })
-          });
-          const data = await res.json();
-          if (data.success) {
-              toast.success("Payroll Generated Successfully!");
-              setShowPayrollModal(false);
-          } else {
-              toast.error(data.message);
-          }
-      } catch (error) {
-           toast.error("Generation failed");
-      } finally {
-          setLoading(prev => ({ ...prev, payroll: false }));
+    try {
+      setLoading((prev) => ({ ...prev, payroll: true }));
+      const res = await fetch("/api/payroll", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "generate",
+          agentId,
+          month: parseInt(month),
+          year: parseInt(year),
+          informedOverrides,
+          salesCount: salesCount,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Payroll Generated Successfully!");
+        setShowPayrollModal(false);
+      } else {
+        toast.error(data.message);
       }
+    } catch (error) {
+      toast.error("Generation failed");
+    } finally {
+      setLoading((prev) => ({ ...prev, payroll: false }));
+    }
   };
 
   // Main Render
@@ -1630,7 +1333,7 @@ export default function AdminAttendancePage() {
     <div className="min-h-screen bg-gray-50/30 overflow-x-hidden">
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-6">
         {/* All Modals */}
-        <ManualAttendanceModal 
+        <ManualAttendanceModal
           isOpen={showManualModal}
           onClose={() => setShowManualModal(false)}
           manualForm={manualForm}
@@ -1640,7 +1343,7 @@ export default function AdminAttendancePage() {
           loading={loading.manual}
           onSubmit={handleManualAttendance}
         />
-        <LeaveRequestModal 
+        <LeaveRequestModal
           isOpen={showLeaveModal}
           onClose={() => setShowLeaveModal(false)}
           leaveForm={leaveForm}
@@ -1654,8 +1357,12 @@ export default function AdminAttendancePage() {
           onClose={() => setShowViewLeaveModal(false)}
           viewingLeave={viewingLeave}
           canApproveLeave={true}
-          onApprove={() => viewingLeave && handleLeaveAction(viewingLeave._id, 'approved')}
-          onReject={() => viewingLeave && handleLeaveAction(viewingLeave._id, 'rejected')}
+          onApprove={() =>
+            viewingLeave && handleLeaveAction(viewingLeave._id, "approved")
+          }
+          onReject={() =>
+            viewingLeave && handleLeaveAction(viewingLeave._id, "rejected")
+          }
         />
         <HolidayModal
           isOpen={showHolidayModal}
@@ -1674,7 +1381,7 @@ export default function AdminAttendancePage() {
           loading={loading.weeklyOff}
           onSubmit={handleCreateWeeklyOff}
         />
-        <AutoAttendanceModal 
+        <AutoAttendanceModal
           isOpen={showAutoModal}
           onClose={() => setShowAutoModal(false)}
           autoForm={autoForm}
@@ -1682,7 +1389,7 @@ export default function AdminAttendancePage() {
           loading={loading.auto}
           onSubmit={handleAutoAttendance}
         />
-        <ShiftAutoAttendanceModal 
+        <ShiftAutoAttendanceModal
           isOpen={showShiftAutoModal}
           onClose={() => setShowShiftAutoModal(false)}
           shiftAutoForm={shiftAutoForm}
@@ -1690,7 +1397,7 @@ export default function AdminAttendancePage() {
           loading={loading.shiftAuto}
           onSubmit={handleShiftAutoAttendance}
         />
-        <EditAttendanceModal 
+        <EditAttendanceModal
           isOpen={showEditModal}
           onClose={() => setShowEditModal(false)}
           editForm={manualForm}
@@ -1699,7 +1406,7 @@ export default function AdminAttendancePage() {
           loading={loading.edit}
           onSubmit={handleUpdateAttendance}
         />
-        <PayrollPreviewModal 
+        <PayrollPreviewModal
           isOpen={showPayrollModal}
           onClose={() => setShowPayrollModal(false)}
           data={payrollModalData}
@@ -1709,8 +1416,8 @@ export default function AdminAttendancePage() {
           onApplySalesCount={() => handleCalculatePayroll()}
           informedOverrides={informedOverrides}
           onInformedOverrideChange={(id, val) => {
-             setInformedOverrides(prev => ({ ...prev, [id]: val }));
-             handleCalculatePayroll(val, id);
+            setInformedOverrides((prev) => ({ ...prev, [id]: val }));
+            handleCalculatePayroll(val, id);
           }}
           loading={loading.payroll}
           onGenerate={handleGeneratePayroll}
@@ -1722,86 +1429,91 @@ export default function AdminAttendancePage() {
           getStatusBadge={getStatusBadge}
         />
 
-        {/* Header - Fully Responsive */}
-        <div className="flex flex-col gap-4 sm:gap-6">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-            <div className="text-center sm:text-left">
+        {/* ══ Page Header ══════════════════════════════════════════════════ */}
+        <div className="flex flex-col gap-3 sm:gap-4">
+          <div className="flex items-start justify-between gap-3">
+            {/* Title */}
+            <div>
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 tracking-tight">
-                Admin Attendance
+                Attendance Management
               </h1>
-              <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">
-                Manage attendance records, leave requests, and holidays
+              <p className="text-gray-500 mt-0.5 text-xs sm:text-sm">
+                Manage records, leave requests, holidays and weekly offs
               </p>
             </div>
 
-            {/* Mobile Actions Dropdown */}
-            <div className="block md:hidden self-center">
-              <MobileHeaderActions />
-            </div>
+            {/* Actions — mobile: dropdown, md+: inline buttons */}
+            <div className="flex-shrink-0 flex items-center gap-2">
+              {/* Mobile dropdown */}
+              <div className="md:hidden">
+                <MobileHeaderActions />
+              </div>
 
-            {/* Desktop Actions Buttons */}
-            <div className="hidden md:flex flex-wrap items-center justify-end gap-2 sm:gap-3">
-              {canCreateLeave && (
+              {/* Desktop buttons */}
+              <div className="hidden md:flex flex-wrap items-center gap-2">
+                {canCreateLeave && (
+                  <Button
+                    onClick={() => setShowLeaveModal(true)}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    size="sm"
+                  >
+                    <UserPlus className="h-3.5 w-3.5 mr-1.5" />
+                    Assign Leave
+                  </Button>
+                )}
+                {canCreateAttendance && (
+                  <Button
+                    onClick={() => setShowManualModal(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    size="sm"
+                  >
+                    <Edit className="h-3.5 w-3.5 mr-1.5" />
+                    Manual Entry
+                  </Button>
+                )}
+                {canCreateAttendance && (
+                  <Button
+                    onClick={() => setShowShiftAutoModal(true)}
+                    variant="outline"
+                    className="border-purple-500 text-purple-600 hover:bg-purple-50"
+                    size="sm"
+                  >
+                    <Clock className="h-3.5 w-3.5 mr-1.5" />
+                    Shift Wise
+                  </Button>
+                )}
                 <Button
-                  onClick={() => setShowLeaveModal(true)}
-                  className="bg-green-600 hover:bg-green-700 text-white text-sm"
-                  size="sm"
-                >
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Assign Leave
-                </Button>
-              )}
-              {canCreateAttendance && (
-                <Button
-                  onClick={() => setShowManualModal(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white text-sm"
-                  size="sm"
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Manual Entry
-                </Button>
-              )}
-              {canCreateAttendance && (
-                <Button
-                  onClick={() => setShowShiftAutoModal(true)}
+                  onClick={handleDownloadAttendance}
                   variant="outline"
-                  className="border-purple-600 text-purple-600 hover:bg-purple-50 text-sm"
                   size="sm"
                 >
-                  <Clock className="h-4 w-4 mr-2" />
-                  Shift Wise
+                  <Download className="h-3.5 w-3.5 mr-1.5" />
+                  CSV
                 </Button>
-              )}
-              <Button
-                onClick={() => handleDownloadAttendance()}
-                variant="outline"
-                size="sm"
-                className="text-sm"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Download CSV
-              </Button>
-              <Button
-                onClick={() => fetchAttendance()}
-                variant="outline"
-                size="sm"
-                className="text-sm"
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh
-              </Button>
+                <Button
+                  onClick={() => fetchAttendance()}
+                  variant="outline"
+                  size="sm"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" />
+                </Button>
+              </div>
             </div>
           </div>
 
           {/* Stats Cards */}
           <StatsCards />
 
-          {/* Individual Agent Summary Cards - Only visible when searching */}
+          {/* Agent-specific summary (only when searching) */}
           <AgentSummaryCards />
         </div>
 
         {/* Tabs - Responsive */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="space-y-6"
+        >
           <TabsList className="grid grid-cols-2 sm:grid-cols-4 gap-1 p-1 bg-muted/50 rounded-md w-full">
             {canViewAttendance && (
               <TabsTrigger
@@ -1819,12 +1531,13 @@ export default function AdminAttendancePage() {
               >
                 <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span>Leave</span>
-                {leaveRequests.filter(r => r.status === "pending").length > 0 && (
+                {leaveRequests.filter((r) => r.status === "pending").length >
+                  0 && (
                   <Badge
                     variant="destructive"
                     className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 p-0 text-[10px] sm:text-xs flex items-center justify-center"
                   >
-                    {leaveRequests.filter(r => r.status === "pending").length}
+                    {leaveRequests.filter((r) => r.status === "pending").length}
                   </Badge>
                 )}
               </TabsTrigger>
@@ -1853,314 +1566,280 @@ export default function AdminAttendancePage() {
           {canViewAttendance && (
             <TabsContent value="attendance" className="space-y-4">
               <Card className="shadow-sm overflow-hidden">
-                <CardHeader className="p-4 sm:p-6">
-                  <div className="flex flex-col gap-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                      <div>
-                        <CardTitle className="text-lg sm:text-xl">Attendance Records</CardTitle>
-                        <CardDescription className="text-sm sm:text-base">
-                          View and manage all attendance records
-                        </CardDescription>
+                {/* Card Header: Title + Filter Toggle */}
+                <CardHeader className="p-4 sm:p-5 border-b">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <CardTitle className="text-base sm:text-lg">
+                        Attendance Records
+                      </CardTitle>
+                      <CardDescription className="text-xs sm:text-sm">
+                        View and manage all attendance records
+                      </CardDescription>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowFilters(!showFilters)}
+                      className="flex-shrink-0 lg:hidden"
+                    >
+                      <Filter className="h-3.5 w-3.5 mr-1.5" />
+                      {showFilters ? "Hide" : "Filters"}
+                    </Button>
+                  </div>
+
+                  {/* ── Filter Panel ───────────────────────────────────── */}
+                  <div
+                    className={`mt-4 space-y-3 ${showFilters ? "block" : "hidden lg:block"}`}
+                  >
+                    {/* Search Bar */}
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Input
+                        placeholder="Search by employee name..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyDown={(e) =>
+                          e.key === "Enter" && handleApplyFilters()
+                        }
+                        className="pl-10"
+                      />
+                      {searchQuery && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSearchQuery("");
+                            handleApplyFilters();
+                          }}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+
+                    {/* Filter Row */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+                      {/* Shift */}
+                      <div className="space-y-1">
+                        <Label className="text-xs text-gray-500">Shift</Label>
+                        <Select
+                          value={filters.shift}
+                          onValueChange={(v) => handleFilterChange("shift", v)}
+                        >
+                          <SelectTrigger className="h-9 text-xs">
+                            <SelectValue placeholder="All Shifts" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Shifts</SelectItem>
+                            {shifts.map((s) => (
+                              <SelectItem key={s._id} value={s._id}>
+                                {s.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
 
-                      {/* Mobile Filter Toggle - Removed since filters always show */}
-                      <div className="block lg:hidden">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setShowFilters(!showFilters)}
-                          className="w-full sm:w-auto"
+                      {/* Status */}
+                      <div className="space-y-1">
+                        <Label className="text-xs text-gray-500">Status</Label>
+                        <Select
+                          value={filters.status}
+                          onValueChange={(v) => handleFilterChange("status", v)}
                         >
-                          <Filter className="h-4 w-4 mr-2" />
-                          {showFilters ? 'Hide Filters' : 'Show Filters'}
-                        </Button>
+                          <SelectTrigger className="h-9 text-xs">
+                            <SelectValue placeholder="All Status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Status</SelectItem>
+                            <SelectItem value="present">Present</SelectItem>
+                            <SelectItem value="late">Late</SelectItem>
+                            <SelectItem value="half_day">Half Day</SelectItem>
+                            <SelectItem value="absent">Absent</SelectItem>
+                            <SelectItem value="early_checkout">
+                              Early Checkout
+                            </SelectItem>
+                            <SelectItem value="overtime">Overtime</SelectItem>
+                            <SelectItem value="leave">Leave</SelectItem>
+                            <SelectItem value="approved_leave">
+                              Approved Leave
+                            </SelectItem>
+                            <SelectItem value="pending_leave">
+                              Pending Leave
+                            </SelectItem>
+                            <SelectItem value="holiday">Holiday</SelectItem>
+                            <SelectItem value="weekly_off">
+                              Weekly Off
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Month */}
+                      <div className="space-y-1">
+                        <Label className="text-xs text-gray-500">Month</Label>
+                        <Select
+                          value={filters.month}
+                          onValueChange={(v) => handleFilterChange("month", v)}
+                        >
+                          <SelectTrigger className="h-9 text-xs">
+                            <SelectValue placeholder="Select Month" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 12 }, (_, i) => {
+                              const d = new Date();
+                              d.setMonth(d.getMonth() - i);
+                              const val = d.toISOString().slice(0, 7);
+                              return (
+                                <SelectItem key={val} value={val}>
+                                  {d.toLocaleDateString("en-US", {
+                                    year: "numeric",
+                                    month: "long",
+                                  })}
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* From Date */}
+                      <div className="space-y-1">
+                        <Label className="text-xs text-gray-500">
+                          From Date
+                        </Label>
+                        <Input
+                          type="date"
+                          value={filters.fromDate || ""}
+                          onChange={(e) =>
+                            handleFilterChange("fromDate", e.target.value)
+                          }
+                          className="h-9 text-xs"
+                        />
+                      </div>
+
+                      {/* To Date */}
+                      <div className="space-y-1">
+                        <Label className="text-xs text-gray-500">To Date</Label>
+                        <Input
+                          type="date"
+                          value={filters.toDate || ""}
+                          onChange={(e) =>
+                            handleFilterChange("toDate", e.target.value)
+                          }
+                          className="h-9 text-xs"
+                        />
                       </div>
                     </div>
 
-                    {/* Filters - Always show on large screens, toggle on mobile */}
-                    <div className={showFilters ? 'block' : 'hidden lg:block'}>
-                    <div className="space-y-4">
-                      {/* Main Search Bar */}
-                      <div className="relative w-full">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <Input
-                          placeholder="Search by agent name..."
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              handleApplyFilters();
-                            }
-                          }}
-                          className="pl-10 w-full"
-                        />
-                        {searchQuery && (
+                    {/* Filter Actions Row */}
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        {/* Advanced toggle */}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            setShowAdvancedFilters(!showAdvancedFilters)
+                          }
+                          className="text-xs h-8"
+                        >
+                          <Filter className="h-3 w-3 mr-1" />
+                          {showAdvancedFilters
+                            ? "Less Options"
+                            : "More Options"}
+                        </Button>
+
+                        {hasActiveFilters && (
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => {
-                              setSearchQuery("");
-                              handleApplyFilters();
-                            }}
-                            className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+                            onClick={handleClearAllFilters}
+                            className="text-xs h-8 text-red-600 hover:text-red-700 hover:bg-red-50"
                           >
-                            <X className="h-3 w-3" />
+                            <X className="h-3 w-3 mr-1" />
+                            Clear All
                           </Button>
                         )}
                       </div>
 
-                      {/* Quick Filters - Always Visible */}
-                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                        {/* Shift Filter */}
-                        <div className="space-y-1">
-                          <Label htmlFor="shift" className="text-xs">Shift</Label>
-                          <Select
-                            value={filters.shift}
-                            onValueChange={(value) => handleFilterChange('shift', value)}
-                          >
-                            <SelectTrigger id="shift" className="w-full text-sm h-9">
-                              <SelectValue placeholder="All Shifts" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">All Shifts</SelectItem>
-                              {shifts.map(shift => (
-                                <SelectItem key={shift._id} value={shift._id}>{shift.name}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {/* Status Filter */}
-                        <div className="space-y-1">
-                          <Label htmlFor="status" className="text-xs">Status</Label>
-                          <Select
-                            value={filters.status}
-                            onValueChange={(value) => handleFilterChange('status', value)}
-                          >
-                            <SelectTrigger id="status" className="w-full text-sm h-9">
-                              <SelectValue placeholder="All Status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">All Status</SelectItem>
-                              <SelectItem value="present">Present</SelectItem>
-                              <SelectItem value="late">Late</SelectItem>
-                              <SelectItem value="half_day">Half Day</SelectItem>
-                              <SelectItem value="absent">Absent</SelectItem>
-                              <SelectItem value="leave">Leave</SelectItem>
-                              <SelectItem value="holiday">Holiday</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {/* Month Filter */}
-                        <div className="space-y-1">
-                          <Label htmlFor="month" className="text-xs">Month</Label>
-                          <Select
-                            value={filters.month}
-                            onValueChange={(value) => handleFilterChange('month', value)}
-                          >
-                            <SelectTrigger id="month" className="w-full text-sm h-9">
-                              <SelectValue placeholder="Select Month" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {Array.from({ length: 12 }, (_, i) => {
-                                const date = new Date();
-                                date.setMonth(date.getMonth() - i);
-                                const value = date.toISOString().slice(0, 7);
-                                const label = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
-                                return <SelectItem key={value} value={value}>{label}</SelectItem>;
-                              })}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {/* Date Range - For larger screens */}
-                        {!isSmallScreen && (
-                          <>
-                            <div className="space-y-1">
-                              <Label htmlFor="fromDate" className="text-xs">From Date</Label>
-                              <Input
-                                id="fromDate"
-                                type="date"
-                                value={filters.fromDate || ''}
-                                onChange={(e) => handleFilterChange('fromDate', e.target.value)}
-                                className="text-sm h-9"
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <Label htmlFor="toDate" className="text-xs">To Date</Label>
-                              <Input
-                                id="toDate"
-                                type="date"
-                                value={filters.toDate || ''}
-                                onChange={(e) => handleFilterChange('toDate', e.target.value)}
-                                className="text-sm h-9"
-                              />
-                            </div>
-                          </>
-                        )}
-                      </div>
-
-                      {/* Advanced Filters Toggle and Actions */}
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                            className="text-xs"
-                          >
-                            <Filter className="h-3 w-3 mr-1" />
-                            {showAdvancedFilters ? 'Hide Advanced Filters' : 'Show Advanced Filters'}
-                          </Button>
-
-                          {hasActiveFilters && (
+                      <div className="flex items-center gap-2">
+                        {/* Payroll calc button */}
+                        {filters.month &&
+                          searchQuery &&
+                          attendance.length > 0 &&
+                          attendance[0]?.agent && (
                             <Button
-                              variant="ghost"
+                              onClick={() => handleCalculatePayroll()}
                               size="sm"
-                              onClick={handleClearAllFilters}
-                              className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                              className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs h-8"
                             >
-                              <X className="h-3 w-3 mr-1" />
-                              Clear All
+                              <CalculatorIcon className="h-3 w-3 mr-1" />
+                              Calculate Salary
                             </Button>
                           )}
-                        </div>
 
-                        {/* Apply Filters Button - Always visible */}
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={handleApplyFilters}
-                          className="text-xs"
+                          className="text-xs h-8"
                         >
                           <RefreshCw className="h-3 w-3 mr-1" />
-                          Apply Filters
+                          Apply
                         </Button>
                       </div>
+                    </div>
 
-                      {/* Advanced Filters Panel */}
-                      {showAdvancedFilters && (
-                        <div className="border rounded-lg p-4 space-y-4 bg-gray-50/50 animate-in fade-in duration-300">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                            {/* Date Range (for small screens) */}
-                            {isSmallScreen && (
-                              <div className="space-y-2 col-span-full">
-                                <Label className="text-xs font-medium">Date Range</Label>
-                                <div className="grid grid-cols-2 gap-2">
-                                  <div className="space-y-1">
-                                    <Label className="text-xs text-muted-foreground">From</Label>
-                                    <Input
-                                      type="date"
-                                      value={filters.fromDate || ''}
-                                      onChange={(e) => handleFilterChange('fromDate', e.target.value)}
-                                      className="text-sm"
-                                    />
-                                  </div>
-                                  <div className="space-y-1">
-                                    <Label className="text-xs text-muted-foreground">To</Label>
-                                    <Input
-                                      type="date"
-                                      value={filters.toDate || ''}
-                                      onChange={(e) => handleFilterChange('toDate', e.target.value)}
-                                      className="text-sm"
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Specific Date */}
-                            <div className="space-y-2">
-                              <Label htmlFor="specificDate" className="text-xs font-medium">Specific Date</Label>
-                              <Input
-                                id="specificDate"
-                                type="date"
-                                value={filters.date || ''}
-                                onChange={(e) => handleFilterChange('date', e.target.value)}
-                                className="text-sm"
-                              />
-                            </div>
-
-                            {/* More Status Options */}
-                            <div className="space-y-2">
-                              <Label htmlFor="detailedStatus" className="text-xs font-medium">Detailed Status</Label>
-                              <Select
-                                value={filters.status}
-                                onValueChange={(value) => handleFilterChange('status', value)}
-                              >
-                                <SelectTrigger id="detailedStatus" className="text-sm">
-                                  <SelectValue placeholder="All Status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="all">All Status</SelectItem>
-                                  <SelectItem value="present">Present</SelectItem>
-                                  <SelectItem value="late">Late</SelectItem>
-                                  <SelectItem value="half_day">Half Day</SelectItem>
-                                  <SelectItem value="absent">Absent</SelectItem>
-                                  <SelectItem value="early_checkout">Early Checkout</SelectItem>
-                                  <SelectItem value="overtime">Overtime</SelectItem>
-                                  <SelectItem value="leave">Leave</SelectItem>
-                                  <SelectItem value="approved_leave">Approved Leave</SelectItem>
-                                  <SelectItem value="pending_leave">Pending Leave</SelectItem>
-                                  <SelectItem value="holiday">Holiday</SelectItem>
-                                  <SelectItem value="weekly_off">Weekly Off</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            {/* Quick Action Buttons */}
-                            <div className="col-span-full flex gap-2 justify-end items-center pt-2 border-t">
-                                <Button
-                                  variant="ghost"
-                                  size="sm" 
-                                  onClick={() => {
-                                      setFilters({
-                                        userType: "agent",
-                                        status: "all",
-                                        shift: "all",
-                                        date: "",
-                                        month: "",
-                                        fromDate: "",
-                                        toDate: ""
-                                      });
-                                      setSearchQuery("");
-                                      toast.success("Reset to default filters");
-                                  }}
-                                  className="text-xs w-full"
-                                >
-                                Reset to Default
-                              </Button>
-                            </div>
-                          </div>
-
-                          {/* Action Buttons at Bottom */}
-                          <div className="flex flex-wrap items-center justify-between gap-2 pt-4 border-t">
-                            <div className="text-xs text-muted-foreground">
-                              Active Filters: {hasActiveFilters ? Object.values(filters).filter(f => f && f !== 'all').length : 0}
-                            </div>
-                            
-                            <div className="flex flex-wrap gap-2">
-                              {filters.month && searchQuery && attendance.length > 0 && attendance[0]?.agent && (
-                                <Button
-                                  onClick={() => handleCalculatePayroll()}
-                                  size="sm"
-                                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs"
-                                >
-                                  <CalculatorIcon className="h-3 w-3 mr-1" />
-                                  Calculate Salary
-                                </Button>
-                              )}
-                            </div>
+                    {/* Advanced Filters Panel */}
+                    {showAdvancedFilters && (
+                      <div className="border rounded-lg p-3 space-y-3 bg-gray-50/60">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <Label className="text-xs text-gray-500">
+                              Specific Date
+                            </Label>
+                            <Input
+                              type="date"
+                              value={filters.date || ""}
+                              onChange={(e) =>
+                                handleFilterChange("date", e.target.value)
+                              }
+                              className="h-9 text-xs"
+                            />
                           </div>
                         </div>
-                      )}
-                    </div>
-                    </div>
+                        <div className="flex justify-end pt-2 border-t">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setFilters({
+                                userType: "agent",
+                                status: "all",
+                                shift: "all",
+                                date: "",
+                                month: "",
+                                fromDate: "",
+                                toDate: "",
+                              });
+                              setSearchQuery("");
+                              toast.success("Reset to defaults");
+                            }}
+                            className="text-xs"
+                          >
+                            Reset to Default
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
+                  {/* ─────────────────────────────────────────────────── */}
                 </CardHeader>
 
-                <CardContent className="p-4 sm:p-6 pt-0">
+                <CardContent className="p-4 sm:p-5 pt-4">
                   <div className="rounded-md overflow-hidden">
                     <ResponsiveTable
                       data={attendance}
@@ -2174,17 +1853,19 @@ export default function AdminAttendancePage() {
                       handleViewAttendance={handleViewAttendance}
                       getStatusBadge={getStatusBadge}
                       onDelete={async (id) => {
-                        if(!confirm("Are you sure you want to delete this record?")) return;
+                        if (
+                          !confirm(
+                            "Are you sure you want to delete this record?",
+                          )
+                        )
+                          return;
                         try {
                           const res = await attendanceService.delete(id);
-                          if(res.success) {
-                            toast.success("Record deleted successfully");
+                          if (res.success) {
+                            toast.success("Record deleted");
                             fetchAttendance();
-                          } else {
-                            toast.error(res.message);
-                          }
-                        } catch(e) {
-                          console.error(e);
+                          } else toast.error(res.message);
+                        } catch (e) {
                           toast.error("Failed to delete record");
                         }
                       }}
@@ -2203,13 +1884,19 @@ export default function AdminAttendancePage() {
                 <CardHeader className="p-4 sm:p-6">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
-                      <CardTitle className="text-lg sm:text-xl">Leave Requests</CardTitle>
+                      <CardTitle className="text-lg sm:text-xl">
+                        Leave Requests
+                      </CardTitle>
                       <CardDescription className="text-sm sm:text-base">
                         Review and manage all leave requests
                       </CardDescription>
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      Pending: {leaveRequests.filter(r => r.status === "pending").length}
+                      Pending:{" "}
+                      {
+                        leaveRequests.filter((r) => r.status === "pending")
+                          .length
+                      }
                     </div>
                   </div>
                 </CardHeader>
@@ -2234,13 +1921,18 @@ export default function AdminAttendancePage() {
               <Card className="shadow-sm overflow-hidden">
                 <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 sm:p-6">
                   <div>
-                    <CardTitle className="text-lg sm:text-xl">Holidays Management</CardTitle>
+                    <CardTitle className="text-lg sm:text-xl">
+                      Holidays Management
+                    </CardTitle>
                     <CardDescription className="text-sm sm:text-base">
                       Manage system holidays
                     </CardDescription>
                   </div>
                   {canCreateHolidays && (
-                    <Button onClick={() => setShowHolidayModal(true)} className="w-full sm:w-auto">
+                    <Button
+                      onClick={() => setShowHolidayModal(true)}
+                      className="w-full sm:w-auto"
+                    >
                       <Plus className="h-4 w-4 mr-2" />
                       Add Holiday
                     </Button>
@@ -2255,8 +1947,12 @@ export default function AdminAttendancePage() {
                   ) : holidays.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <PartyPopper className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold text-gray-600 mb-2">No holidays found</h3>
-                      <p className="text-gray-500">Add your first holiday to get started</p>
+                      <h3 className="text-lg font-semibold text-gray-600 mb-2">
+                        No holidays found
+                      </h3>
+                      <p className="text-gray-500">
+                        Add your first holiday to get started
+                      </p>
                     </div>
                   ) : (
                     <div className="rounded-md border overflow-hidden">
@@ -2280,13 +1976,18 @@ export default function AdminAttendancePage() {
               <Card className="shadow-sm overflow-hidden">
                 <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 sm:p-6">
                   <div>
-                    <CardTitle className="text-lg sm:text-xl">Weekly Off Days</CardTitle>
+                    <CardTitle className="text-lg sm:text-xl">
+                      Weekly Off Days
+                    </CardTitle>
                     <CardDescription className="text-sm sm:text-base">
                       Manage weekly off days
                     </CardDescription>
                   </div>
                   {canCreateWeeklyOff && (
-                    <Button onClick={() => setShowWeeklyOffModal(true)} className="w-full sm:w-auto">
+                    <Button
+                      onClick={() => setShowWeeklyOffModal(true)}
+                      className="w-full sm:w-auto"
+                    >
                       <Plus className="h-4 w-4 mr-2" />
                       Add Weekly Off
                     </Button>
@@ -2301,8 +2002,12 @@ export default function AdminAttendancePage() {
                   ) : weeklyOffs.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <CalendarDays className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold text-gray-600 mb-2">No weekly off days configured</h3>
-                      <p className="text-gray-500">Add Sunday, Friday, or other weekly off days</p>
+                      <h3 className="text-lg font-semibold text-gray-600 mb-2">
+                        No weekly off days configured
+                      </h3>
+                      <p className="text-gray-500">
+                        Add Sunday, Friday, or other weekly off days
+                      </p>
                     </div>
                   ) : (
                     <div className="rounded-md border overflow-hidden">
