@@ -398,6 +398,7 @@
 //   ];
 // };
 
+// src/components/attendance/tables/AttendanceTableColumns.jsx
 "use client";
 import React from "react";
 import { Button } from "@/components/ui/button";
@@ -415,7 +416,10 @@ import {
   Bell,
   BellOff
 } from "lucide-react";
-import { formatToPakistaniDate, formatToPakistaniTime } from "@/utils/TimeFuntions";
+import {
+  formatToPakistaniDate,
+  formatToPakistaniTime,
+} from "@/utils/TimeFuntions";
 import { formatDate } from "@/utils/timezone";
 import {
   DropdownMenu,
@@ -500,8 +504,8 @@ export const getAttendanceColumns = ({
 
   return [
     {
-      label: "Agent",
-      minWidth: "140px",
+      label: "Employee",
+      minWidth: "200px",
       render: (a) => (
         <div className="min-w-[200px]">
           <div className="font-medium text-sm">
@@ -513,9 +517,7 @@ export const getAttendanceColumns = ({
             {a.user ? a.user.email : a.agent?.agentId || "—"}
           </div>
           {a.shift?.name && (
-            <div className="text-xs text-blue-600 mt-0.5">
-              {a.shift.name}
-            </div>
+            <div className="text-xs text-blue-600 mt-0.5">{a.shift.name}</div>
           )}
         </div>
       ),
@@ -525,7 +527,10 @@ export const getAttendanceColumns = ({
       minWidth: "100px",
       render: (a) => {
         const date = new Date(a.date || a.createdAt);
-        const dayName = date.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'Asia/Karachi' });
+        const dayName = date.toLocaleDateString("en-US", {
+          weekday: "short",
+          timeZone: "Asia/Karachi",
+        });
         const formattedDate = formatToPakistaniDate(a.date || a.createdAt);
         return (
           <div className="text-sm">
@@ -601,29 +606,26 @@ export const getAttendanceColumns = ({
       label: "Work Hours",
       minWidth: "100px",
       render: (a) => {
-        if (!a.checkInTime || !a.checkOutTime) return (
-          <div className="text-sm text-muted-foreground">—</div>
-        );
+        if (!a.checkInTime || !a.checkOutTime)
+          return <div className="text-sm text-muted-foreground">—</div>;
         const checkInTime = new Date(a.checkInTime);
         const checkOutTime = new Date(a.checkOutTime);
-        
-        if (isNaN(checkInTime.getTime()) || isNaN(checkOutTime.getTime())) return (
-          <div className="text-sm text-muted-foreground">—</div>
-        );
+
+        if (isNaN(checkInTime.getTime()) || isNaN(checkOutTime.getTime()))
+          return <div className="text-sm text-muted-foreground">—</div>;
 
         const diff = checkOutTime - checkInTime;
-        if (diff < 0) return (
-          <div className="text-sm text-muted-foreground">—</div>
-        );
+        if (diff < 0)
+          return <div className="text-sm text-muted-foreground">—</div>;
 
         const hours = Math.floor(diff / (1000 * 60 * 60));
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        
+
         let className = "text-sm";
         if (hours < 4) className += " text-red-600 font-semibold";
         else if (hours < 8) className += " text-orange-600";
         else className += " text-green-600";
-        
+
         return (
           <div className={className}>
             {hours}h {minutes}m
@@ -649,7 +651,7 @@ export const getAttendanceColumns = ({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               {/* View Details */}
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => handleViewAttendance(a)}
                 className="cursor-pointer"
               >
@@ -698,13 +700,39 @@ export const getAttendanceColumns = ({
               )}
               
               {/* Edit/Delete Actions */}
+
+              {/* Download as PDF */}
+              <DropdownMenuItem
+                onClick={() => {
+                  // PDF download functionality
+                  toast.info("PDF download feature coming soon!");
+                }}
+                className="cursor-pointer"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Download as PDF
+              </DropdownMenuItem>
+
+              {/* Generate Report */}
+              <DropdownMenuItem
+                onClick={() => {
+                  // Report generation functionality
+                  toast.info("Report generation feature coming soon!");
+                }}
+                className="cursor-pointer"
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Generate Report
+              </DropdownMenuItem>
+
+              {/* Separator for edit/delete actions */}
               {(canEditAttendance || canDeleteAttendance) && (
                 <>
                   <DropdownMenuSeparator />
-                  
+
                   {/* Edit Attendance */}
                   {canEditAttendance && (
-                    <DropdownMenuItem 
+                    <DropdownMenuItem
                       onClick={() => handleEditAttendance(a)}
                       className="cursor-pointer text-blue-600"
                     >
@@ -712,8 +740,8 @@ export const getAttendanceColumns = ({
                       Edit Attendance
                     </DropdownMenuItem>
                   )}
-                  
-                  {/* Delete Attendance - Commented out as per original */}
+
+                  {/* Delete Attendance */}
                   {/* {canDeleteAttendance && (
                     <DropdownMenuItem 
                       onClick={() => handleDeleteAttendance(a._id)}

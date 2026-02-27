@@ -1,183 +1,67 @@
-// import React, { useContext } from 'react';
-// import { ThemeContext } from '../context/ThemeContext';
-
-// const LocationStatusCard = ({ distance, checkRadius, loading }) => {
-//   const { theme } = useContext(ThemeContext);
-
-//   const getStatusColor = () => {
-//     if (loading) return theme.colors.textSecondary;
-//     if (distance === null || distance === undefined) return '#FF6B6B';
-//     if (distance <= checkRadius) return '#4CAF50';
-//     return '#FF9800';
-//   };
-
-//   const getStatusText = () => {
-//     if (loading) return 'Checking location...';
-//     if (distance === null || distance === undefined) return '📍 Location unavailable';
-//     if (distance <= checkRadius) return '✅ Within office range';
-//     return '❌ Out of office range';
-//   };
-
-//   const statusColor = getStatusColor();
-
-//   return (
-//     <div style={{
-//       padding: 20,
-//       borderRadius: 16,
-//       marginBottom: 16,
-//       border: `1px solid ${theme.colors.border}`,
-//       backgroundColor: theme.colors.card,
-//       textAlign: 'center',
-//     }}>
-//       <h3 style={{
-//         fontSize: 18,
-//         fontWeight: 'bold',
-//         marginBottom: 16,
-//         color: theme.colors.text,
-//       }}>
-//         📍 Location Status
-//       </h3>
-//       <div style={{
-//         display: 'flex',
-//         alignItems: 'center',
-//         justifyContent: 'center',
-//         marginBottom: 12,
-//       }}>
-//         <div style={{
-//           width: 12,
-//           height: 12,
-//           borderRadius: 6,
-//           marginRight: 8,
-//           backgroundColor: statusColor,
-//         }}></div>
-//         <p style={{
-//           fontSize: 16,
-//           fontWeight: 600,
-//           color: statusColor,
-//           margin: 0,
-//         }}>
-//           {getStatusText()}
-//         </p>
-//       </div>
-//       <div style={{
-//         display: 'flex',
-//         justifyContent: 'space-between',
-//         padding: '8px 0',
-//         color: theme.colors.text,
-//       }}>
-//         <span style={{ fontSize: 14, flex: 1, color: theme.colors.textSecondary, textAlign: 'left' }}>
-//           Distance:
-//         </span>
-//         <span style={{ fontSize: 14, fontWeight: '600', flex: 1, textAlign: 'right' }}>
-//           {distance !== null && distance !== undefined ? `${distance.toFixed(0)} meters` : 'Unknown'}
-//         </span>
-//       </div>
-//       <div style={{
-//         display: 'flex',
-//         justifyContent: 'space-between',
-//         padding: '8px 0',
-//         color: theme.colors.text,
-//       }}>
-//         <span style={{ fontSize: 14, flex: 1, color: theme.colors.textSecondary, textAlign: 'left' }}>
-//           Required Range:
-//         </span>
-//         <span style={{ fontSize: 14, fontWeight: '600', flex: 1, textAlign: 'right' }}>
-//           Within {checkRadius} meters
-//         </span>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default LocationStatusCard;
-
-
-import React, { useContext } from 'react';
-import { ThemeContext } from '../context/ThemeContext';
+// src/components/LocationStatusCard.jsx
+import React from "react";
+import {
+  MapPin,
+  CheckCircle2,
+  AlertTriangle,
+  XCircle,
+  Loader2,
+} from "lucide-react";
 
 const LocationStatusCard = ({ distance, checkRadius, loading }) => {
-  const { theme } = useContext(ThemeContext);
+  const isWithinRange =
+    distance !== null && distance !== undefined && distance <= checkRadius;
 
-  const getStatusColor = () => {
-    if (loading) return theme.colors.textSecondary;
-    if (distance === null || distance === undefined) return '#FF6B6B';
-    if (distance <= checkRadius) return '#4CAF50';
-    return '#FF9800';
-  };
-
-  const getStatusText = () => {
-    if (loading) return 'Checking location...';
-    if (distance === null || distance === undefined) return '📍 Location unavailable';
-    if (distance <= checkRadius) return '✅ Within office range';
-    return '❌ Out of office range';
-  };
-
-  const statusColor = getStatusColor();
+  const config = loading
+    ? {
+        icon: <Loader2 className="h-5 w-5 text-gray-400 animate-spin" />,
+        label: "Checking location…",
+        sub: null,
+        bg: "bg-gray-50 border-gray-200",
+        text: "text-gray-500",
+      }
+    : distance === null || distance === undefined
+      ? {
+          icon: <XCircle className="h-5 w-5 text-red-500" />,
+          label: "Location unavailable",
+          sub: "Enable location access",
+          bg: "bg-red-50 border-red-200",
+          text: "text-red-600",
+        }
+      : isWithinRange
+        ? {
+            icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
+            label: "Within office range",
+            sub: `${distance.toFixed(0)} m from office`,
+            bg: "bg-green-50 border-green-200",
+            text: "text-green-600",
+          }
+        : {
+            icon: <AlertTriangle className="h-5 w-5 text-orange-500" />,
+            label: "Outside office range",
+            sub: `${distance.toFixed(0)} m — allowed: ${checkRadius}m`,
+            bg: "bg-orange-50 border-orange-200",
+            text: "text-orange-600",
+          };
 
   return (
-    <div style={{
-      padding: 20,
-      borderRadius: 16,
-      marginBottom: 16,
-      border: `1px solid ${theme.colors.border}`,
-      backgroundColor: theme.colors.card,
-      textAlign: 'center',
-    }}>
-      <h3 style={{
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 16,
-        color: theme.colors.text,
-      }}>
-        📍 Location Status
-      </h3>
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 12,
-      }}>
-        <div style={{
-          width: 12,
-          height: 12,
-          borderRadius: 6,
-          marginRight: 8,
-          backgroundColor: statusColor,
-        }}></div>
-        <p style={{
-          fontSize: 16,
-          fontWeight: 600,
-          color: statusColor,
-          margin: 0,
-        }}>
-          {getStatusText()}
-        </p>
+    <div
+      className={`flex items-center gap-3 rounded-2xl border p-4 ${config.bg}`}
+    >
+      <div
+        className={`p-2.5 rounded-xl ${loading ? "bg-gray-100" : isWithinRange ? "bg-green-100" : distance === null ? "bg-red-100" : "bg-orange-100"}`}
+      >
+        {config.icon}
       </div>
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        padding: '8px 0',
-        color: theme.colors.text,
-      }}>
-        <span style={{ fontSize: 14, flex: 1, color: theme.colors.textSecondary, textAlign: 'left' }}>
-          Distance:
-        </span>
-        <span style={{ fontSize: 14, fontWeight: '600', flex: 1, textAlign: 'right' }}>
-          {distance !== null && distance !== undefined ? `${distance.toFixed(0)} meters` : 'Unknown'}
-        </span>
+      <div className="flex-1 min-w-0">
+        <p className={`text-sm font-semibold ${config.text}`}>{config.label}</p>
+        {config.sub && (
+          <p className="text-xs text-gray-500 mt-0.5">{config.sub}</p>
+        )}
       </div>
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        padding: '8px 0',
-        color: theme.colors.text,
-      }}>
-        <span style={{ fontSize: 14, flex: 1, color: theme.colors.textSecondary, textAlign: 'left' }}>
-          Required Range:
-        </span>
-        <span style={{ fontSize: 14, fontWeight: '600', flex: 1, textAlign: 'right' }}>
-          Within {checkRadius} meters
-        </span>
+      <div className="text-right flex-shrink-0">
+        <p className="text-xs text-gray-400">Range</p>
+        <p className="text-sm font-bold text-gray-700">{checkRadius}m</p>
       </div>
     </div>
   );

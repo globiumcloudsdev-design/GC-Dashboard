@@ -1,435 +1,297 @@
-//src/components/AttendanceSummary.jsx
-import React, { useState, useEffect, useContext } from 'react';
-import { ThemeContext } from '../context/ThemeContext';
+// src/components/AttendanceSummary.jsx
+import React, { useState, useEffect } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
-const months = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
-const AttendanceSummary = ({ monthlySummary, filter, attendanceHistory }) => {
-  const { theme, isDarkMode } = useContext(ThemeContext);
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const recordsPerPage = 5;
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [monthlySummary]);
-
-  const getMonthName = (monthNumber) => months[monthNumber - 1] || '';
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'present': return theme.colors.success;
-      case 'late': return '#F59E0B';
-      case 'absent': return theme.colors.error;
-      case 'holiday': return '#8B5CF6';
-      case 'weekly_off': return theme.colors.textSecondary;
-      case 'approved_leave':
-      case 'leave': return '#EC4899';
-      default: return theme.colors.textSecondary;
-    }
+const STATUS_CFG = {
+  present: {
+    label: "Present",
+    icon: "✅",
+    tile: "bg-emerald-50 border-emerald-200",
+    num: "text-emerald-600",
+    badge: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  },
+  late: {
+    label: "Late",
+    icon: "⏰",
+    tile: "bg-amber-50   border-amber-200",
+    num: "text-amber-600",
+    badge: "bg-amber-100   text-amber-700   border-amber-200",
+  },
+  absent: {
+    label: "Absent",
+    icon: "❌",
+    tile: "bg-rose-50    border-rose-200",
+    num: "text-rose-600",
+    badge: "bg-rose-100    text-rose-700    border-rose-200",
+  },
+  holiday: {
+    label: "Holiday",
+    icon: "🎉",
+    tile: "bg-purple-50  border-purple-200",
+    num: "text-purple-600",
+    badge: "bg-purple-100  text-purple-700  border-purple-200",
+  },
+  weekly_off: {
+    label: "Weekly Off",
+    icon: "🏖️",
+    tile: "bg-slate-50   border-slate-200",
+    num: "text-slate-500",
+    badge: "bg-slate-100   text-slate-600   border-slate-200",
+  },
+  approved_leave: {
+    label: "Leave",
+    icon: "📝",
+    tile: "bg-pink-50    border-pink-200",
+    num: "text-pink-600",
+    badge: "bg-pink-100    text-pink-700    border-pink-200",
+  },
+  leave: {
+    label: "Leave",
+    icon: "📝",
+    tile: "bg-pink-50    border-pink-200",
+    num: "text-pink-600",
+    badge: "bg-pink-100    text-pink-700    border-pink-200",
+  },
+};
+const getCfg = (s) =>
+  STATUS_CFG[s] || {
+    label: s,
+    icon: "📅",
+    tile: "bg-gray-50 border-gray-200",
+    num: "text-gray-500",
+    badge: "bg-gray-100 text-gray-600 border-gray-200",
   };
 
-  const getStatusBackgroundColor = (status) => {
-    const color = getStatusColor(status);
-    return isDarkMode ? `${color}20` : `${color}10`;
-  };
+const fmtDate = (d) =>
+  new Date(d).toLocaleDateString("en-PK", { day: "2-digit", month: "short" });
+const fmtDay = (d) => (d || "").slice(0, 3);
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'present': return '✅';
-      case 'late': return '⏰';
-      case 'absent': return '❌';
-      case 'holiday': return '🎉';
-      case 'weekly_off': return '🏖️';
-      case 'approved_leave':
-      case 'leave': return '📝';
-      default: return '📅';
-    }
-  };
+export default function AttendanceSummary({ monthlySummary }) {
+  const [page, setPage] = useState(1);
+  const PER = 8;
 
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'present': return 'Present';
-      case 'late': return 'Late';
-      case 'absent': return 'Absent';
-      case 'holiday': return 'Holiday';
-      case 'weekly_off': return 'Weekly Off';
-      case 'approved_leave': return 'Approved Leave';
-      case 'leave': return 'Leave';
-      default: return status;
-    }
-  };
+  useEffect(() => setPage(1), [monthlySummary]);
 
-  const formatTableDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-PK', { day: '2-digit', month: 'short' });
-  };
+  if (!monthlySummary) {
+    return (
+      <div className="text-center py-10">
+        <p className="text-4xl mb-3">📭</p>
+        <p className="font-bold text-gray-500 text-sm">No data available</p>
+        <p className="text-xs text-gray-400 mt-1">
+          Select a month to view records
+        </p>
+      </div>
+    );
+  }
 
-  const calculateStats = () => {
-    if (!monthlySummary?.records) return null;
+  const records = monthlySummary.records || [];
+  const count = (fn) => records.filter(fn).length;
 
-    const records = monthlySummary.records;
-    const present = records.filter(r => r.status === 'present').length;
-    const late = records.filter(r => r.status === 'late').length;
-    const absent = records.filter(r => r.status === 'absent').length;
-    const holiday = records.filter(r => r.status === 'holiday').length;
-    const weeklyOff = records.filter(r => r.status === 'weekly_off').length;
-    const leave = records.filter(r => r.status === 'leave').length;
+  const present = count((r) => r.status === "present");
+  const late = count((r) => r.status === "late");
+  const absent = count((r) => r.status === "absent");
+  const holiday = count((r) => r.status === "holiday");
+  const leave = count((r) => ["leave", "approved_leave"].includes(r.status));
+  const working = count((r) => !["holiday", "weekly_off"].includes(r.status));
+  const rate = working > 0 ? ((present / working) * 100).toFixed(1) : 0;
+  const rateNum = parseFloat(rate);
+  const rateColor =
+    rateNum >= 90
+      ? "text-emerald-600"
+      : rateNum >= 70
+        ? "text-amber-600"
+        : "text-rose-600";
+  const rateBg =
+    rateNum >= 90
+      ? "bg-emerald-50 border-emerald-200"
+      : rateNum >= 70
+        ? "bg-amber-50 border-amber-200"
+        : "bg-rose-50 border-rose-200";
 
-    const workingDays = records.filter(r => !['holiday', 'weekly_off'].includes(r.status)).length;
-    const attendanceRate = workingDays > 0 ? (present / workingDays * 100).toFixed(1) : 0;
-
-    return {
-      present, late, absent, holiday, weeklyOff, leave,
-      workingDays, totalDays: records.length,
-      attendanceRate: parseFloat(attendanceRate),
-    };
-  };
-
-  const paginatedRecords = () => {
-    if (!monthlySummary?.records) return [];
-
-    const startIndex = (currentPage - 1) * recordsPerPage;
-    const endIndex = startIndex + recordsPerPage;
-    return monthlySummary.records.slice(startIndex, endIndex);
-  };
-
-  const getPerformanceColor = (rate) => {
-    if (rate >= 90) return theme.colors.success;
-    if (rate >= 70) return '#F59E0B';
-    return theme.colors.error;
-  };
-
-  const stats = calculateStats();
-  const recordsToShow = paginatedRecords();
-  const totalPages = monthlySummary?.records ? Math.ceil(monthlySummary.records.length / recordsPerPage) : 0;
-
-  const goToPage = (page) => {
-    setCurrentPage(page);
-  };
-  const goToNextPage = () => {
-    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
-  };
-  const goToPrevPage = () => {
-    if (currentPage > 1) setCurrentPage(currentPage - 1);
-  };
-
-  const getPageNumbers = () => {
-    const pages = [];
-    const maxVisiblePages = 5;
-
-    if (totalPages <= maxVisiblePages) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
-      const startPage = Math.max(1, currentPage - 2);
-      const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-      for (let i = startPage; i <= endPage; i++) pages.push(i);
-    }
-    return pages;
-  };
+  const totalPages = Math.ceil(records.length / PER);
+  const slice = records.slice((page - 1) * PER, page * PER);
 
   return (
-    <div style={{
-      padding: 20,
-      borderRadius: 16,
-      marginBottom: 20,
-      border: `1px solid ${theme.colors.border}`,
-      backgroundColor: theme.colors.card || theme.colors.surface,
-    }}>
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 20,
-      }}>
-        <h2 style={{ fontSize: 18, fontWeight: '700', flex: 1, color: theme.colors.text }}>
-          📊 Monthly Summary
-        </h2>
-        {filter && (
-          <div style={{ alignItems: 'flex-end' }}>
-            <p style={{ fontSize: 14, fontWeight: '600', color: theme.colors.primary }}>
-              {getMonthName(filter.month)} {filter.year}
-            </p>
-          </div>
-        )}
+    <div className="space-y-5">
+      {/* ── Big 3 stat tiles ── */}
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          {
+            status: "present",
+            val: present,
+            grad: "from-emerald-500 to-teal-600",
+          },
+          { status: "late", val: late, grad: "from-amber-400 to-orange-500" },
+          { status: "absent", val: absent, grad: "from-rose-500 to-red-600" },
+        ].map(({ status, val, grad }) => {
+          const c = getCfg(status);
+          return (
+            <div
+              key={status}
+              className={`rounded-[24px] bg-gradient-to-br ${grad} p-4 text-center shadow-lg shadow-black/5 relative overflow-hidden group`}
+            >
+              <div className="absolute top-0 right-0 w-12 h-12 bg-white/10 rounded-full -mr-4 -mt-4 blur-xl group-hover:scale-150 transition-transform" />
+              <p className="text-xl leading-none mb-2">{c.icon}</p>
+              <p className="text-2xl font-black text-white leading-none">
+                {val}
+              </p>
+              <p className="text-[9px] font-black text-white/70 uppercase tracking-widest mt-2">
+                {c.label}
+              </p>
+            </div>
+          );
+        })}
       </div>
 
-      {monthlySummary && (
-        <>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            marginBottom: 20,
-          }}>
-            {['present', 'late', 'absent'].map((status) => (
-              <div key={status} style={{ alignItems: 'center', flex: 1, textAlign: 'center' }}>
-                <div style={{
-                  width: 48, height: 48, borderRadius: 24,
-                  display: 'flex', justifyContent: 'center', alignItems: 'center',
-                  marginBottom: 8,
-                  backgroundColor: getStatusBackgroundColor(status),
-                }}>
-                  <span style={{ fontSize: 20, color: getStatusColor(status) }}>
-                    {getStatusIcon(status)}
-                  </span>
-                </div>
-                <p style={{ fontSize: 20, fontWeight: '700', color: getStatusColor(status), margin: 0 }}>
-                  {stats?.[status] || 0}
-                </p>
-                <p style={{ fontSize: 12, textAlign: 'center', color: theme.colors.textSecondary, margin: 0 }}>
-                  {getStatusText(status)}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          <div style={{
-            marginTop: 10,
-            paddingTop: 20,
-            borderTop: `1px solid ${theme.colors.border}`,
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-              <div style={{ flex: 1 }}>
-                <p style={{ fontSize: 14, marginBottom: 4, fontWeight: '500', color: theme.colors.textSecondary }}>
-                  Working Days:
-                </p>
-                <p style={{ fontSize: 16, fontWeight: '600', color: theme.colors.text }}>
-                  {stats?.workingDays || 0}
-                </p>
-              </div>
-
-              <div style={{ flex: 1 }}>
-                <p style={{ fontSize: 14, marginBottom: 4, fontWeight: '500', color: theme.colors.textSecondary }}>
-                  Total Days:
-                </p>
-                <p style={{ fontSize: 16, fontWeight: '600', color: theme.colors.text }}>
-                  {stats?.totalDays || 0}
-                </p>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-              <div style={{ flex: 1 }}>
-                <p style={{ fontSize: 14, marginBottom: 4, fontWeight: '500', color: theme.colors.textSecondary }}>
-                  Attendance Rate:
-                </p>
-                <p style={{
-                  fontSize: 16,
-                  fontWeight: 'bold',
-                  color: getPerformanceColor(stats?.attendanceRate || 0),
-                  margin: 0,
-                }}>
-                  {stats?.attendanceRate || 0}%
-                </p>
-              </div>
-
-              <div style={{ flex: 1 }}>
-                <p style={{ fontSize: 14, marginBottom: 4, fontWeight: '500', color: theme.colors.textSecondary }}>
-                  Holidays:
-                </p>
-                <p style={{ fontSize: 16, fontWeight: '600', color: getStatusColor('holiday'), margin: 0 }}>
-                  {stats?.holiday || 0}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {monthlySummary.records && monthlySummary.records.length > 0 && (
-            <>
-              <div style={{
-                marginTop: 20,
-                paddingTop: 20,
-                borderTop: `1px solid ${theme.colors.border}`,
-              }}>
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: 12,
-                }}>
-                  <p style={{ fontSize: 16, fontWeight: '700', color: theme.colors.text }}>
-                    📋 Daily Attendance Records
-                  </p>
-                  <p style={{ fontSize: 12, fontWeight: '500', color: theme.colors.textSecondary }}>
-                    {monthlySummary.records.length} records
-                  </p>
-                </div>
-
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={{ minWidth: '650px', borderCollapse: 'collapse', width: '100%' }}>
-                    <thead style={{ backgroundColor: isDarkMode ? theme.colors.surface : '#F9FAFB' }}>
-                      <tr>
-                        <th style={{ width: '70px', fontSize: 12, fontWeight: '700', textAlign: 'center', padding: '8px', color: theme.colors.text }}>Date</th>
-                        <th style={{ width: '50px', fontSize: 12, fontWeight: '700', textAlign: 'center', color: theme.colors.text }}>Day</th>
-                        <th style={{ width: '80px', fontSize: 12, fontWeight: '700', textAlign: 'center', color: theme.colors.text }}>Check In</th>
-                        <th style={{ width: '80px', fontSize: 12, fontWeight: '700', textAlign: 'center', color: theme.colors.text }}>Check Out</th>
-                        <th style={{ width: '120px', fontSize: 12, fontWeight: '700', textAlign: 'center', color: theme.colors.text }}>Status</th>
-                        <th style={{ width: '150px', fontSize: 12, fontWeight: '700', textAlign: 'left', color: theme.colors.text }}>Remarks</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {recordsToShow.map((record, index) => {
-                        const globalIndex = (currentPage - 1) * recordsPerPage + index;
-                        const rowBg = globalIndex % 2 === 0 ? (isDarkMode ? theme.colors.background + '20' : 'rgba(249, 250, 251, 0.5)') : 'transparent';
-                        return (
-                          <tr key={globalIndex} style={{ backgroundColor: rowBg, minHeight: 50 }}>
-                            <td style={{ padding: '8px', textAlign: 'center', color: theme.colors.text }}>{formatTableDate(record.date)}</td>
-                            <td style={{ padding: '8px', textAlign: 'center', color: theme.colors.text }}>{record.day}</td>
-                            <td style={{ padding: '8px', textAlign: 'center', color: record.checkInTime ? theme.colors.text : theme.colors.textSecondary, fontFamily: 'monospace' }}>
-                              {record.checkInTime || '--:--'}
-                            </td>
-                            <td style={{ padding: '8px', textAlign: 'center', color: record.checkOutTime ? theme.colors.text : theme.colors.textSecondary, fontFamily: 'monospace' }}>
-                              {record.checkOutTime || '--:--'}
-                            </td>
-                            <td style={{ padding: '8px', textAlign: 'center' }}>
-                              <div style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                padding: '4px 8px',
-                                borderRadius: 12,
-                                border: '1px solid',
-                                borderColor: getStatusColor(record.status),
-                                alignSelf: 'center',
-                              }}>
-                                <span style={{ fontSize: 10, marginRight: 4 }}>{getStatusIcon(record.status)}</span>
-                                <span style={{ fontSize: 10, fontWeight: '700', color: getStatusColor(record.status) }}>{getStatusText(record.status)}</span>
-                              </div>
-                            </td>
-                            <td style={{ padding: '8px', color: theme.colors.textSecondary, textAlign: 'left' }}>
-                              {record.remarks || '-'}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-
-                {totalPages > 1 && (
-                  <div style={{
-                    marginTop: 16,
-                    paddingTop: 16,
-                    borderTop: `1px solid ${theme.colors.border}`,
-                  }}>
-                    <div style={{ textAlign: 'center', marginBottom: 12 }}>
-                      <p style={{ fontSize: 12, fontWeight: '500', color: theme.colors.textSecondary }}>
-                        Showing {((currentPage - 1) * recordsPerPage) + 1} to {Math.min(currentPage * recordsPerPage, monthlySummary.records.length)} of {monthlySummary.records.length} records
-                      </p>
-                    </div>
-
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <button
-                        type="button"
-                        style={{
-                          padding: '8px 12px',
-                          borderRadius: 8,
-                          border: `1px solid ${theme.colors.border}`,
-                          minWidth: 80,
-                          opacity: currentPage === 1 ? 0.5 : 1,
-                          cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                          color: currentPage === 1 ? theme.colors.textSecondary : theme.colors.primary,
-                          fontWeight: '600',
-                          fontSize: 12,
-                          backgroundColor: 'transparent',
-                        }}
-                        onClick={goToPrevPage}
-                        disabled={currentPage === 1}
-                      >
-                        ◀️ Prev
-                      </button>
-
-                      <div style={{ display: 'flex', alignItems: 'center' }}>
-                        {getPageNumbers().map(page => (
-                          <button
-                            key={page}
-                            type="button"
-                            onClick={() => goToPage(page)}
-                            style={{
-                              width: 32,
-                              height: 32,
-                              borderRadius: 6,
-                              margin: '0 2px',
-                              borderWidth: 1,
-                              borderStyle: 'solid',
-                              borderColor: page === currentPage ? 'transparent' : theme.colors.border,
-                              backgroundColor: page === currentPage ? theme.colors.primary : 'transparent',
-                              color: page === currentPage ? '#FFFFFF' : theme.colors.text,
-                              fontSize: 12,
-                              fontWeight: '600',
-                              cursor: 'pointer',
-                            }}
-                          >
-                            {page}
-                          </button>
-                        ))}
-                      </div>
-
-                      <button
-                        type="button"
-                        style={{
-                          padding: '8px 12px',
-                          borderRadius: 8,
-                          border: `1px solid ${theme.colors.border}`,
-                          minWidth: 80,
-                          opacity: currentPage === totalPages ? 0.5 : 1,
-                          cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-                          color: currentPage === totalPages ? theme.colors.textSecondary : theme.colors.primary,
-                          fontWeight: '600',
-                          fontSize: 12,
-                          backgroundColor: 'transparent',
-                        }}
-                        onClick={goToNextPage}
-                        disabled={currentPage === totalPages}
-                      >
-                        Next ▶️
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-        </>
-      )}
-
-      {/* Fallback for attendanceHistory without monthlySummary */}
-      {!monthlySummary && attendanceHistory && (
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <div style={{ textAlign: 'center', flex: 1 }}>
-            <p style={{ fontSize: 24, fontWeight: '700', color: theme.colors.primary }}>
-              {attendanceHistory.length}
-            </p>
-            <p style={{ fontSize: 12, color: theme.colors.textSecondary }}>Total Records</p>
-          </div>
-          <div style={{ textAlign: 'center', flex: 1 }}>
-            <p style={{ fontSize: 24, fontWeight: '700', color: theme.colors.success }}>
-              {attendanceHistory.filter(a => a.checkOutTime).length}
-            </p>
-            <p style={{ fontSize: 12, color: theme.colors.textSecondary }}>Completed</p>
-          </div>
-          <div style={{ textAlign: 'center', flex: 1 }}>
-            <p style={{ fontSize: 24, fontWeight: '700', color: '#F59E0B' }}>
-              {attendanceHistory.filter(a => a.isLate).length}
-            </p>
-            <p style={{ fontSize: 12, color: theme.colors.textSecondary }}>Late Days</p>
-          </div>
+      {/* ── Detail grid ── */}
+      <div className="grid grid-cols-2 gap-3">
+        <div
+          className={`rounded-2xl border ${rateBg} px-4 py-3 flex items-center justify-between shadow-sm`}
+        >
+          <p className="text-[11px] font-bold text-slate-500/80 uppercase tracking-wider">
+            Rate
+          </p>
+          <p className={`text-base font-black ${rateColor}`}>{rate}%</p>
         </div>
-      )}
+        <div className="bg-blue-50/50 border border-blue-100 rounded-2xl px-4 py-3 flex items-center justify-between shadow-sm">
+          <p className="text-[11px] font-bold text-slate-500/80 uppercase tracking-wider">
+            Working
+          </p>
+          <p className="text-base font-black text-blue-600">{working}</p>
+        </div>
+        <div className="bg-purple-50/50 border border-purple-100 rounded-2xl px-4 py-3 flex items-center justify-between shadow-sm">
+          <p className="text-[11px] font-bold text-slate-500/80 uppercase tracking-wider">
+            Holidays
+          </p>
+          <p className="text-base font-black text-purple-600">{holiday}</p>
+        </div>
+        <div className="bg-pink-50/50 border border-pink-100 rounded-2xl px-4 py-3 flex items-center justify-between shadow-sm">
+          <p className="text-[11px] font-bold text-slate-500/80 uppercase tracking-wider">
+            Leaves
+          </p>
+          <p className="text-base font-black text-pink-600">{leave}</p>
+        </div>
+      </div>
 
-      {/* No data fallback */}
-      {!monthlySummary && !attendanceHistory && (
-        <div style={{ textAlign: 'center', padding: 40, color: theme.colors.textSecondary }}>
-          <p style={{ fontSize: 48, margin: '0 0 16px' }}>📭</p>
-          <p style={{ fontSize: 16, fontWeight: '600', marginBottom: 8 }}>No attendance data available</p>
-          <p style={{ fontSize: 14, opacity: 0.7 }}>Select a month to view attendance records</p>
+      {/* ── Daily records ── */}
+      {slice.length > 0 && (
+        <div>
+          <div className="flex items-center justify-between mb-2.5">
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">
+              Daily Records
+            </p>
+            <p className="text-[11px] font-semibold text-gray-400">
+              {records.length} total
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-gray-100 overflow-hidden">
+            {/* Table head */}
+            <div className="grid grid-cols-5 bg-gray-50 border-b border-gray-100 px-3 py-2">
+              {["Date", "Day", "In", "Out", "Status"].map((h) => (
+                <p
+                  key={h}
+                  className="text-[10px] font-bold text-gray-400 uppercase text-center"
+                >
+                  {h}
+                </p>
+              ))}
+            </div>
+
+            {/* Rows */}
+            {slice.map((r, i) => {
+              const cfg = getCfg(r.status);
+              return (
+                <div
+                  key={i}
+                  className={`grid grid-cols-5 px-3 py-2.5 items-center border-b border-gray-50 last:border-0 ${
+                    i % 2 === 0 ? "bg-white" : "bg-gray-50/40"
+                  }`}
+                >
+                  <p className="text-[11px] font-semibold text-gray-700 text-center">
+                    {fmtDate(r.date)}
+                  </p>
+                  <p className="text-[11px] text-gray-400 text-center font-medium">
+                    {fmtDay(r.day)}
+                  </p>
+                  <p className="text-[11px] font-mono text-center text-gray-600">
+                    {r.checkInTime || "—"}
+                  </p>
+                  <p className="text-[11px] font-mono text-center text-gray-600">
+                    {r.checkOutTime || "—"}
+                  </p>
+                  <div className="flex justify-center">
+                    <span
+                      className={`text-[9px] font-bold border px-1.5 py-0.5 rounded-full ${cfg.badge}`}
+                    >
+                      {cfg.label}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-3">
+              <p className="text-[11px] text-gray-400">
+                {(page - 1) * PER + 1}–{Math.min(page * PER, records.length)} of{" "}
+                {records.length}
+              </p>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="w-7 h-7 rounded-xl bg-gray-100 hover:bg-gray-200 disabled:opacity-40 transition flex items-center justify-center"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5 text-gray-600" />
+                </button>
+
+                {Array.from(
+                  { length: Math.min(5, totalPages) },
+                  (_, i) => i + 1,
+                ).map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p)}
+                    className={`w-7 h-7 text-[11px] font-bold rounded-xl transition ${
+                      p === page
+                        ? "bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-sm"
+                        : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                ))}
+
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="w-7 h-7 rounded-xl bg-gray-100 hover:bg-gray-200 disabled:opacity-40 transition flex items-center justify-center"
+                >
+                  <ChevronRight className="h-3.5 w-3.5 text-gray-600" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
   );
-};
-
-export default AttendanceSummary;
+}

@@ -66,6 +66,12 @@ import {
   AlertTriangle,
   XCircle,
   Megaphone,
+  Eye,
+  EyeOff,
+  UserCheck,
+  Clock,
+  ShieldCheck,
+  Briefcase,
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -73,7 +79,6 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function NotificationsAdminPage() {
   const { user, hasPermission } = useAuth();
 
-  // Permission flags for notifications module
   const canView = hasPermission?.("notification", "view");
   const canCreate = hasPermission?.("notification", "create");
   const canEdit = hasPermission?.("notification", "edit");
@@ -93,6 +98,12 @@ export default function NotificationsAdminPage() {
   // Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingNotification, setEditingNotification] = useState(null);
+
+  // Read Tracker Modal States
+  const [isTrackerOpen, setIsTrackerOpen] = useState(false);
+  const [trackerLoading, setTrackerLoading] = useState(false);
+  const [trackerData, setTrackerData] = useState(null);
+  const [trackerSearch, setTrackerSearch] = useState("");
 
   // Form States
   const [formData, setFormData] = useState({
@@ -126,10 +137,7 @@ export default function NotificationsAdminPage() {
 
   const fetchNotifications = async (page = 1, search = "") => {
     setLoading(true);
-    let result;
-    // Note: viewAgent filtering is currently client-side or re-fetches.
-    // To be fast, we use the main API with page/limit/search.
-    result = await notificationService.getAllNotifications(
+    const result = await notificationService.getAllNotifications(
       true,
       page,
       itemsPerPage,
@@ -149,12 +157,36 @@ export default function NotificationsAdminPage() {
 
   const fetchAgents = async () => {
     try {
-      const res = await agentService.getAllAgents({ limit: 500 }); // Saare load karne ki bajaye reasonable limit
+      const res = await agentService.getAllAgents({ limit: 500 });
       setAgents(res.agents || []);
     } catch (err) {
       console.error("Failed to fetch agents", err);
     }
   };
+
+  // ── Read Tracker ─────────────────────────────────────────────────────────────
+  const openTracker = async (notification) => {
+    setTrackerData(null);
+    setTrackerSearch("");
+    setIsTrackerOpen(true);
+    setTrackerLoading(true);
+
+    try {
+      const result = await notificationService.getReadStatus(notification._id);
+      if (result.success) {
+        setTrackerData(result.data);
+      } else {
+        toast.error(result.message || "Failed to load tracker");
+        setIsTrackerOpen(false);
+      }
+    } catch (err) {
+      toast.error("Error fetching read status");
+      setIsTrackerOpen(false);
+    } finally {
+      setTrackerLoading(false);
+    }
+  };
+  // ─────────────────────────────────────────────────────────────────────────────
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -221,7 +253,7 @@ export default function NotificationsAdminPage() {
           editingNotification ? "Updated successfully" : "Created successfully",
         );
         setIsModalOpen(false);
-        fetchNotifications(viewAgent === "all" ? null : viewAgent);
+        fetchNotifications(currentPage, searchTerm);
       } else {
         toast.error(result.message);
       }
@@ -243,7 +275,7 @@ export default function NotificationsAdminPage() {
     const result = await notificationService.deleteNotification(id);
     if (result.success) {
       toast.success("Deleted permanently");
-      fetchNotifications(viewAgent === "all" ? null : viewAgent);
+      fetchNotifications(currentPage, searchTerm);
     } else {
       toast.error(result.message);
     }
@@ -264,18 +296,22 @@ export default function NotificationsAdminPage() {
     }
   };
 
-  const displayNotifications = notifications;
-
-  useEffect(() => {
-    // Initial search or page change handled by fetchNotifications side effect
-  }, [searchTerm]);
-
   const getAgentName = (id) => {
     const agent = agents.find((a) => a._id === id || a.agentId === id);
     return agent
       ? `${agent.agentName} (${agent.agentId || "N/A"})`
       : `ID: ${id.substring(0, 8)}...`;
   };
+
+  // Filtered tracker list
+  const filteredReaders = trackerData?.readBy?.filter((r) => {
+    const q = trackerSearch.toLowerCase();
+    return (
+      r.name?.toLowerCase().includes(q) ||
+      r.email?.toLowerCase().includes(q) ||
+      r.role?.toLowerCase().includes(q)
+    );
+  });
 
   if (!canView)
     return (
@@ -343,7 +379,7 @@ export default function NotificationsAdminPage() {
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Broadacsts</SelectItem>
+                <SelectItem value="all">All Broadcasts</SelectItem>
                 <Separator className="my-1" />
                 {agents.map((a) => (
                   <SelectItem key={a._id} value={a._id}>
@@ -364,7 +400,7 @@ export default function NotificationsAdminPage() {
               <Loader2 className="h-10 w-10 animate-spin text-[#10B5DB] mb-2" />
               <p className="text-sm font-medium">Fetching history...</p>
             </div>
-          ) : displayNotifications.length === 0 ? (
+          ) : notifications.length === 0 ? (
             <div className="text-center py-20 text-muted-foreground">
               <Megaphone className="h-16 w-16 mx-auto mb-4 opacity-5 bg-gray-100 rounded-full p-4" />
               <p className="text-lg font-medium">No results found</p>
@@ -375,11 +411,17 @@ export default function NotificationsAdminPage() {
               <Table>
                 <TableHeader className="bg-gray-50/50 dark:bg-gray-900/50">
                   <TableRow className="hover:bg-transparent">
-                    <TableHead className="w-[30%]">
+                    <TableHead className="w-[28%]">
                       Notification Content
                     </TableHead>
                     <TableHead>Target Audience</TableHead>
                     <TableHead>Type</TableHead>
+                    <TableHead>
+                      <div className="flex items-center gap-1.5">
+                        <Eye className="h-3.5 w-3.5 text-[#10B5DB]" />
+                        Read By
+                      </div>
+                    </TableHead>
                     <TableHead>Created Date</TableHead>
                     {(canEdit || canDelete) && (
                       <TableHead className="text-right">Actions</TableHead>
@@ -388,7 +430,7 @@ export default function NotificationsAdminPage() {
                 </TableHeader>
                 <TableBody>
                   <AnimatePresence mode="wait">
-                    {displayNotifications.map((n, idx) => (
+                    {notifications.map((n, idx) => (
                       <motion.tr
                         key={n._id}
                         initial={{ opacity: 0, y: 10 }}
@@ -456,7 +498,7 @@ export default function NotificationsAdminPage() {
 
                             {n.targetType === "agent" && (
                               <span className="text-[10px] text-muted-foreground font-medium italic">
-                                Target: All Agents
+                                Target: All Employees
                               </span>
                             )}
                           </div>
@@ -469,6 +511,38 @@ export default function NotificationsAdminPage() {
                             </span>
                           </div>
                         </TableCell>
+
+                        {/* ── Read Tracker Column ── */}
+                        <TableCell>
+                          <button
+                            onClick={() => openTracker(n)}
+                            className="flex items-center gap-2 group/tracker"
+                            title="View who has read this notification"
+                          >
+                            <div
+                              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-all
+                              ${
+                                (n.readBy?.length || 0) > 0
+                                  ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200"
+                                  : "bg-gray-100 text-gray-500 hover:bg-gray-200 border border-gray-200"
+                              }`}
+                            >
+                              {(n.readBy?.length || 0) > 0 ? (
+                                <UserCheck className="h-3 w-3" />
+                              ) : (
+                                <EyeOff className="h-3 w-3" />
+                              )}
+                              {n.readBy?.length || 0}
+                              <span className="hidden sm:inline">
+                                {(n.readBy?.length || 0) === 1
+                                  ? "reader"
+                                  : "readers"}
+                              </span>
+                            </div>
+                          </button>
+                        </TableCell>
+                        {/* ─────────────────────── */}
+
                         <TableCell>
                           <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
                             <Calendar size={12} />
@@ -536,7 +610,6 @@ export default function NotificationsAdminPage() {
 
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(
                   (page) => {
-                    // Show current page, first, last, and one before/after current
                     if (
                       page === 1 ||
                       page === totalPages ||
@@ -584,7 +657,207 @@ export default function NotificationsAdminPage() {
         )}
       </Card>
 
-      {/* Create/Edit Dashboard Modal */}
+      {/* ═══════════════════════════════════════════════════════════════════════
+          Read Tracker Modal
+      ═══════════════════════════════════════════════════════════════════════ */}
+      <Dialog open={isTrackerOpen} onOpenChange={setIsTrackerOpen}>
+        <DialogContent className="sm:max-w-lg p-0 overflow-hidden border-none shadow-2xl">
+          {/* Header */}
+          <div className="relative bg-gradient-to-br from-[#0f172a] to-[#1e3a5f] px-6 py-7 text-white overflow-hidden">
+            {/* BG decoration */}
+            <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full bg-white/5" />
+            <div className="absolute bottom-0 left-1/2 w-24 h-24 rounded-full bg-[#10B5DB]/10" />
+
+            <DialogHeader className="relative z-10">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 bg-[#10B5DB]/20 rounded-xl border border-[#10B5DB]/30">
+                  <Eye className="h-5 w-5 text-[#10B5DB]" />
+                </div>
+                <div>
+                  <DialogTitle className="text-lg font-bold text-white leading-snug">
+                    Notification Read Tracker
+                  </DialogTitle>
+                  <DialogDescription className="text-blue-200/80 text-xs mt-0.5">
+                    {trackerData
+                      ? `"${trackerData.title}"`
+                      : "Loading details..."}
+                  </DialogDescription>
+                </div>
+              </div>
+
+              {/* Stats row */}
+              {trackerData && !trackerLoading && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center gap-3 mt-3 flex-wrap"
+                >
+                  <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20">
+                    <UserCheck className="h-3.5 w-3.5 text-emerald-400" />
+                    <span className="text-xs font-bold text-white">
+                      {trackerData.totalReadBy}
+                    </span>
+                    <span className="text-xs text-blue-200/70">Readers</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20">
+                    <Users className="h-3.5 w-3.5 text-blue-300" />
+                    <span className="text-xs text-blue-200/70 capitalize">
+                      {trackerData.targetType === "all"
+                        ? "Global Broadcast"
+                        : trackerData.targetType}
+                    </span>
+                  </div>
+                  {trackerData.totalTargets !== null && (
+                    <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20">
+                      <span className="text-xs text-blue-200/70">
+                        {trackerData.totalReadBy} / {trackerData.totalTargets}{" "}
+                        seen
+                      </span>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </DialogHeader>
+          </div>
+
+          {/* Body */}
+          <div className="bg-white dark:bg-gray-900 px-6 py-5 flex flex-col gap-4">
+            {trackerLoading ? (
+              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground gap-3">
+                <Loader2 className="h-8 w-8 animate-spin text-[#10B5DB]" />
+                <p className="text-sm">Fetching reader list...</p>
+              </div>
+            ) : trackerData?.totalReadBy === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground gap-3">
+                <div className="p-4 bg-gray-50 rounded-2xl">
+                  <EyeOff className="h-10 w-10 opacity-20" />
+                </div>
+                <p className="font-medium text-sm">No one has read this yet</p>
+                <p className="text-xs text-center">
+                  This notification has not been viewed by any user or employee.
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Search */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by name, email or role..."
+                    value={trackerSearch}
+                    onChange={(e) => setTrackerSearch(e.target.value)}
+                    className="pl-9 bg-gray-50 border-gray-200 text-sm"
+                  />
+                </div>
+
+                {/* Reader list */}
+                <div className="flex flex-col gap-2 max-h-72 overflow-y-auto pr-1 custom-scrollbar">
+                  <AnimatePresence>
+                    {filteredReaders?.length === 0 ? (
+                      <div className="text-center py-6 text-sm text-muted-foreground">
+                        No matching readers found.
+                      </div>
+                    ) : (
+                      filteredReaders?.map((reader, idx) => (
+                        <motion.div
+                          key={reader._id?.toString() || idx}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 10 }}
+                          transition={{ delay: idx * 0.03 }}
+                          className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-blue-50/40 hover:border-blue-100 transition-all group"
+                        >
+                          {/* Avatar */}
+                          <div
+                            className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm
+                            ${
+                              reader.type === "agent"
+                                ? "bg-purple-100 text-purple-700 border-2 border-purple-200"
+                                : "bg-blue-100 text-blue-700 border-2 border-blue-200"
+                            }`}
+                          >
+                            {reader.name?.charAt(0)?.toUpperCase() || "?"}
+                          </div>
+
+                          {/* Info */}
+                          <div className="flex flex-col flex-1 min-w-0">
+                            <span className="text-sm font-semibold text-gray-900 truncate">
+                              {reader.name}
+                            </span>
+                            <span className="text-xs text-muted-foreground truncate">
+                              {reader.email}
+                            </span>
+                          </div>
+
+                          {/* Role badge */}
+                          <div className="flex-shrink-0">
+                            <Badge
+                              variant="outline"
+                              className={`text-[10px] font-semibold px-2 py-0.5 flex items-center gap-1
+                              ${
+                                reader.type === "agent"
+                                  ? "border-purple-200 text-purple-700 bg-purple-50"
+                                  : "border-blue-200 text-blue-700 bg-blue-50"
+                              }`}
+                            >
+                              {reader.type === "agent" ? (
+                                <Briefcase className="h-2.5 w-2.5" />
+                              ) : (
+                                <ShieldCheck className="h-2.5 w-2.5" />
+                              )}
+                              {reader.role}
+                            </Badge>
+                          </div>
+                        </motion.div>
+                      ))
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Footer summary */}
+                <div className="flex items-center justify-between pt-2 border-t text-xs text-muted-foreground">
+                  <span>
+                    Showing{" "}
+                    <span className="font-semibold text-gray-700">
+                      {filteredReaders?.length || 0}
+                    </span>{" "}
+                    of{" "}
+                    <span className="font-semibold text-gray-700">
+                      {trackerData?.totalReadBy || 0}
+                    </span>{" "}
+                    readers
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-blue-400 inline-block" />
+                      Admin/User
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-purple-400 inline-block" />
+                      Employee
+                    </span>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="px-6 pb-5 bg-white dark:bg-gray-900">
+            <Button
+              variant="ghost"
+              className="w-full border border-gray-200 hover:bg-gray-50"
+              onClick={() => setIsTrackerOpen(false)}
+            >
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          Create/Edit Notification Modal
+      ═══════════════════════════════════════════════════════════════════════ */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="sm:max-w-xl p-0 overflow-hidden border-none shadow-2xl">
           <div className="bg-[#10B5DB] px-6 py-8 text-white relative">
@@ -665,7 +938,7 @@ export default function NotificationsAdminPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Everyone</SelectItem>
-                    <SelectItem value="specific">Specific Agent</SelectItem>
+                    <SelectItem value="specific">Specific Employee</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -678,7 +951,7 @@ export default function NotificationsAdminPage() {
                 className="space-y-2 p-4 bg-blue-50/50 rounded-xl border border-blue-100"
               >
                 <Label className="text-xs font-bold text-blue-800">
-                  Choose Agent
+                  Choose Employee
                 </Label>
                 <Select
                   value={formData.targetUsers}

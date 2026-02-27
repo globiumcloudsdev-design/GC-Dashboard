@@ -273,6 +273,7 @@ const agentSchema = new mongoose.Schema({
   resetPasswordToken: String,
   resetPasswordExpires: Date,
   pushTokens: [{ type: String }],
+  profilePicture: { type: String },
   isActive: {
     type: Boolean,
     default: true

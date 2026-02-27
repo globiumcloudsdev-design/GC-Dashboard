@@ -141,7 +141,7 @@ export default function AgentTopbar({ collapsed, toggleSidebar, isOpen }) {
           <Menu size={20} />
         </Button>
         <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-          <span className="text-[#10B5DB] drop-shadow-sm">Agent</span>
+          <span className="text-[#10B5DB] drop-shadow-sm">Employee</span>
           <span className="text-slate-400 font-medium">/</span>
           <span className="text-sm uppercase tracking-[0.2em] font-bold text-slate-500 mt-0.5">
             Portal
@@ -331,11 +331,11 @@ export default function AgentTopbar({ collapsed, toggleSidebar, isOpen }) {
               aria-label="Open profile menu"
             >
               <Avatar className="h-8 w-8">
-                <AvatarImage src="/avatars/default.png" alt="Agent" />
+                <AvatarImage src="/avatars/default.png" alt="Employee" />
                 <AvatarFallback>{agent?.name?.charAt(0) || "A"}</AvatarFallback>
               </Avatar>
               <span className="hidden sm:inline text-sm font-medium text-gray-900 dark:text-gray-100">
-                {agent?.name || "Agent"}
+                {agent?.name || "Employee"}
               </span>
             </Button>
           </DropdownMenuTrigger>
