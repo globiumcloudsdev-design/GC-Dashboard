@@ -219,14 +219,8 @@ export default function TeamSection() {
         const response = await teamService.getTeams({ isActive: true, limit: 100 });
         let members = response.data || [];
 
-<<<<<<< HEAD
-        const fIndex = members.findIndex(m => 
-          m.position?.toLowerCase().includes("founder") || 
-          m.position?.toLowerCase().includes("ceo")
-=======
         const ceoIndex = members.findIndex((m) =>
           m.position?.toLowerCase().includes("ceo"),
->>>>>>> 0d42b8e9255045d288baa70cabd06d017da4c5de
         );
 
         if (fIndex > -1) {
@@ -245,66 +239,6 @@ export default function TeamSection() {
   }, []);
 
   return (
-<<<<<<< HEAD
-    <section className="py-24 bg-[#F8FAFC] overflow-hidden">
-      <div className="max-w-full mx-auto px-4 relative">
-      <div className="text-center mb-16">
-  <h2 className="text-5xl md:text-7xl font-black text-gray-900 tracking-tighter uppercase">
-    OUR <span className="text-[#10B5DB]">EXPERTS.</span>
-  </h2>
-  {/* Line ki jagah text */}
-  <p className="text-gray-400 mt-4 font-bold text-xs uppercase tracking-[0.4em]">
-    The brains behind the innovation
-  </p>
-</div>
-
-        {loading ? (
-          <div className="h-[450px] flex items-center justify-center">
-            <div className="w-40 h-1 bg-gray-200 rounded-full overflow-hidden">
-              <div className="h-full bg-[#10B5DB] w-1/2 animate-[loading_1s_infinite]" />
-            </div>
-          </div>
-        ) : (
-          <Swiper
-            modules={[Pagination, Autoplay, EffectCoverflow]}
-            effect={"coverflow"}
-            grabCursor={true}
-            centeredSlides={true} // ✅ Founder ab hamesha center mein aayega
-            loop={teamMembers.length > 3} // ✅ Loop zaroori hai center alignment ke liye
-            slidesPerView={"auto"} // ✅ CSS width ke saath kaam karega
-            initialSlide={0}
-            speed={800}
-            autoplay={{
-              delay: 3000,
-              disableOnInteraction: false,
-              pauseOnMouseEnter: true,
-            }}
-            coverflowEffect={{
-              rotate: 5,
-              stretch: 0,
-              depth: 100,
-              modifier: 2,
-              slideShadows: false,
-            }}
-            pagination={{ clickable: true, dynamicBullets: true }}
-            className="team-swiper !pb-20"
-          >
-            {teamMembers.map((member) => (
-              <SwiperSlide 
-                key={member._id} 
-                className="!w-[280px] md:!w-[350px]" // ✅ Fix width for centering
-              >
-                <TeamMember
-                  name={member.name}
-                  role={member.position}
-                  profileImage={member.profileImage}
-                  linkedin={member.linkedin}
-                  github={member.github}
-                />
-              </SwiperSlide>
-            ))}
-          </Swiper>
-=======
     <section
       ref={sectionRef}
       className="py-16 md:py-24 bg-[#F8FAFC] relative overflow-hidden"
@@ -415,7 +349,6 @@ export default function TeamSection() {
               </button>
             </div>
           </div>
->>>>>>> 0d42b8e9255045d288baa70cabd06d017da4c5de
         )}
       </div>
 
@@ -423,33 +356,15 @@ export default function TeamSection() {
         .team-swiper {
           overflow: visible !important;
         }
-<<<<<<< HEAD
-        .swiper-slide {
-          transition: all 0.6s ease-in-out;
-          opacity: 0.9;
-          transform: scale(0.85);
-          filter: grayscale(100%); /* Side slides grayscale rahengi focus ke liye */
-        }
-        .swiper-slide-active {
-          opacity: 1 !important;
-          transform: scale(1.1) !important;
-          filter: grayscale(0%) !important; /* Center wali slide full color */
-          z-index: 10;
-        }
-=======
 
         .swiper-pagination-bullet {
           background: #cbd5e1 !important;
           opacity: 1 !important;
         }
 
->>>>>>> 0d42b8e9255045d288baa70cabd06d017da4c5de
         .swiper-pagination-bullet-active {
           background: #10b5db !important;
           width: 35px !important;
-<<<<<<< HEAD
-          border-radius: 5px !important;
-=======
           border-radius: 12px !important;
         }
 
@@ -467,7 +382,6 @@ export default function TeamSection() {
 
         .swiper-slide img {
           border-radius: inherit;
->>>>>>> 0d42b8e9255045d288baa70cabd06d017da4c5de
         }
       `}</style>
     </section>
