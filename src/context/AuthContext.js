@@ -2,7 +2,7 @@
 
 "use client";
 
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { authService } from "../services/authService";
 import { useRouter } from "next/navigation";
 
@@ -86,27 +86,39 @@ export function AuthProvider({ children }) {
     setUser((prev) => ({ ...prev, ...userData }));
   };
 
-  const hasPermission = (module, action) => {
+  const hasPermission = useCallback((module, action = 'view') => {
     if (!user) return false;
 
-    // Super Admin has all permissions
-    if (user.role?.name === 'super_admin' || user.role === 'super_admin') return true;
+    // 1. Get role name and normalize it for wide matching
+    const roleObj = user.role;
+    const roleName = (typeof roleObj === 'object' ? roleObj?.name : roleObj) || '';
+    const normalizedRole = roleName.toLowerCase().replace(/[\s_-]/g, '');
 
-    // Prefer role-level permission if present (role may be populated on the user object)
-    try {
-      const rolePerm = user.role && user.role.permissions && user.role.permissions[module] ? !!user.role.permissions[module]?.[action] : null;
-      const userPerm = user.permissions && user.permissions[module] ? !!user.permissions[module]?.[action] : null;
-
-      // If role explicitly grants or denies (boolean), respect it; otherwise fall back to user-specific permission
-      if (rolePerm === true) return true;
-      if (rolePerm === false && userPerm === true) return true; // user can still have explicit true
-
-      return !!userPerm;
-    } catch (err) {
-      // In case of unexpected shape, fall back to checking user.permissions
-      return user.permissions && !!user.permissions[module]?.[action];
+    // 2. Super Admin / Admin bypass - Very broad matching
+    const adminTerms = ['superadmin', 'admin', 'administrator', 'root', 'super_admin'];
+    if (adminTerms.some(term => normalizedRole.includes(term))) {
+      return true;
     }
-  };
+
+    // 3. Robust nested permission check
+    const checkPerm = (perms) => {
+      if (!perms) return false;
+      // Standard: perms.module.action
+      if (perms[module] && typeof perms[module] === 'object' && perms[module][action]) return true;
+      // Flattened: perms["module_action"]
+      if (perms[`${module}_${action}`] === true) return true;
+      return false;
+    };
+
+    // 4. Try all possible permission paths
+    if (checkPerm(user.permissions)) return true;
+    if (checkPerm(user.role?.permissions)) return true;
+
+    // 5. Default visible modules
+    if (['dashboard', 'overview', 'profile'].includes(module)) return true;
+
+    return false;
+  }, [user]);
 
   const value = {
     user,
