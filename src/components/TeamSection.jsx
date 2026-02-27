@@ -1,9 +1,7 @@
 "use client";
-import { motion } from "framer-motion";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { teamService } from "../services/teamService";
-import { sectionReveal } from "@/lib/animations";
 import { FaLinkedinIn, FaGithub } from "react-icons/fa";
 
 // Swiper Imports
@@ -171,39 +169,29 @@ const TeamMember = ({ name, role, profileImage, linkedin, github, index }) => {
 export default function TeamSection() {
   const [teamMembers, setTeamMembers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [initialSlide, setInitialSlide] = useState(0);
-  const sectionRef = useRef(null);
 
   useEffect(() => {
     const fetchTeamMembers = async () => {
       try {
-        const response = await teamService.getTeams({
-          isActive: true,
-          limit: 100,
-        });
+        const response = await teamService.getTeams({ isActive: true, limit: 100 });
         let members = response.data || [];
 
         const ceoIndex = members.findIndex((m) =>
           m.position?.toLowerCase().includes("ceo"),
         );
 
-        let initialSlideIndex = 0;
-        if (ceoIndex !== -1) {
-          const ceo = members.splice(ceoIndex, 1)[0];
-          const middle = Math.floor(members.length / 2);
-          members.splice(middle, 0, ceo);
-          initialSlideIndex = middle;
+        if (fIndex > -1) {
+          const founder = members.splice(fIndex, 1)[0];
+          members.unshift(founder);
         }
 
         setTeamMembers(members);
-        setInitialSlide(initialSlideIndex);
       } catch (err) {
-        console.error("Error fetching team:", err);
+        console.error(err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchTeamMembers();
   }, []);
 
@@ -324,7 +312,6 @@ export default function TeamSection() {
       <style jsx global>{`
         .team-swiper {
           overflow: visible !important;
-          padding-top: 20px;
         }
 
         .swiper-pagination-bullet {
@@ -357,3 +344,9 @@ export default function TeamSection() {
     </section>
   );
 }
+
+
+
+
+
+

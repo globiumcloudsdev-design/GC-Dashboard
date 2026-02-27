@@ -1,6 +1,6 @@
 // src/app/(dashboard)/dashboard/view-attendance/page.jsx
 "use client";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { adminService } from "@/services/adminService";
 import { shiftService } from "@/services/shiftService";
 import { attendanceService } from "@/services/attendanceService";
@@ -253,6 +253,39 @@ export default function AdminAttendancePage() {
     date: new Date().toISOString().split("T")[0],
     userType: "agent",
   });
+
+  // Filtered leave requests based on filters
+  const filteredLeaveRequests = useMemo(() => {
+    let filtered = leaveRequests;
+    if (searchQuery) {
+      filtered = filtered.filter(request =>
+        (request.agent?.agentName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (request.user?.firstName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (request.user?.lastName || '').toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    if (filters.status !== 'all') {
+      filtered = filtered.filter(request => request.status === filters.status);
+    }
+    if (filters.fromDate) {
+      filtered = filtered.filter(request => new Date(request.startDate) >= new Date(filters.fromDate));
+    }
+    if (filters.toDate) {
+      filtered = filtered.filter(request => new Date(request.endDate) <= new Date(filters.toDate));
+    }
+    if (filters.date) {
+      filtered = filtered.filter(request => request.startDate <= filters.date && request.endDate >= filters.date);
+    }
+    if (filters.month) {
+      const [year, month] = filters.month.split('-');
+      const startOfMonth = new Date(parseInt(year), parseInt(month) - 1, 1);
+      const endOfMonth = new Date(parseInt(year), parseInt(month), 0);
+      filtered = filtered.filter(request =>
+        new Date(request.startDate) <= endOfMonth && new Date(request.endDate) >= startOfMonth
+      );
+    }
+    return filtered;
+  }, [leaveRequests, searchQuery, filters]);
 
   // Fetch functions
   const fetchInitialData = async () => {
@@ -1906,7 +1939,7 @@ export default function AdminAttendancePage() {
                 <CardContent className="p-4 sm:p-6 pt-0">
                   <div className="rounded-md border overflow-hidden">
                     <ResponsiveTable
-                      data={leaveRequests}
+                      data={filteredLeaveRequests}
                       columns={leaveColumns}
                       loading={loading.leave}
                       emptyMessage="No leave requests found"
