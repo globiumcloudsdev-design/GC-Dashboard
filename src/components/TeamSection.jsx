@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { teamService } from "../services/teamService";
 import { FaLinkedinIn, FaGithub } from "react-icons/fa";
@@ -169,6 +169,7 @@ const TeamMember = ({ name, role, profileImage, linkedin, github, index }) => {
 export default function TeamSection() {
   const [teamMembers, setTeamMembers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const sectionRef = useRef(null); // Define sectionRef
 
   useEffect(() => {
     const fetchTeamMembers = async () => {
@@ -180,9 +181,9 @@ export default function TeamSection() {
           m.position?.toLowerCase().includes("ceo"),
         );
 
-        if (fIndex > -1) {
-          const founder = members.splice(fIndex, 1)[0];
-          members.unshift(founder);
+        if (ceoIndex > -1) {
+          const ceo = members.splice(ceoIndex, 1)[0];
+          members.unshift(ceo);
         }
 
         setTeamMembers(members);
