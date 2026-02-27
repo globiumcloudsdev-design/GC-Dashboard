@@ -38,6 +38,8 @@ export async function POST(request) {
     const body = await request.json();
     const { attendanceId, userType = "agent" } = body;
 
+        console.log('Request ', request.body);
+
     const now = new Date();
     const todayStart = new Date(
       now.getFullYear(),
@@ -136,21 +138,19 @@ export async function POST(request) {
     // UPDATE FIELDS
     attendance.isEarlyCheckout = earlyCheckout;
     attendance.earlyMinutes = earlyMinutes;
+
     attendance.isOvertime = overtime;
     attendance.overtimeMinutes = overtimeMinutes;
 
-    // STATUS UPDATE RULES - IMPROVED VERSION
-    // If person was late and checks out early, they're still "late"
-    // Don't override "late" status with "early_checkout"
-    
-    if (attendance.status === "present") {
-      if (earlyCheckout) {
-        attendance.status = "early_checkout";
-      }
-      // If overtime, keep as "present" (or could be "overtime" if you want)
+    // STATUS UPDATE RULES:
+    // Present → late checkout = still present
+    // Present → early checkout = "early_checkout"
+    // Halfday / Late → status stays same
+    // Absent → never overwrite
+
+    if (attendance.status === "present" && earlyCheckout) {
+      attendance.status = "early_checkout";
     }
-    // If status was "late", keep it as "late" regardless of checkout time
-    // If status was "half_day", keep it as "half_day"
 
     await attendance.save();
 
@@ -165,11 +165,6 @@ export async function POST(request) {
       msg = `Checked-out early (${earlyMinutes} minutes early)`;
     } else if (overtime) {
       msg = `Checked-out with overtime (${overtimeMinutes} minutes)`;
-    }
-
-    // Add note about informed status
-    if (attendance.isInformed) {
-      msg += " (Informed)";
     }
 
     return NextResponse.json({

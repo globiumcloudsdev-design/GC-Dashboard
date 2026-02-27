@@ -598,106 +598,13 @@ export default function AdminAttendancePage() {
     setShowViewModal(true);
   };
 
-  // const handleEditAttendance = (attendance) => {
-  //   const formatDateOnly = (val) => {
-  //     if (!val) return "";
-  //     try {
-  //       const date = new Date(val);
-  //       return date.toLocaleDateString("en-CA", { timeZone: "Asia/Karachi" });
-  //     } catch {
-  //       return "";
-  //     }
-  //   };
-
-  //   const formatTimeOnly = (val) => {
-  //     if (!val) return "";
-  //     try {
-  //       const date = new Date(val);
-  //       const options = {
-  //         hour: "2-digit",
-  //         minute: "2-digit",
-  //         hour12: false,
-  //         timeZone: "Asia/Karachi",
-  //       };
-  //       const timeString = date.toLocaleTimeString("en-GB", options);
-  //       return timeString;
-  //     } catch (error) {
-  //       console.error("Error formatting time:", error, val);
-  //       return "";
-  //     }
-  //   };
-
-  // //   setEditingAttendance(attendance);
-
-  //   let attendanceDate = "";
-  //   if (attendance.date) {
-  //     attendanceDate = formatDateOnly(attendance.date);
-  //   } else if (attendance.checkInTime) {
-  //     attendanceDate = formatDateOnly(attendance.checkInTime);
-  //   } else {
-  //     const now = new Date();
-  //     attendanceDate = now.toLocaleDateString("en-CA", {
-  //       timeZone: "Asia/Karachi",
-  //     });
-  //   }
-
-  //   setManualForm({
-  //     userType: attendance.user ? "user" : "agent",
-  //     userId: attendance.user?._id || "",
-  //     agentId: attendance.agent?._id || "",
-  //     shiftId: attendance.shift?._id || "",
-  //     date: attendanceDate,
-  //     status: attendance.status,
-  //     checkInTime: formatTimeOnly(attendance.checkInTime),
-  //     checkOutTime: formatTimeOnly(attendance.checkOutTime),
-  //     notes: attendance.notes || "",
-  //   });
-  //   setShowEditModal(true);
-  // };
-
-  // const handleUpdateAttendance = async (e) => {
-  //   e.preventDefault();
-  //   try {
-  //     setLoading(prev => ({ ...prev, edit: true }));
-
-  //     const originalStatus = editingAttendance?.status;
-  //     const isManuallySettingStatus = manualForm.status !== originalStatus;
-
-  //     // Send times as HH:MM format (API expects this format)
-  //     const updateData = {
-  //       attendanceId: editingAttendance._id,
-  //       status: isManuallySettingStatus ? manualForm.status : null,
-  //       checkInTime: manualForm.checkInTime || null,
-  //       checkOutTime: manualForm.checkOutTime || null,
-  //       shiftId: manualForm.shiftId || null,
-  //       notes: manualForm.notes || ""
-  //     };
-
-  //     const response = await adminService.updateAttendance(updateData);
-  //     console.log("🎯 DEBUG: API Response:", response);
-  //     if (response.success) {
-  //       toast.success("Attendance updated successfully");
-  //       setShowEditModal(false);
-  //       fetchAttendance();
-  //     } else {
-  //       toast.error(response.message || "Error updating attendance");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error updating attendance:", error);
-  //     toast.error("Error updating attendance");
-  //   } finally {
-  //     setLoading(prev => ({ ...prev, edit: false }));
-  //   }
-  // };
-
-  // Update the handleEditAttendance function
   const handleEditAttendance = (attendance) => {
     const formatDateOnly = (val) => {
       if (!val) return "";
       try {
         const date = new Date(val);
         return date.toLocaleDateString("en-CA", { timeZone: "Asia/Karachi" });
-      } catch (error) {
+      } catch {
         return "";
       }
     };
@@ -729,7 +636,9 @@ export default function AdminAttendancePage() {
       attendanceDate = formatDateOnly(attendance.checkInTime);
     } else {
       const now = new Date();
-      attendanceDate = now.toLocaleDateString("en-CA", { timeZone: "Asia/Karachi" });
+      attendanceDate = now.toLocaleDateString("en-CA", {
+        timeZone: "Asia/Karachi",
+      });
     }
 
     setManualForm({
@@ -742,16 +651,14 @@ export default function AdminAttendancePage() {
       checkInTime: formatTimeOnly(attendance.checkInTime),
       checkOutTime: formatTimeOnly(attendance.checkOutTime),
       notes: attendance.notes || "",
-      isInformed: attendance.isInformed || false,
     });
     setShowEditModal(true);
   };
 
-  // Update handleUpdateAttendance to include isInformed
   const handleUpdateAttendance = async (e) => {
     e.preventDefault();
     try {
-      setLoading(prev => ({ ...prev, edit: true }));
+      setLoading((prev) => ({ ...prev, edit: true }));
 
       const originalStatus = editingAttendance?.status;
       const isManuallySettingStatus = manualForm.status !== originalStatus;

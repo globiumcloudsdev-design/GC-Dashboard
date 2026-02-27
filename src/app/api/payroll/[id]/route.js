@@ -1,9 +1,7 @@
-//src/app/api/payroll/[id]/route.js
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Payroll from '@/Models/Payroll';
 import Agent from '@/Models/Agent';
-import Shift from '@/Models/Shift';
 
 export async function GET(request, { params }) {
   try {

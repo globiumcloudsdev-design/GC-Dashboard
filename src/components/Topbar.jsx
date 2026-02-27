@@ -117,7 +117,7 @@ export default function Topbar({ collapsed }) {
 
   return (
     <header
-      className={`flex items-center justify-between fixed top-0 right-0 z-40 h-20 transition-all duration-300 border-b border-gray-200/50 dark:border-slate-800/50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl pr-4 sm:pr-8 ${
+      className={`flex items-center justify-between fixed top-0 right-0 z-40 h-20 transition-[left,background-color,border-color,color] duration-300 border-b border-gray-200/50 dark:border-slate-800/50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl pr-4 sm:pr-8 ${
         collapsed ? "lg:left-[80px]" : "lg:left-[280px]"
       } left-0 pl-16 sm:pl-16 lg:pl-8`}
     >
@@ -279,7 +279,7 @@ export default function Topbar({ collapsed }) {
 
         <Separator orientation="vertical" className="h-6 dark:bg-gray-700" />
 
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"

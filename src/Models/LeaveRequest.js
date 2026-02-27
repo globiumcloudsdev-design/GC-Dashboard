@@ -20,12 +20,6 @@ const LeaveRequestSchema = new mongoose.Schema(
     reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     reviewedAt: { type: Date },
     comments: { type: String, default: "" },
-    requestType: {
-      type: String,
-      enum: ["mobile_app", "desktop"],
-      default: "mobile_app",
-      required: true
-    },
   },
   { timestamps: true }
 );

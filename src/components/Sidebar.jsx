@@ -1,4 +1,4 @@
-// "use client";
+"use client";
 
 import {
   Home,
@@ -183,9 +183,9 @@ export default function Sidebar({ collapsed, setCollapsed }) {
   const pathname = usePathname();
   const isMobile = useMediaQuery({ maxWidth: 1023 });
 
-//   useEffect(() => {
-//     setOpenMobile(false);
-//   }, [pathname]);
+  useEffect(() => {
+    setOpenMobile(false);
+  }, [pathname]);
 
   const { user, loading: authLoading, hasPermission, logout } = useAuth();
 
@@ -222,7 +222,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setOpenMobile(false)}
-            className="fixed inset-0 bg-black/60 backdrop-blur-md z-[60] lg:hidden"
+            className="fixed inset-0 bg-black/60 backdrop-blur-md z-[40] lg:hidden"
           />
         )}
       </AnimatePresence>
@@ -242,7 +242,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
         }}
         transition={{ type: "spring", damping: 25, stiffness: 200 }}
         className={cn(
-          "fixed z-[70] flex flex-col h-screen border-r shadow-2xl transition-colors duration-300",
+          "fixed z-[30] flex flex-col h-screen border-r shadow-2xl transition-colors duration-300",
           "bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-gray-200/50 dark:border-slate-800/50",
           "lg:left-0 lg:top-0",
           !openMobile && isMobile && "invisible lg:visible",
@@ -342,12 +342,17 @@ export default function Sidebar({ collapsed, setCollapsed }) {
                     <div className="h-3 w-20 bg-slate-200 dark:bg-slate-700 rounded mx-4 mb-3" />
                   )}
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className={cn(
-                      "rounded-xl px-4 py-3 flex items-center gap-3",
-                      collapsed && "justify-center"
-                    )}>
+                    <div
+                      key={i}
+                      className={cn(
+                        "rounded-xl px-4 py-3 flex items-center gap-3",
+                        collapsed && "justify-center",
+                      )}
+                    >
                       <div className="h-5 w-5 bg-slate-200 dark:bg-slate-700 rounded shrink-0" />
-                      {!collapsed && <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded flex-1" />}
+                      {!collapsed && (
+                        <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded flex-1" />
+                      )}
                     </div>
                   ))}
                 </div>
@@ -356,78 +361,81 @@ export default function Sidebar({ collapsed, setCollapsed }) {
           ) : (
             allowedSections.map((section, sIdx) => (
               <div key={sIdx} className="space-y-2">
-              {!collapsed && (
-                <motion.h3
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="px-4 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]"
-                >
-                  {section.title}
-                </motion.h3>
-              )}
+                {!collapsed && (
+                  <motion.h3
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="px-4 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]"
+                  >
+                    {section.title}
+                  </motion.h3>
+                )}
 
-              <div className="space-y-1">
-                {section.items.map((item, iIdx) => {
-                  const isActive = pathname === item.href;
-                  return (
-                    <Tooltip key={iIdx} delayDuration={0}>
-                      <TooltipTrigger asChild>
-                        <Link
-                          href={item.href}
-                          onClick={() => isMobile && setOpenMobile(false)}
-                          className={cn(
-                            "flex items-center gap-3 rounded-xl px-4 py-3 text-[14px] font-semibold group transition-all duration-300 relative",
-                            isActive
-                              ? "bg-gradient-to-r from-[#10B5DB]/10 to-blue-500/5 text-[#10B5DB] dark:from-[#10B5DB]/20 dark:to-transparent"
-                              : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200",
-                          )}
-                        >
-                          {isActive && (
-                            <motion.div
-                              layoutId="active-pill"
-                              className="absolute left-0 w-1 h-6 bg-[#10B5DB] rounded-r-full shadow-[0_0_10px_#10B5DB]"
-                            />
-                          )}
-
-                          <item.icon
-                            size={20}
+                <div className="space-y-1">
+                  {section.items.map((item, iIdx) => {
+                    const isActive = pathname === item.href;
+                    return (
+                      <Tooltip key={iIdx} delayDuration={0}>
+                        <TooltipTrigger asChild>
+                          <Link
+                            href={item.href}
+                            onClick={() => isMobile && setOpenMobile(false)}
                             className={cn(
-                              "shrink-0 transition-transform duration-300 group-hover:scale-110",
+                              "flex items-center gap-3 rounded-xl px-4 py-3 text-[14px] font-semibold group transition-all duration-300 relative",
                               isActive
-                                ? "text-[#10B5DB]"
-                                : "text-slate-400 dark:text-slate-600 group-hover:text-slate-900 dark:group-hover:text-slate-200",
+                                ? "bg-gradient-to-r from-[#10B5DB]/10 to-blue-500/5 text-[#10B5DB] dark:from-[#10B5DB]/20 dark:to-transparent"
+                                : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200",
                             )}
-                          />
+                          >
+                            {isActive && (
+                              <motion.div
+                                layoutId="active-pill"
+                                className="absolute left-0 w-1 h-6 bg-[#10B5DB] rounded-r-full shadow-[0_0_10px_#10B5DB]"
+                              />
+                            )}
 
-                          {!collapsed && (
-                            <span className="flex-1 truncate">
-                              {item.label}
-                            </span>
-                          )}
+                            <item.icon
+                              size={20}
+                              className={cn(
+                                "shrink-0 transition-transform duration-300 group-hover:scale-110",
+                                isActive
+                                  ? "text-[#10B5DB]"
+                                  : "text-slate-400 dark:text-slate-600 group-hover:text-slate-900 dark:group-hover:text-slate-200",
+                              )}
+                            />
 
-                          {!collapsed && isActive && (
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0.5 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                            >
-                              <ChevronRight size={14} className="opacity-40" />
-                            </motion.div>
-                          )}
-                        </Link>
-                      </TooltipTrigger>
-                      {collapsed && (
-                        <TooltipContent
-                          side="right"
-                          sideOffset={20}
-                          className="bg-slate-900 text-white border-none shadow-xl"
-                        >
-                          {item.label}
-                        </TooltipContent>
-                      )}
-                    </Tooltip>
-                  );
-                })}
-              </div>
+                            {!collapsed && (
+                              <span className="flex-1 truncate">
+                                {item.label}
+                              </span>
+                            )}
+
+                            {!collapsed && isActive && (
+                              <motion.div
+                                initial={{ opacity: 0, scale: 0.5 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                              >
+                                <ChevronRight
+                                  size={14}
+                                  className="opacity-40"
+                                />
+                              </motion.div>
+                            )}
+                          </Link>
+                        </TooltipTrigger>
+                        {collapsed && (
+                          <TooltipContent
+                            side="right"
+                            sideOffset={20}
+                            className="bg-slate-900 text-white border-none shadow-xl"
+                          >
+                            {item.label}
+                          </TooltipContent>
+                        )}
+                      </Tooltip>
+                    );
+                  })}
+                </div>
               </div>
             ))
           )}
@@ -472,7 +480,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
         <Button
           variant="outline"
           size="icon"
-          className="fixed top-4 left-4 z-[80] lg:hidden shadow-xl bg-[#10B5DB] text-white border-none hover:bg-[#0e9ab9]"
+          className="fixed top-4 left-4 z-[50] lg:hidden shadow-xl bg-[#10B5DB] text-white border-none hover:bg-[#0e9ab9]"
           onClick={() => setOpenMobile(true)}
         >
           <Menu size={20} />

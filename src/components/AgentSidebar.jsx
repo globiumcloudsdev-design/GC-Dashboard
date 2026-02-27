@@ -98,15 +98,6 @@ export default function AgentSidebar({
     })).filter((section) => section.items.length > 0);
   }, [agent]);
 
-  // Filter navItems based on agent's target type
-  const navItems = baseNavItems.filter(item => {
-    if (item.requiresRevenue) {
-      // Show only if agent has revenue target (amount or both)
-      return agent?.monthlyTargetType === 'amount' || agent?.monthlyTargetType === 'both';
-    }
-    return true;
-  });
-
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950">
