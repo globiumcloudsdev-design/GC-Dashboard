@@ -1,4 +1,3 @@
-//src/app/api/payroll/[id]/route.js
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Payroll from '@/Models/Payroll';

@@ -1,242 +1,84 @@
-// import React from 'react';
-// import { ThemeContext } from '../context/ThemeContext';
-
-// const styles = {
-//   infoCard: {
-//     padding: '20px',
-//     marginBottom: '16px',
-//     borderRadius: '16px',
-//     borderWidth: '1px',
-//     borderStyle: 'solid',
-//   },
-//   cardTitle: {
-//     fontSize: '18px',
-//     fontWeight: 'bold',
-//     marginBottom: '16px',
-//     textAlign: 'center',
-//   },
-//   detailRow: {
-//     display: 'flex',
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'center',
-//     padding: '8px 0',
-//   },
-//   detailLabel: {
-//     fontSize: '14px',
-//     flex: 1,
-//   },
-//   detailValue: {
-//     fontSize: '14px',
-//     fontWeight: 600,
-//     textAlign: 'right',
-//     flex: 1,
-//   },
-// };
-
-// const TodayStatusCard = ({ todayAttendance, agentShift, workingTime }) => {
-//   const { theme } = React.useContext(ThemeContext);
-
-//   const getShiftTiming = () => {
-//     if (!agentShift) return 'No shift assigned';
-
-//     const formatTime = (timeStr) => {
-//       if (!timeStr) return '--:--';
-//       const [hours, minutes] = timeStr.split(':');
-//       return `${hours}:${minutes}`;
-//     };
-
-//     return `${formatTime(agentShift.startTime)} - ${formatTime(agentShift.endTime)}`;
-//   };
-
-//   const getCurrentStatus = () => {
-//     if (!todayAttendance) return 'Not Checked In';
-//     if (todayAttendance.checkOutTime) return 'Checked Out';
-//     return 'Checked In - Working';
-//   };
-
-//   const getStatusIcon = () => {
-//     if (!todayAttendance) return '❌';
-//     if (todayAttendance.checkOutTime) return '✅';
-//     return '🟢';
-//   };
-
-//   return (
-//     <div
-//       style={{
-//         ...styles.infoCard,
-//         backgroundColor: theme.colors.card,
-//         borderColor: theme.colors.border,
-//       }}
-//     >
-//       <div style={{ ...styles.cardTitle, color: theme.colors.text }}>
-//         📋 Today's Status
-//       </div>
-//       <div style={styles.detailRow}>
-//         <div style={{ ...styles.detailLabel, color: theme.colors.textSecondary }}>
-//           Shift:
-//         </div>
-//         <div style={{ ...styles.detailValue, color: theme.colors.text }}>
-//           {agentShift?.name || 'Not Assigned'}
-//         </div>
-//       </div>
-//       <div style={styles.detailRow}>
-//         <div style={{ ...styles.detailLabel, color: theme.colors.textSecondary }}>
-//           Timing:
-//         </div>
-//         <div style={{ ...styles.detailValue, color: theme.colors.text }}>
-//           {getShiftTiming()}
-//         </div>
-//       </div>
-//       <div style={styles.detailRow}>
-//         <div style={{ ...styles.detailLabel, color: theme.colors.textSecondary }}>
-//           Status:
-//         </div>
-//         <div
-//           style={{
-//             ...styles.detailValue,
-//             color: todayAttendance ? '#4CAF50' : '#FF9800',
-//             fontWeight: 'bold',
-//           }}
-//         >
-//           {getStatusIcon()} {getCurrentStatus()}
-//         </div>
-//       </div>
-//       {todayAttendance && !todayAttendance.checkOutTime && (
-//         <div style={styles.detailRow}>
-//           <div style={{ ...styles.detailLabel, color: theme.colors.textSecondary }}>
-//             Working Time:
-//           </div>
-//           <div style={{ ...styles.detailValue, color: theme.colors.primary, fontWeight: 'bold' }}>
-//             ⏱️ {workingTime}
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default TodayStatusCard;
-
-
-
-
-
-import React from 'react';
-import { ThemeContext } from '../context/ThemeContext';
-import { formatTime } from '@/utils/timezone';
-
-const styles = {
-  infoCard: {
-    padding: '20px',
-    marginBottom: '16px',
-    borderRadius: '16px',
-    borderWidth: '1px',
-    borderStyle: 'solid',
-  },
-  cardTitle: {
-    fontSize: '18px',
-    fontWeight: 'bold',
-    marginBottom: '16px',
-    textAlign: 'center',
-  },
-  detailRow: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '8px 0',
-  },
-  detailLabel: {
-    fontSize: '14px',
-    flex: 1,
-  },
-  detailValue: {
-    fontSize: '14px',
-    fontWeight: 600,
-    textAlign: 'right',
-    flex: 1,
-  },
-};
+// src/components/TodayStatusCard.jsx
+import React from "react";
+import { Clock, CheckCircle2, XCircle, Timer } from "lucide-react";
+import { formatTime } from "@/utils/timezone";
 
 const TodayStatusCard = ({ todayAttendance, agentShift, workingTime }) => {
-  const { theme } = React.useContext(ThemeContext);
-
   const getShiftTiming = () => {
-    if (!agentShift) return 'No shift assigned';
-
-    const formatTime = (timeStr) => {
-      if (!timeStr) return '--:--';
-      const [hours, minutes] = timeStr.split(':');
-      return `${hours}:${minutes}`;
+    if (!agentShift) return "No shift assigned";
+    const fmt = (t) => {
+      if (!t) return "--:--";
+      const [h, m] = t.split(":");
+      return `${h}:${m}`;
     };
-
-    return `${formatTime(agentShift.startTime)} - ${formatTime(agentShift.endTime)}`;
+    return `${fmt(agentShift.startTime)} – ${fmt(agentShift.endTime)}`;
   };
 
-  const getCurrentStatus = () => {
-    if (!todayAttendance) return 'Not Checked In';
-    if (todayAttendance.checkOutTime) return 'Checked Out';
-    return 'Checked In - Working';
-  };
+  const { status, label, icon } = !todayAttendance
+    ? {
+        status: "idle",
+        label: "Not Checked In",
+        icon: <XCircle className="h-4 w-4 text-gray-400" />,
+      }
+    : todayAttendance.checkOutTime
+      ? {
+          status: "done",
+          label: "Checked Out",
+          icon: <CheckCircle2 className="h-4 w-4 text-green-500" />,
+        }
+      : {
+          status: "working",
+          label: "Checked In — Working",
+          icon: (
+            <div className="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse" />
+          ),
+        };
 
-  const getStatusIcon = () => {
-    if (!todayAttendance) return '❌';
-    if (todayAttendance.checkOutTime) return '✅';
-    return '🟢';
-  };
+  const rows = [
+    { label: "Shift", value: agentShift?.name || "Not Assigned" },
+    { label: "Timing", value: getShiftTiming() },
+    {
+      label: "Status",
+      value: label,
+      extra: icon,
+      valueClass:
+        status === "working"
+          ? "text-green-600"
+          : status === "done"
+            ? "text-blue-600"
+            : "text-gray-500",
+    },
+    ...(todayAttendance && !todayAttendance.checkOutTime
+      ? [
+          {
+            label: "Working Time",
+            value: workingTime,
+            valueClass: "text-blue-600 font-mono font-bold",
+            icon: <Timer className="h-3.5 w-3.5 text-blue-400" />,
+          },
+        ]
+      : []),
+  ];
 
   return (
-    <div
-      style={{
-        ...styles.infoCard,
-        backgroundColor: theme.colors.card,
-        borderColor: theme.colors.border,
-      }}
-    >
-      <div style={{ ...styles.cardTitle, color: theme.colors.text }}>
-        📋 Today's Status
-      </div>
-      <div style={styles.detailRow}>
-        <div style={{ ...styles.detailLabel, color: theme.colors.textSecondary }}>
-          Shift:
-        </div>
-        <div style={{ ...styles.detailValue, color: theme.colors.text }}>
-          {agentShift?.name || 'Not Assigned'}
-        </div>
-      </div>
-      <div style={styles.detailRow}>
-        <div style={{ ...styles.detailLabel, color: theme.colors.textSecondary }}>
-          Timing:
-        </div>
-        <div style={{ ...styles.detailValue, color: theme.colors.text }}>
-          {getShiftTiming()}
-        </div>
-      </div>
-      <div style={styles.detailRow}>
-        <div style={{ ...styles.detailLabel, color: theme.colors.textSecondary }}>
-          Status:
-        </div>
+    <div className="space-y-2">
+      {rows.map(({ label, value, extra, valueClass, icon }) => (
         <div
-          style={{
-            ...styles.detailValue,
-            color: todayAttendance ? '#4CAF50' : '#FF9800',
-            fontWeight: 'bold',
-          }}
+          key={label}
+          className="flex items-center justify-between py-1.5 border-b border-gray-50 last:border-0"
         >
-          {getStatusIcon()} {getCurrentStatus()}
-        </div>
-      </div>
-      {todayAttendance && !todayAttendance.checkOutTime && (
-        <div style={styles.detailRow}>
-          <div style={{ ...styles.detailLabel, color: theme.colors.textSecondary }}>
-            Working Time:
+          <span className="text-sm text-gray-500 font-medium">{label}</span>
+          <div className="flex items-center gap-1.5">
+            {extra}
+            {icon}
+            <span
+              className={`text-sm font-semibold text-gray-800 ${valueClass || ""}`}
+            >
+              {value}
+            </span>
           </div>
-          <div style={{ ...styles.detailValue, color: theme.colors.primary, fontWeight: 'bold' }}>
-            ⏱️ {workingTime}
-          </div>
         </div>
-      )}
+      ))}
     </div>
   );
 };

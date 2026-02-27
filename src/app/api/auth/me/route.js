@@ -75,6 +75,7 @@ export async function GET(request) {
           lastLogin: user.lastLogin,
           permissions: user.role.permissions,
         },
+        token,
       },
     });
   } catch (error) {

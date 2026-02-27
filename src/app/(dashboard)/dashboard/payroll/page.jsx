@@ -1,4 +1,3 @@
-//src/app/(dashboard)/dashboard/payroll/page.jsx
 "use client";
 import React, { useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
@@ -9,10 +8,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import * as XLSX from 'xlsx';
-import { Download, FileSpreadsheet, Printer, Users, DollarSign, Clock, CheckCircle2, ChevronLeft, ChevronRight, FileText, Eye } from "lucide-react";
+import { Download, FileSpreadsheet, Printer, Users, DollarSign, Clock, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import GenerateAllSalaryModal from "@/components/GenerateAllSalaryModal";
-import PayrollDescriptionModal from "@/components/payroll/PayrollDescriptionModal"; // ADD THIS IMPORT
 
 export default function PayrollAdminPage() {
   const { user, hasPermission } = useAuth();
@@ -38,13 +36,18 @@ export default function PayrollAdminPage() {
   const [payrolls, setPayrolls] = useState([]);
   const [loading, setLoading] = useState(false);
   const [generateAllModalOpen, setGenerateAllModalOpen] = useState(false);
-  
-  // NEW: State for description modal
-  const [descriptionModalOpen, setDescriptionModalOpen] = useState(false);
-  const [selectedPayroll, setSelectedPayroll] = useState(null);
 
   useEffect(() => {
-    if (canView) fetchPayrolls(1);
+    if (canView) fetchPayrolls(1); // load page 1 on mount or filter change
+  }, [canView]); // removed filters dependency to avoid double fetch, trigger manually for filter
+  
+  // Trigger fetch when filters change (debounced or manual button?) - Instructions say "jb filter chale to data dikhao"
+  // The existing code had a manual "Filter" button, which is good.
+  // But we want initial load to use the defaults.
+  
+  // Let's modify:
+  useEffect(() => {
+     if(canView) fetchPayrolls(1);
   }, []); 
 
   async function fetchPayrolls(pageOverride) {
@@ -61,6 +64,7 @@ export default function PayrollAdminPage() {
       params.append('limit', pagination.limit);
 
       const res = await fetch(`/api/payroll?${params.toString()}`);
+      // Be defensive: some endpoints may return empty body or non-JSON on error
       const text = await res.text();
       if (!text) {
         setPayrolls([]);
@@ -117,12 +121,6 @@ export default function PayrollAdminPage() {
     }
   }
 
-  // NEW: Function to open description modal
-  const handleViewDetails = (payroll) => {
-    setSelectedPayroll(payroll);
-    setDescriptionModalOpen(true);
-  };
-
   function getMonthName(m) {
     if (!m) return '';
     try {
@@ -160,6 +158,7 @@ export default function PayrollAdminPage() {
   function handlePrintReport() {
     if (payrolls.length === 0) return toast.error("No data to print");
 
+    // Open a new window for printing the table view
     const printWindow = window.open('', '_blank', 'width=1000,height=800');
     if (!printWindow) return toast.error("Pop-up blocked");
 
@@ -222,6 +221,7 @@ export default function PayrollAdminPage() {
   }
 
   function openPayslip(payroll) {
+    // opens a new printable page for the payroll payslip
     window.open(`/dashboard/payroll/payslip/${payroll._id}`, '_blank');
   }
 
@@ -238,7 +238,7 @@ export default function PayrollAdminPage() {
   const formatCurrency = (val) => new Intl.NumberFormat('en-PK', { style: 'currency', currency: 'PKR', maximumFractionDigits: 0 }).format(val);
 
   const handleGenerateAllSuccess = () => {
-    fetchPayrolls(1);
+    fetchPayrolls(1); // Refresh the payroll list
   };
 
   if (!canView) return <div className="p-6">You do not have permission to view payrolls.</div>;
@@ -416,39 +416,14 @@ export default function PayrollAdminPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          {/* NEW: View Details Button */}
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleViewDetails(p)}
-                            className="flex items-center gap-1 text-blue-600 border-blue-200 hover:bg-blue-50"
-                            title="View detailed salary breakdown"
-                          >
-                            <Eye className="h-3.5 w-3.5" />
-                            Details
-                          </Button>
-
-                          {/* View Slip Button - Only for paid status */}
-                          {p.status === 'paid' && (
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              onClick={()=> openPayslip(p)}
-                              className="flex items-center gap-1"
-                            >
-                              <FileText className="h-3.5 w-3.5" />
-                              Slip
-                            </Button>
-                          )}
-                          
-                          {/* Mark Paid/Unpaid Button */}
+                          <Button size="sm" variant="outline" onClick={()=> openPayslip(p)} disabled={p.status !== 'paid'}>View Slip</Button>
                           {canPay && (
                              <Button 
                                 size="sm" 
                                 variant={p.status === 'paid' ? "secondary" : "default"}
                                 onClick={()=> togglePaid(p)}
                              >
-                                {p.status === 'paid' ? 'Unpaid' : 'Paid'}
+                                {p.status === 'paid' ? 'Mark Unpaid' : 'Mark Paid'}
                              </Button>
                           )}
                         </div>
@@ -499,17 +474,6 @@ export default function PayrollAdminPage() {
         isOpen={generateAllModalOpen}
         onClose={() => setGenerateAllModalOpen(false)}
         onSuccess={handleGenerateAllSuccess}
-      />
-
-      {/* NEW: Payroll Description Modal */}
-      <PayrollDescriptionModal
-        isOpen={descriptionModalOpen}
-        onClose={() => {
-          setDescriptionModalOpen(false);
-          setSelectedPayroll(null);
-        }}
-        payrollId={selectedPayroll?._id}
-        payrollData={selectedPayroll}
       />
     </div>
   );

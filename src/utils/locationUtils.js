@@ -150,12 +150,12 @@ export const getDistance = (lat1, lon1, lat2, lon2) => {
   const Δλ = ((lon2 - lon1) * Math.PI) / 180;
 
   const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-            Math.cos(φ1) * Math.cos(φ2) *
-            Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-  
+    Math.cos(φ1) * Math.cos(φ2) *
+    Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   const distance = R * c;
-  
+
   console.log('📏 Distance calculated:', distance, 'meters');
   return distance;
 };
@@ -173,26 +173,31 @@ export const getAddressFromCoords = async (latitude, longitude) => {
       {
         signal: controller.signal,
         headers: {
-          'User-Agent': 'AgentApp/1.0',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         },
       }
     );
-    
+
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      throw new Error('Geocoding API error');
+      throw new Error(`Geocoding API error: ${response.status}`);
     }
-    
+
     const data = await response.json();
-    
+
     if (data && data.display_name) {
       return data.display_name;
     }
-    
+
     return 'Address not found';
   } catch (error) {
-    console.error('❌ Reverse geocoding error:', error);
+    if (error.name === 'AbortError') {
+      console.warn('⚠️ Reverse geocoding timeout');
+    } else {
+      console.warn('⚠️ Reverse geocoding failed:', error.message);
+    }
+    // Return formatted coordinates as fallback
     return `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
   }
 };
@@ -220,13 +225,13 @@ export const checkLocationPermissions = async () => {
 export const getEnhancedLocation = async () => {
   try {
     console.log('🔍 Attempting to get enhanced location...');
-    
+
     // Try to get fresh location directly - don't check permissions first
     // as permission check might fail on some browsers/scenarios
     try {
       const location = await getCurrentLocation();
       console.log('✅ Got location from browser GPS:', location);
-      
+
       // Try to get address
       let address = `${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}`;
       try {
@@ -235,7 +240,7 @@ export const getEnhancedLocation = async () => {
       } catch (addressError) {
         console.warn('⚠️ Address lookup failed, using coordinates:', addressError.message);
       }
-      
+
       return {
         ...location,
         address,
@@ -244,7 +249,7 @@ export const getEnhancedLocation = async () => {
       };
     } catch (geoError) {
       console.warn('⚠️ GPS location failed:', geoError.message);
-      
+
       // Try to get cached location from localStorage
       try {
         const cachedLocation = localStorage.getItem('agentLocation');
@@ -262,7 +267,7 @@ export const getEnhancedLocation = async () => {
       } catch (cacheError) {
         console.error('❌ Cache read error:', cacheError);
       }
-      
+
       throw geoError;
     }
   } catch (error) {
@@ -291,12 +296,12 @@ export const getHighAccuracyLocation = () => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude, accuracy } = position.coords;
-        console.log('📍 High accuracy location fetched:', { 
-          latitude, 
-          longitude, 
-          accuracy: `${accuracy} meters` 
+        console.log('📍 High accuracy location fetched:', {
+          latitude,
+          longitude,
+          accuracy: `${accuracy} meters`
         });
-        
+
         resolve({
           latitude,
           longitude,
@@ -305,7 +310,7 @@ export const getHighAccuracyLocation = () => {
       },
       (error) => {
         console.error('❌ High accuracy location error:', error);
-        
+
         let errorMessage = 'Failed to get accurate location';
         switch (error.code) {
           case error.PERMISSION_DENIED:
@@ -321,7 +326,7 @@ export const getHighAccuracyLocation = () => {
             errorMessage = 'An unknown error occurred while getting location.';
             break;
         }
-        
+
         reject(new Error(errorMessage));
       },
       options

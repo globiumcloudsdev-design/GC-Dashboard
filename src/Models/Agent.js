@@ -39,35 +39,35 @@
 //     type: String,
 //     trim: true
 //   },
-  
+
 //   // ✅ Monthly Target Types
 //   monthlyTargetType: {
 //     type: String,
 //     enum: ['none', 'digit', 'amount', 'both'],
 //     default: 'none'
 //   },
-  
+
 //   // Digit Target (e.g., 100 calls, 50 settlements)
 //   monthlyDigitTarget: {
 //     type: Number,
 //     default: 0,
 //     min: [0, 'Digit target cannot be negative']
 //   },
-  
+
 //   // Amount Target (e.g., 500000 revenue, 1000000 sales)
 //   monthlyAmountTarget: {
 //     type: Number,
 //     default: 0,
 //     min: [0, 'Amount target cannot be negative']
 //   },
-  
+
 //   // Currency for amount target
 //   targetCurrency: {
 //     type: String,
 //     default: 'PKR',
 //     enum: ['PKR', 'USD', 'EUR', 'GBP']
 //   },
-  
+
 //   // Salary Details
 //   basicSalary: {
 //     type: Number,
@@ -124,7 +124,7 @@ const agentSchema = new mongoose.Schema({
     trim: true,
     uppercase: true,
     validate: {
-      validator: function(v) {
+      validator: function (v) {
         return /^[A-Z]{2}\d{4}$/.test(v);
       },
       message: props => `${props.value} is not a valid Agent ID! Format: 2 letters followed by 4 digits (e.g., AB1234)`
@@ -149,35 +149,35 @@ const agentSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
-  
+
   // ✅ Monthly Target Types
   monthlyTargetType: {
     type: String,
     enum: ['none', 'digit', 'amount', 'both'],
     default: 'none'
   },
-  
+
   // Digit Target (e.g., 100 calls, 50 settlements)
   monthlyDigitTarget: {
     type: Number,
     default: 0,
     min: [0, 'Digit target cannot be negative']
   },
-  
+
   // Amount Target (e.g., 500000 revenue, 1000000 sales)
   monthlyAmountTarget: {
     type: Number,
     default: 0,
     min: [0, 'Amount target cannot be negative']
   },
-  
+
   // Currency for amount target
   targetCurrency: {
     type: String,
     default: 'PKR',
     enum: ['PKR', 'USD', 'EUR', 'GBP']
   },
-  
+
   // Salary Details
   basicSalary: {
     type: Number,
@@ -209,7 +209,7 @@ const agentSchema = new mongoose.Schema({
     enum: ['fixed', 'percentage'],
     default: 'fixed'
   },
-  
+
   // After Target Incentive (when target is achieved)
   perSaleIncentiveAfterTarget: {
     type: Number,
@@ -221,14 +221,14 @@ const agentSchema = new mongoose.Schema({
     enum: ['fixed', 'percentage'],
     default: 'fixed'
   },
-  
+
   // Additional settings for percentage calculation
   incentivePercentageOn: {
     type: String,
     enum: ['sale_amount', 'profit', 'revenue'],
     default: 'sale_amount'
   },
-  
+
   // Minimum sale amount for incentive eligibility
   minSaleAmountForIncentive: {
     type: Number,
@@ -272,6 +272,8 @@ const agentSchema = new mongoose.Schema({
   },
   resetPasswordToken: String,
   resetPasswordExpires: Date,
+  pushTokens: [{ type: String }],
+  profilePicture: { type: String },
   isActive: {
     type: Boolean,
     default: true
@@ -281,36 +283,36 @@ const agentSchema = new mongoose.Schema({
 });
 
 // ✅ Helper method to calculate incentive for a sale
-agentSchema.methods.calculateIncentive = function(achievedDigit = 0, achievedAmount = 0, saleAmount = 0, saleProfit = 0) {
+agentSchema.methods.calculateIncentive = function (achievedDigit = 0, achievedAmount = 0, saleAmount = 0, saleProfit = 0) {
   let incentive = 0;
   let isTargetAchieved = false;
-  
+
   // Check if target is achieved
   if (this.monthlyTargetType === 'digit') {
     isTargetAchieved = achievedDigit >= this.monthlyDigitTarget;
   } else if (this.monthlyTargetType === 'amount') {
     isTargetAchieved = achievedAmount >= this.monthlyAmountTarget;
   } else if (this.monthlyTargetType === 'both') {
-    isTargetAchieved = achievedDigit >= this.monthlyDigitTarget && 
-                      achievedAmount >= this.monthlyAmountTarget;
+    isTargetAchieved = achievedDigit >= this.monthlyDigitTarget &&
+      achievedAmount >= this.monthlyAmountTarget;
   } else {
     // 'none' - no target, always use in target incentive
     isTargetAchieved = false;
   }
-  
+
   // Check minimum sale amount eligibility
   if (saleAmount < this.minSaleAmountForIncentive) {
     return { incentive: 0, isTargetAchieved, message: 'Sale amount below minimum threshold' };
   }
-  
+
   if (isTargetAchieved) {
     // After target incentive calculation
     if (this.afterTargetIncentiveType === 'fixed') {
       incentive = this.perSaleIncentiveAfterTarget;
     } else if (this.afterTargetIncentiveType === 'percentage') {
       const baseAmount = this.incentivePercentageOn === 'sale_amount' ? saleAmount :
-                        this.incentivePercentageOn === 'profit' ? saleProfit :
-                        saleAmount; // revenue is same as sale_amount for now
+        this.incentivePercentageOn === 'profit' ? saleProfit :
+          saleAmount; // revenue is same as sale_amount for now
       incentive = (baseAmount * this.perSaleIncentiveAfterTarget) / 100;
     }
   } else {
@@ -319,12 +321,12 @@ agentSchema.methods.calculateIncentive = function(achievedDigit = 0, achievedAmo
       incentive = this.perSaleIncentiveInTarget;
     } else if (this.inTargetIncentiveType === 'percentage') {
       const baseAmount = this.incentivePercentageOn === 'sale_amount' ? saleAmount :
-                        this.incentivePercentageOn === 'profit' ? saleProfit :
-                        saleAmount;
+        this.incentivePercentageOn === 'profit' ? saleProfit :
+          saleAmount;
       incentive = (baseAmount * this.perSaleIncentiveInTarget) / 100;
     }
   }
-  
+
   return {
     incentive,
     isTargetAchieved,
@@ -335,7 +337,7 @@ agentSchema.methods.calculateIncentive = function(achievedDigit = 0, achievedAmo
 };
 
 // ✅ Virtual for total incentive potential
-agentSchema.virtual('estimatedMonthlyIncentive').get(function() {
+agentSchema.virtual('estimatedMonthlyIncentive').get(function () {
   if (this.monthlyTargetType === 'digit' && this.inTargetIncentiveType === 'fixed') {
     return this.monthlyDigitTarget * this.perSaleIncentiveInTarget;
   } else if (this.monthlyTargetType === 'amount' && this.inTargetIncentiveType === 'percentage') {

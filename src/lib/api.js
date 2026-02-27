@@ -20,7 +20,11 @@ api.interceptors.request.use(
     if (showLoader) showLoader();
 
     // Add authorization header if token exists
-    const token = localStorage.getItem('agentToken') || localStorage.getItem('accessToken');
+    // ✅ Smart token: Agent pages → agentToken, Admin pages → admin token
+    const isAgentPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/agent');
+    const token = isAgentPage
+      ? (localStorage.getItem('agentToken') || localStorage.getItem('token') || localStorage.getItem('accessToken'))
+      : (localStorage.getItem('token') || localStorage.getItem('accessToken') || localStorage.getItem('agentToken'));
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

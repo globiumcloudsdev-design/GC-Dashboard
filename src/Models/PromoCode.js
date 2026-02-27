@@ -46,7 +46,6 @@ const promoCodeSchema = new mongoose.Schema({
 });
 
 // Index for better performance
-promoCodeSchema.index({ promoCode: 1 });
 promoCodeSchema.index({ agentId: 1 });
 promoCodeSchema.index({ validUntil: 1 });
 promoCodeSchema.index({ isActive: 1 });

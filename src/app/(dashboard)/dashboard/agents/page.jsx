@@ -1,14 +1,14 @@
 // src/app/(dashboard)/dashboard/agents/page.jsx
 "use client";
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
-import { agentService } from '@/services/agentService';
-import { shiftService } from '@/services/shiftService';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { agentService } from "@/services/agentService";
+import { shiftService } from "@/services/shiftService";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -16,23 +16,23 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter
-} from '@/components/ui/dialog';
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -49,13 +49,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ResetPasswordDialog } from '@/components/ResetPasswordDialog';
-import { 
-  Search, 
-  ChevronLeft, 
-  ChevronRight, 
-  ChevronsLeft, 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ResetPasswordDialog } from "@/components/ResetPasswordDialog";
+import {
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
   ChevronsRight,
   Eye,
   Edit,
@@ -80,47 +80,47 @@ import {
   Upload,
   FileText,
   X,
-  Loader2
-} from 'lucide-react';
+  Loader2,
+} from "lucide-react";
 
 // Constants
 const EMPLOYEE_TYPES = [
-  { value: 'Permanent', label: 'Permanent' },
-  { value: 'Contract', label: 'Contract' },
-  { value: 'Temporary', label: 'Temporary' },
-  { value: 'Probation', label: 'Probation' },
-  { value: 'Intern', label: 'Intern' }
+  { value: "Permanent", label: "Permanent" },
+  { value: "Contract", label: "Contract" },
+  { value: "Temporary", label: "Temporary" },
+  { value: "Probation", label: "Probation" },
+  { value: "Intern", label: "Intern" },
 ];
 
 const DESIGNATIONS = [
-  { value: 'Sales Agent', label: 'Sales Agent' },
-  { value: 'Senior Agent', label: 'Senior Agent' },
-  { value: 'Team Lead', label: 'Team Lead' },
-  { value: 'Supervisor', label: 'Supervisor' },
-  { value: 'Manager', label: 'Manager' },
-  { value: 'Executive', label: 'Executive' },
-  { value: 'Trainee', label: 'Trainee' }
+  { value: "Sales Agent", label: "Sales Agent" },
+  { value: "Senior Agent", label: "Senior Agent" },
+  { value: "Team Lead", label: "Team Lead" },
+  { value: "Supervisor", label: "Supervisor" },
+  { value: "Manager", label: "Manager" },
+  { value: "Executive", label: "Executive" },
+  { value: "Trainee", label: "Trainee" },
 ];
 
 const TARGET_TYPES = [
-  { value: 'none', label: 'No Target' },
-  { value: 'digit', label: 'Digit Target (Quantity)' },
-  { value: 'amount', label: 'Amount Target (Revenue)' },
-  { value: 'both', label: 'Both Targets' }
+  { value: "none", label: "No Target" },
+  { value: "digit", label: "Digit Target (Quantity)" },
+  { value: "amount", label: "Amount Target (Revenue)" },
+  { value: "both", label: "Both Targets" },
 ];
 
 const CURRENCIES = [
-  { value: 'PKR', label: 'PKR' },
-  { value: 'USD', label: 'USD' },
-  { value: 'EUR', label: 'EUR' },
-  { value: 'GBP', label: 'GBP' }
+  { value: "PKR", label: "PKR" },
+  { value: "USD", label: "USD" },
+  { value: "EUR", label: "EUR" },
+  { value: "GBP", label: "GBP" },
 ];
 
 const PAGE_SIZES = [
-  { value: 5, label: '5 / page' },
-  { value: 10, label: '10 / page' },
-  { value: 20, label: '20 / page' },
-  { value: 50, label: '50 / page' }
+  { value: 5, label: "5 / page" },
+  { value: 10, label: "10 / page" },
+  { value: 20, label: "20 / page" },
+  { value: 50, label: "50 / page" },
 ];
 
 const DOCUMENT_TYPES = [
@@ -131,13 +131,13 @@ const DOCUMENT_TYPES = [
   "Photos",
   "Bank Letter",
   "Medical Certificate",
-  "Profile Photo"
+  "Profile Photo",
 ];
 
 const MULTIPLE_ALLOWED_TYPES = [
   "Educational Certificates",
   "Experience Certificates",
-  "Photos"
+  "Photos",
 ];
 
 export default function AgentsPage() {
@@ -161,78 +161,78 @@ export default function AgentsPage() {
   const [pageSize, setPageSize] = useState(5);
 
   // Filter state
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedShift, setSelectedShift] = useState('all');
-  const [selectedStatus, setSelectedStatus] = useState('all');
-  const [selectedEmployeeType, setSelectedEmployeeType] = useState('all');
-  const [selectedTargetType, setSelectedTargetType] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedShift, setSelectedShift] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [selectedEmployeeType, setSelectedEmployeeType] = useState("all");
+  const [selectedTargetType, setSelectedTargetType] = useState("all");
 
   // Form states
   const [formData, setFormData] = useState({
-    agentName: '',
-    agentId: '',
-    shift: '',
-    email: '',
-    phone: '',
-    password: '',
-    monthlyTargetType: 'none',
-    monthlyDigitTarget: '',
-    monthlyAmountTarget: '',
-    targetCurrency: 'PKR',
-    employeeType: 'Permanent',
-    designation: '',
-    basicSalary: '',
-    attendanceAllowance: '',
+    agentName: "",
+    agentId: "",
+    shift: "",
+    email: "",
+    phone: "",
+    password: "",
+    monthlyTargetType: "none",
+    monthlyDigitTarget: "",
+    monthlyAmountTarget: "",
+    targetCurrency: "PKR",
+    employeeType: "Permanent",
+    designation: "",
+    basicSalary: "",
+    attendanceAllowance: "",
     // New Incentive Fields
-    commissionType: 'Basic + Commission',
-    perSaleIncentiveInTarget: '',
-    inTargetIncentiveType: 'fixed',
-    perSaleIncentiveAfterTarget: '',
-    afterTargetIncentiveType: 'fixed',
-    incentivePercentageOn: 'sale_amount',
-    minSaleAmountForIncentive: '',
+    commissionType: "Basic + Commission",
+    perSaleIncentiveInTarget: "",
+    inTargetIncentiveType: "fixed",
+    perSaleIncentiveAfterTarget: "",
+    afterTargetIncentiveType: "fixed",
+    incentivePercentageOn: "sale_amount",
+    minSaleAmountForIncentive: "",
     bankDetails: {
-      bankName: '',
-      accountTitle: '',
-      accountNumber: '',
-      iban: '',
-      branchCode: ''
+      bankName: "",
+      accountTitle: "",
+      accountNumber: "",
+      iban: "",
+      branchCode: "",
     },
-    documents: []
+    documents: [],
   });
 
   const [editFormData, setEditFormData] = useState({
-    _id: '',
-    agentName: '',
-    agentId: '',
-    shift: '',
-    email: '',
-    phone: '',
-    monthlyTargetType: 'none',
-    monthlyDigitTarget: '',
-    monthlyAmountTarget: '',
-    targetCurrency: 'PKR',
-    employeeType: 'Permanent',
-    designation: '',
+    _id: "",
+    agentName: "",
+    agentId: "",
+    shift: "",
+    email: "",
+    phone: "",
+    monthlyTargetType: "none",
+    monthlyDigitTarget: "",
+    monthlyAmountTarget: "",
+    targetCurrency: "PKR",
+    employeeType: "Permanent",
+    designation: "",
     isActive: true,
-    basicSalary: '',
-    attendanceAllowance: '',
+    basicSalary: "",
+    attendanceAllowance: "",
     // New Incentive Fields
-    commissionType: 'Basic + Commission',
-    perSaleIncentiveInTarget: '',
-    inTargetIncentiveType: 'fixed',
-    perSaleIncentiveAfterTarget: '',
-    afterTargetIncentiveType: 'fixed',
-    incentivePercentageOn: 'sale_amount',
-    minSaleAmountForIncentive: '',
+    commissionType: "Basic + Commission",
+    perSaleIncentiveInTarget: "",
+    inTargetIncentiveType: "fixed",
+    perSaleIncentiveAfterTarget: "",
+    afterTargetIncentiveType: "fixed",
+    incentivePercentageOn: "sale_amount",
+    minSaleAmountForIncentive: "",
     bankDetails: {
-      bankName: '',
-      accountTitle: '',
-      accountNumber: '',
-      iban: '',
-      branchCode: ''
+      bankName: "",
+      accountTitle: "",
+      accountNumber: "",
+      iban: "",
+      branchCode: "",
     },
-    documents: []
+    documents: [],
   });
 
   const [shifts, setShifts] = useState([]);
@@ -252,8 +252,8 @@ export default function AgentsPage() {
       const response = await shiftService.getShiftsForDropdown();
       setShifts(response);
     } catch (error) {
-      console.error('Error fetching shifts:', error);
-      toast.error('Error fetching shifts');
+      console.error("Error fetching shifts:", error);
+      toast.error("Error fetching shifts");
     } finally {
       setShiftsLoading(false);
     }
@@ -266,7 +266,7 @@ export default function AgentsPage() {
       const params = {
         page: currentPage,
         limit: pageSize,
-        search: searchTerm
+        search: searchTerm,
       };
 
       const response = await agentService.getAllAgents(params);
@@ -274,25 +274,31 @@ export default function AgentsPage() {
       setTotalPages(response.pagination?.totalPages || 1);
       setTotalAgents(response.pagination?.total || response.totalAgents || 0);
     } catch (error) {
-      console.error('Error fetching agents:', error);
-      toast.error('Error fetching agents');
+      console.error("Error fetching agents:", error);
+      toast.error("Error fetching agents");
     } finally {
       setLoading(false);
     }
   };
 
   // Filter agents
-  const filteredAgents = agents.filter(agent => {
-    const matchesShift = selectedShift === 'all' || agent.shift?._id === selectedShift;
-    const matchesStatus = selectedStatus === 'all' ||
-      (selectedStatus === 'active' && agent.isActive) ||
-      (selectedStatus === 'inactive' && !agent.isActive);
-    const matchesEmployeeType = selectedEmployeeType === 'all' || 
+  const filteredAgents = agents.filter((agent) => {
+    const matchesShift =
+      selectedShift === "all" || agent.shift?._id === selectedShift;
+    const matchesStatus =
+      selectedStatus === "all" ||
+      (selectedStatus === "active" && agent.isActive) ||
+      (selectedStatus === "inactive" && !agent.isActive);
+    const matchesEmployeeType =
+      selectedEmployeeType === "all" ||
       agent.employeeType === selectedEmployeeType;
-    const matchesTargetType = selectedTargetType === 'all' || 
+    const matchesTargetType =
+      selectedTargetType === "all" ||
       agent.monthlyTargetType === selectedTargetType;
 
-    return matchesShift && matchesStatus && matchesEmployeeType && matchesTargetType;
+    return (
+      matchesShift && matchesStatus && matchesEmployeeType && matchesTargetType
+    );
   });
 
   // Event handlers
@@ -303,69 +309,74 @@ export default function AgentsPage() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    
+
     let newValue = value;
-    
-    if (name === 'agentId') {
-      newValue = value.toUpperCase().replace(/\s/g, '');
-    } else if (name === 'monthlyDigitTarget') {
-      newValue = value.replace(/[^0-9]/g, '');
-    } else if (name === 'monthlyAmountTarget') {
-      newValue = value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
+
+    if (name === "agentId") {
+      newValue = value.toUpperCase().replace(/\s/g, "");
+    } else if (name === "monthlyDigitTarget") {
+      newValue = value.replace(/[^0-9]/g, "");
+    } else if (name === "monthlyAmountTarget") {
+      newValue = value.replace(/[^0-9.]/g, "").replace(/(\..*)\./g, "$1");
     }
-    
+
     setFormData({
       ...formData,
-      [name]: newValue
+      [name]: newValue,
     });
   };
 
   const handleEditInputChange = (e) => {
     const { name, value } = e.target;
-    
+
     let newValue = value;
-    
-    if (name === 'agentId') {
-      newValue = value.toUpperCase().replace(/\s/g, '');
-    } else if (name === 'monthlyDigitTarget') {
-      newValue = value.replace(/[^0-9]/g, '');
-    } else if (name === 'monthlyAmountTarget') {
-      newValue = value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
+
+    if (name === "agentId") {
+      newValue = value.toUpperCase().replace(/\s/g, "");
+    } else if (name === "monthlyDigitTarget") {
+      newValue = value.replace(/[^0-9]/g, "");
+    } else if (name === "monthlyAmountTarget") {
+      newValue = value.replace(/[^0-9.]/g, "").replace(/(\..*)\./g, "$1");
     }
-    
+
     setEditFormData({
       ...editFormData,
-      [name]: newValue
+      [name]: newValue,
     });
   };
 
   const handleSelectChange = (name, value) => {
     // Logic for Target Type affecting Incentive Types
-    if (name === 'monthlyTargetType') {
+    if (name === "monthlyTargetType") {
       let newInTargetType = formData.inTargetIncentiveType;
       let newAfterTargetType = formData.afterTargetIncentiveType;
 
-      if (value === 'digit') {
-        newInTargetType = 'fixed';
-        newAfterTargetType = 'fixed';
-      } else if (value === 'amount') {
-        newInTargetType = 'percentage';
-        newAfterTargetType = 'percentage';
+      if (value === "digit") {
+        newInTargetType = "fixed";
+        newAfterTargetType = "fixed";
+      } else if (value === "amount") {
+        newInTargetType = "percentage";
+        newAfterTargetType = "percentage";
       }
 
-      setFormData({ 
-        ...formData, 
+      setFormData({
+        ...formData,
         [name]: value,
         inTargetIncentiveType: newInTargetType,
-        afterTargetIncentiveType: newAfterTargetType
+        afterTargetIncentiveType: newAfterTargetType,
       });
       return;
     }
 
     // Logic for Commission Type
-    if (name === 'commissionType' && value === 'Only Commission') {
-       setFormData({ ...formData, [name]: value, basicSalary: '0', attendanceAllowance: '0' });
-       return;
+    if (name === "commissionType" && value === "Only Commission") {
+      setFormData({
+        ...formData,
+        [name]: value,
+        basicSalary: "0",
+        attendanceAllowance: "0",
+      });
+      return;
     }
 
     setFormData({ ...formData, [name]: value });
@@ -373,31 +384,36 @@ export default function AgentsPage() {
 
   const handleEditSelectChange = (name, value) => {
     // Logic for Target Type affecting Incentive Types
-    if (name === 'monthlyTargetType') {
+    if (name === "monthlyTargetType") {
       let newInTargetType = editFormData.inTargetIncentiveType;
       let newAfterTargetType = editFormData.afterTargetIncentiveType;
 
-      if (value === 'digit') {
-        newInTargetType = 'fixed';
-        newAfterTargetType = 'fixed';
-      } else if (value === 'amount') {
-        newInTargetType = 'percentage';
-        newAfterTargetType = 'percentage';
+      if (value === "digit") {
+        newInTargetType = "fixed";
+        newAfterTargetType = "fixed";
+      } else if (value === "amount") {
+        newInTargetType = "percentage";
+        newAfterTargetType = "percentage";
       }
 
-      setEditFormData({ 
-        ...editFormData, 
+      setEditFormData({
+        ...editFormData,
         [name]: value,
         inTargetIncentiveType: newInTargetType,
-        afterTargetIncentiveType: newAfterTargetType
+        afterTargetIncentiveType: newAfterTargetType,
       });
       return;
     }
 
     // Logic for Commission Type
-    if (name === 'commissionType' && value === 'Only Commission') {
-       setEditFormData({ ...editFormData, [name]: value, basicSalary: '0', attendanceAllowance: '0' });
-       return;
+    if (name === "commissionType" && value === "Only Commission") {
+      setEditFormData({
+        ...editFormData,
+        [name]: value,
+        basicSalary: "0",
+        attendanceAllowance: "0",
+      });
+      return;
     }
 
     setEditFormData({ ...editFormData, [name]: value });
@@ -405,23 +421,23 @@ export default function AgentsPage() {
 
   const handleBankChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       bankDetails: {
         ...prev.bankDetails,
-        [name]: value
-      }
+        [name]: value,
+      },
     }));
   };
 
   const handleEditBankChange = (e) => {
     const { name, value } = e.target;
-    setEditFormData(prev => ({
+    setEditFormData((prev) => ({
       ...prev,
       bankDetails: {
         ...prev.bankDetails,
-        [name]: value
-      }
+        [name]: value,
+      },
     }));
   };
 
@@ -439,16 +455,16 @@ export default function AgentsPage() {
     try {
       const uploadPromises = files.map(async (file) => {
         const formData = new FormData();
-        formData.append('file', file);
-        formData.append('folder', 'agent-documents');
-        
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData
+        formData.append("file", file);
+        formData.append("folder", "agent-documents");
+
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
         });
-        
-        if (!response.ok) throw new Error('Upload failed');
-        
+
+        if (!response.ok) throw new Error("Upload failed");
+
         const json = await response.json();
         const uploadedFile = json.data || json;
 
@@ -458,22 +474,22 @@ export default function AgentsPage() {
           url: uploadedFile.url,
           publicId: uploadedFile.publicId,
           type: createDocType, // Classification Type
-          mimeType: file.type
+          mimeType: file.type,
         };
       });
 
       const uploadedDocs = await Promise.all(uploadPromises);
-      
-      setFormData(prev => ({
+
+      setFormData((prev) => ({
         ...prev,
-        documents: [...prev.documents, ...uploadedDocs]
+        documents: [...prev.documents, ...uploadedDocs],
       }));
       setCreateDocType(""); // Reset selection
-      if(e.target) e.target.value = null; // Reset input
-      toast.success('Documents uploaded successfully');
+      if (e.target) e.target.value = null; // Reset input
+      toast.success("Documents uploaded successfully");
     } catch (error) {
-      console.error('Upload Error:', error);
-      toast.error('Failed to upload documents');
+      console.error("Upload Error:", error);
+      toast.error("Failed to upload documents");
     } finally {
       setUploading(false);
     }
@@ -493,16 +509,16 @@ export default function AgentsPage() {
     try {
       const uploadPromises = files.map(async (file) => {
         const formData = new FormData();
-        formData.append('file', file);
-        formData.append('folder', 'agent-documents');
-        
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData
+        formData.append("file", file);
+        formData.append("folder", "agent-documents");
+
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
         });
-        
-        if (!response.ok) throw new Error('Upload failed');
-        
+
+        if (!response.ok) throw new Error("Upload failed");
+
         const json = await response.json();
         const uploadedFile = json.data || json;
 
@@ -512,44 +528,45 @@ export default function AgentsPage() {
           url: uploadedFile.url,
           publicId: uploadedFile.publicId,
           type: editDocType,
-          mimeType: file.type
+          mimeType: file.type,
         };
       });
 
       const uploadedDocs = await Promise.all(uploadPromises);
-      
-      setEditFormData(prev => ({
+
+      setEditFormData((prev) => ({
         ...prev,
-        documents: [...(prev.documents || []), ...uploadedDocs]
+        documents: [...(prev.documents || []), ...uploadedDocs],
       }));
       setEditDocType("");
-      if(e.target) e.target.value = null;
-      toast.success('Documents uploaded successfully');
+      if (e.target) e.target.value = null;
+      toast.success("Documents uploaded successfully");
     } catch (error) {
-      console.error('Upload Error:', error);
-      toast.error('Failed to upload documents');
+      console.error("Upload Error:", error);
+      toast.error("Failed to upload documents");
     } finally {
       setUploading(false);
     }
   };
 
   const handleFileDelete = (index) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      documents: prev.documents.filter((_, i) => i !== index)
+      documents: prev.documents.filter((_, i) => i !== index),
     }));
   };
 
   const handleEditFileDelete = (index) => {
-    setEditFormData(prev => ({
+    setEditFormData((prev) => ({
       ...prev,
-      documents: prev.documents.filter((_, i) => i !== index)
+      documents: prev.documents.filter((_, i) => i !== index),
     }));
   };
 
   const generatePassword = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%';
-    let password = '';
+    const chars =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%";
+    let password = "";
     for (let i = 0; i < 12; i++) {
       password += chars.charAt(Math.floor(Math.random() * chars.length));
     }
@@ -558,72 +575,88 @@ export default function AgentsPage() {
 
   const handleCreateAgent = async (e) => {
     e.preventDefault();
-    
+
     // Validations
     if (!formData.shift) {
-      toast.warning('Please select a shift');
+      toast.warning("Please select a shift");
       return;
     }
-    
+
     if (!validateAgentId(formData.agentId)) {
-      toast.warning('Agent ID must be in format: 2 letters + 4 digits (e.g., AB1234)');
+      toast.warning(
+        "Employee ID must be in format: 2 letters + 4 digits (e.g., AB1234)",
+      );
       return;
     }
-    
+
     setLoading(true);
     try {
       await agentService.createAgent({
         ...formData,
-        monthlyDigitTarget: formData.monthlyDigitTarget ? parseInt(formData.monthlyDigitTarget) : 0,
-        monthlyAmountTarget: formData.monthlyAmountTarget ? parseFloat(formData.monthlyAmountTarget) : 0,
+        monthlyDigitTarget: formData.monthlyDigitTarget
+          ? parseInt(formData.monthlyDigitTarget)
+          : 0,
+        monthlyAmountTarget: formData.monthlyAmountTarget
+          ? parseFloat(formData.monthlyAmountTarget)
+          : 0,
         agentId: formData.agentId.toUpperCase(),
-        basicSalary: formData.basicSalary ? parseFloat(formData.basicSalary) : 0,
-        attendanceAllowance: formData.attendanceAllowance ? parseFloat(formData.attendanceAllowance) : 0,
+        basicSalary: formData.basicSalary
+          ? parseFloat(formData.basicSalary)
+          : 0,
+        attendanceAllowance: formData.attendanceAllowance
+          ? parseFloat(formData.attendanceAllowance)
+          : 0,
         commissionType: formData.commissionType,
-        perSaleIncentiveInTarget: formData.perSaleIncentiveInTarget ? parseFloat(formData.perSaleIncentiveInTarget) : 0,
+        perSaleIncentiveInTarget: formData.perSaleIncentiveInTarget
+          ? parseFloat(formData.perSaleIncentiveInTarget)
+          : 0,
         inTargetIncentiveType: formData.inTargetIncentiveType,
-        perSaleIncentiveAfterTarget: formData.perSaleIncentiveAfterTarget ? parseFloat(formData.perSaleIncentiveAfterTarget) : 0,
+        perSaleIncentiveAfterTarget: formData.perSaleIncentiveAfterTarget
+          ? parseFloat(formData.perSaleIncentiveAfterTarget)
+          : 0,
         afterTargetIncentiveType: formData.afterTargetIncentiveType,
         incentivePercentageOn: formData.incentivePercentageOn,
-        minSaleAmountForIncentive: formData.minSaleAmountForIncentive ? parseFloat(formData.minSaleAmountForIncentive) : 0
+        minSaleAmountForIncentive: formData.minSaleAmountForIncentive
+          ? parseFloat(formData.minSaleAmountForIncentive)
+          : 0,
       });
-      toast.success('Agent created successfully!');
+      toast.success("Employee created successfully!");
       setShowCreateForm(false);
       setFormData({
-        agentName: '',
-        agentId: '',
-        shift: '',
-        email: '',
-        phone: '',
-        password: '',
-        monthlyTargetType: 'none',
-        monthlyDigitTarget: '',
-        monthlyAmountTarget: '',
-        targetCurrency: 'PKR',
-        employeeType: 'Permanent',
-        designation: '',
-        basicSalary: '',
-        attendanceAllowance: '',
-        commissionType: 'Basic + Commission',
-        perSaleIncentiveInTarget: '',
-        inTargetIncentiveType: 'fixed',
-        perSaleIncentiveAfterTarget: '',
-        afterTargetIncentiveType: 'fixed',
-        incentivePercentageOn: 'sale_amount',
-        minSaleAmountForIncentive: '',
+        agentName: "",
+        agentId: "",
+        shift: "",
+        email: "",
+        phone: "",
+        password: "",
+        monthlyTargetType: "none",
+        monthlyDigitTarget: "",
+        monthlyAmountTarget: "",
+        targetCurrency: "PKR",
+        employeeType: "Permanent",
+        designation: "",
+        basicSalary: "",
+        attendanceAllowance: "",
+        commissionType: "Basic + Commission",
+        perSaleIncentiveInTarget: "",
+        inTargetIncentiveType: "fixed",
+        perSaleIncentiveAfterTarget: "",
+        afterTargetIncentiveType: "fixed",
+        incentivePercentageOn: "sale_amount",
+        minSaleAmountForIncentive: "",
         bankDetails: {
-          bankName: '',
-          accountTitle: '',
-          accountNumber: '',
-          iban: '',
-          branchCode: ''
+          bankName: "",
+          accountTitle: "",
+          accountNumber: "",
+          iban: "",
+          branchCode: "",
         },
-        documents: []
+        documents: [],
       });
       fetchAgents();
     } catch (error) {
-      console.error('Error creating agent:', error);
-      toast.error(error.response?.data?.error || 'Error creating agent');
+      console.error("Error creating agent:", error);
+      toast.error(error.response?.data?.error || "Error creating employee");
     } finally {
       setLoading(false);
     }
@@ -632,15 +665,17 @@ export default function AgentsPage() {
   const handleEditAgent = async (e) => {
     e.preventDefault();
     if (!editFormData.shift) {
-      toast.warning('Please select a shift');
+      toast.warning("Please select a shift");
       return;
     }
-    
+
     if (!validateAgentId(editFormData.agentId)) {
-      toast.warning('Agent ID must be in format: 2 letters + 4 digits (e.g., AB1234)');
+      toast.warning(
+        "Employee ID must be in format: 2 letters + 4 digits (e.g., AB1234)",
+      );
       return;
     }
-    
+
     setLoading(true);
     try {
       await agentService.updateAgent(editFormData._id, {
@@ -650,63 +685,77 @@ export default function AgentsPage() {
         email: editFormData.email,
         phone: editFormData.phone,
         monthlyTargetType: editFormData.monthlyTargetType,
-        monthlyDigitTarget: editFormData.monthlyDigitTarget ? parseInt(editFormData.monthlyDigitTarget) : 0,
-        monthlyAmountTarget: editFormData.monthlyAmountTarget ? parseFloat(editFormData.monthlyAmountTarget) : 0,
+        monthlyDigitTarget: editFormData.monthlyDigitTarget
+          ? parseInt(editFormData.monthlyDigitTarget)
+          : 0,
+        monthlyAmountTarget: editFormData.monthlyAmountTarget
+          ? parseFloat(editFormData.monthlyAmountTarget)
+          : 0,
         targetCurrency: editFormData.targetCurrency,
         employeeType: editFormData.employeeType,
         designation: editFormData.designation,
         isActive: editFormData.isActive,
-        basicSalary: editFormData.basicSalary ? parseFloat(editFormData.basicSalary) : 0,
-        attendanceAllowance: editFormData.attendanceAllowance ? parseFloat(editFormData.attendanceAllowance) : 0,
+        basicSalary: editFormData.basicSalary
+          ? parseFloat(editFormData.basicSalary)
+          : 0,
+        attendanceAllowance: editFormData.attendanceAllowance
+          ? parseFloat(editFormData.attendanceAllowance)
+          : 0,
         commissionType: editFormData.commissionType,
-        perSaleIncentiveInTarget: editFormData.perSaleIncentiveInTarget ? parseFloat(editFormData.perSaleIncentiveInTarget) : 0,
+        perSaleIncentiveInTarget: editFormData.perSaleIncentiveInTarget
+          ? parseFloat(editFormData.perSaleIncentiveInTarget)
+          : 0,
         inTargetIncentiveType: editFormData.inTargetIncentiveType,
-        perSaleIncentiveAfterTarget: editFormData.perSaleIncentiveAfterTarget ? parseFloat(editFormData.perSaleIncentiveAfterTarget) : 0,
+        perSaleIncentiveAfterTarget: editFormData.perSaleIncentiveAfterTarget
+          ? parseFloat(editFormData.perSaleIncentiveAfterTarget)
+          : 0,
         afterTargetIncentiveType: editFormData.afterTargetIncentiveType,
         incentivePercentageOn: editFormData.incentivePercentageOn,
-        minSaleAmountForIncentive: editFormData.minSaleAmountForIncentive ? parseFloat(editFormData.minSaleAmountForIncentive) : 0,
+        minSaleAmountForIncentive: editFormData.minSaleAmountForIncentive
+          ? parseFloat(editFormData.minSaleAmountForIncentive)
+          : 0,
         bankDetails: editFormData.bankDetails,
-        documents: editFormData.documents
+        documents: editFormData.documents,
       });
-      toast.success('Agent updated successfully!');
+      toast.success("Employee updated successfully!");
       setShowEditForm(false);
       setEditFormData({
-        _id: '',
-        agentName: '',
-        agentId: '',
-        shift: '',
-        email: '',
-        phone: '',
-        monthlyTargetType: 'none',
-        monthlyDigitTarget: '',
-        monthlyAmountTarget: '',
-        targetCurrency: 'PKR',
-        employeeType: 'Permanent',
-        designation: 'Sales Agent',
+        _id: "",
+        agentName: "",
+        agentId: "",
+        shift: "",
+        email: "",
+        phone: "",
+        monthlyTargetType: "none",
+        monthlyDigitTarget: "",
+        monthlyAmountTarget: "",
+        targetCurrency: "PKR",
+        employeeType: "Permanent",
+        designation: "Sales Agent",
         isActive: true,
-        basicSalary: '',
-        attendanceAllowance: '',
-        perSaleIncentive: '',
-        commissionType: 'Basic + Commission',
-        perSaleIncentiveInTarget: '',
-        inTargetIncentiveType: 'fixed',
-        perSaleIncentiveAfterTarget: '',
-        afterTargetIncentiveType: 'fixed',
-        incentivePercentageOn: 'sale_amount',
-        minSaleAmountForIncentive: '',
+        basicSalary: "",
+        attendanceAllowance: "",
+        perSaleIncentive: "",
+        commissionType: "Basic + Commission",
+        perSaleIncentiveInTarget: "",
+        inTargetIncentiveType: "fixed",
+        perSaleIncentiveAfterTarget: "",
+        afterTargetIncentiveType: "fixed",
+        incentivePercentageOn: "sale_amount",
+        minSaleAmountForIncentive: "",
         bankDetails: {
-          bankName: '',
-          accountTitle: '',
-          accountNumber: '',
-          iban: '',
-          branchCode: ''
+          bankName: "",
+          accountTitle: "",
+          accountNumber: "",
+          iban: "",
+          branchCode: "",
         },
-        documents: []
+        documents: [],
       });
       fetchAgents();
     } catch (error) {
-      console.error('Error updating agent:', error);
-      toast.error(error.response?.data?.error || 'Error updating agent');
+      console.error("Error updating agent:", error);
+      toast.error(error.response?.data?.error || "Error updating employee");
     } finally {
       setLoading(false);
     }
@@ -717,33 +766,36 @@ export default function AgentsPage() {
       _id: agent._id,
       agentName: agent.agentName,
       agentId: agent.agentId,
-      shift: agent.shift?._id || '',
+      shift: agent.shift?._id || "",
       email: agent.email,
-      phone: agent.phone || '',
-      monthlyTargetType: agent.monthlyTargetType || 'none',
-      monthlyDigitTarget: agent.monthlyDigitTarget?.toString() || '',
-      monthlyAmountTarget: agent.monthlyAmountTarget?.toString() || '',
-      targetCurrency: agent.targetCurrency || 'PKR',
-      employeeType: agent.employeeType || 'Permanent',
-      designation: agent.designation || '',
+      phone: agent.phone || "",
+      monthlyTargetType: agent.monthlyTargetType || "none",
+      monthlyDigitTarget: agent.monthlyDigitTarget?.toString() || "",
+      monthlyAmountTarget: agent.monthlyAmountTarget?.toString() || "",
+      targetCurrency: agent.targetCurrency || "PKR",
+      employeeType: agent.employeeType || "Permanent",
+      designation: agent.designation || "",
       isActive: agent.isActive,
-      basicSalary: agent.basicSalary?.toString() || '',
-      attendanceAllowance: agent.attendanceAllowance?.toString() || '',
-      commissionType: agent.commissionType || 'Basic + Commission',
-      perSaleIncentiveInTarget: agent.perSaleIncentiveInTarget?.toString() || '',
-      inTargetIncentiveType: agent.inTargetIncentiveType || 'fixed',
-      perSaleIncentiveAfterTarget: agent.perSaleIncentiveAfterTarget?.toString() || '',
-      afterTargetIncentiveType: agent.afterTargetIncentiveType || 'fixed',
-      incentivePercentageOn: agent.incentivePercentageOn || 'sale_amount',
-      minSaleAmountForIncentive: agent.minSaleAmountForIncentive?.toString() || '',
+      basicSalary: agent.basicSalary?.toString() || "",
+      attendanceAllowance: agent.attendanceAllowance?.toString() || "",
+      commissionType: agent.commissionType || "Basic + Commission",
+      perSaleIncentiveInTarget:
+        agent.perSaleIncentiveInTarget?.toString() || "",
+      inTargetIncentiveType: agent.inTargetIncentiveType || "fixed",
+      perSaleIncentiveAfterTarget:
+        agent.perSaleIncentiveAfterTarget?.toString() || "",
+      afterTargetIncentiveType: agent.afterTargetIncentiveType || "fixed",
+      incentivePercentageOn: agent.incentivePercentageOn || "sale_amount",
+      minSaleAmountForIncentive:
+        agent.minSaleAmountForIncentive?.toString() || "",
       bankDetails: {
-        bankName: agent.bankDetails?.bankName || '',
-        accountTitle: agent.bankDetails?.accountTitle || '',
-        accountNumber: agent.bankDetails?.accountNumber || '',
-        iban: agent.bankDetails?.iban || '',
-        branchCode: agent.bankDetails?.branchCode || ''
+        bankName: agent.bankDetails?.bankName || "",
+        accountTitle: agent.bankDetails?.accountTitle || "",
+        accountNumber: agent.bankDetails?.accountNumber || "",
+        iban: agent.bankDetails?.iban || "",
+        branchCode: agent.bankDetails?.branchCode || "",
       },
-      documents: agent.documents || []
+      documents: agent.documents || [],
     });
     setShowEditForm(true);
   };
@@ -754,25 +806,27 @@ export default function AgentsPage() {
   };
 
   const handleDeleteAgent = async (agentId) => {
-    if (!confirm('Are you sure you want to delete this agent?')) return;
+    if (!confirm("Are you sure you want to delete this employee?")) return;
     try {
       await agentService.deleteAgent(agentId);
-      toast.success('Agent deleted successfully');
+      toast.success("Employee deleted successfully");
       fetchAgents();
     } catch (error) {
-      console.error('Error deleting agent:', error);
-      toast.error('Error deleting agent');
+      console.error("Error deleting agent:", error);
+      toast.error("Error deleting employee");
     }
   };
 
   const handleToggleStatus = async (agentId, currentStatus) => {
     try {
       await agentService.updateAgentStatus(agentId, !currentStatus);
-      toast.success(`Agent ${!currentStatus ? 'activated' : 'deactivated'} successfully`);
+      toast.success(
+        `Employee ${!currentStatus ? "activated" : "deactivated"} successfully`,
+      );
       fetchAgents();
     } catch (error) {
-      console.error('Error updating agent status:', error);
-      toast.error('Error updating status');
+      console.error("Error updating agent status:", error);
+      toast.error("Error updating status");
     }
   };
 
@@ -792,396 +846,526 @@ export default function AgentsPage() {
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2">
             <Shield className="h-7 w-7 text-[#10B5DB]" />
-            Agent Management
+            Employee Management
           </h1>
-          <p className="text-gray-600 mt-1 text-sm sm:text-base">Manage all agents and their targets</p>
+          <p className="text-gray-600 mt-1 text-sm sm:text-base">
+            Manage all employees and their targets
+          </p>
         </div>
-        
+
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" className="gap-2">
             <Filter className="h-4 w-4" />
             Export
           </Button>
-          
-          {hasPermission('agent', 'create') && (
+
+          {hasPermission("agent", "create") && (
             <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
               <DialogTrigger asChild>
                 <Button className="blue-button gap-2">
                   <Plus className="h-4 w-4" />
-                  Create New Agent
+                  Create New Employee
                 </Button>
               </DialogTrigger>
-              
+
               <DialogContent className="sm:max-w-[800px] max-h-[90vh] flex flex-col">
                 <DialogHeader>
-                  <DialogTitle>Create New Agent</DialogTitle>
+                  <DialogTitle>Create New Employee</DialogTitle>
                   <DialogDescription>
-                    Add a new agent to the system. A welcome email will be sent.
+                    Add a new employee to the system. A welcome email will be
+                    sent.
                   </DialogDescription>
                 </DialogHeader>
-                
-                <Tabs defaultValue="profile" className="flex-1 flex flex-col overflow-hidden">
+
+                <Tabs
+                  defaultValue="profile"
+                  className="flex-1 flex flex-col overflow-hidden"
+                >
                   <TabsList className="grid w-full grid-cols-3 mb-4">
                     <TabsTrigger value="profile">Profile & Info</TabsTrigger>
-                    <TabsTrigger value="financials">Financials & Bank</TabsTrigger>
+                    <TabsTrigger value="financials">
+                      Financials & Bank
+                    </TabsTrigger>
                     <TabsTrigger value="documents">Documents</TabsTrigger>
                   </TabsList>
-                
-                <form onSubmit={handleCreateAgent} className="flex flex-col flex-1 overflow-hidden">
-                  <div className="flex-1 overflow-y-auto pr-2">
-                  <TabsContent value="profile" className="space-y-4 mt-0">
-                  {/* Basic Information */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="agentName">Agent Name *</Label>
-                      <Input
-                        id="agentName"
-                        name="agentName"
-                        value={formData.agentName}
-                        onChange={handleInputChange}
-                        required
-                        placeholder="Enter agent full name"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="agentId">Agent ID * <span className="text-xs text-muted-foreground">(e.g., AB1234)</span></Label>
-                      <Input
-                        id="agentId"
-                        name="agentId"
-                        value={formData.agentId}
-                        onChange={handleInputChange}
-                        required
-                        placeholder="AB1234"
-                        maxLength={6}
-                        className={formData.agentId && !validateAgentId(formData.agentId) ? "border-red-500" : ""}
-                      />
-                      {formData.agentId && !validateAgentId(formData.agentId) && (
-                        <p className="text-xs text-red-500">Format: 2 letters + 4 digits (e.g., AB1234)</p>
-                      )}
-                    </div>
-                  </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email *</Label>
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        required
-                        placeholder="agent@example.com"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number</Label>
-                      <Input
-                        id="phone"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleInputChange}
-                        placeholder="+92 300 1234567"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Employee Details */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="employeeType">Employee Type</Label>
-                      <Select 
-                        value={formData.employeeType} 
-                        onValueChange={(v) => handleSelectChange('employeeType', v)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {EMPLOYEE_TYPES.map(type => (
-                            <SelectItem key={type.value} value={type.value}>
-                              {type.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="designation">Designation</Label>
-                      <Input 
-                        id="designation"
-                        name="designation"
-                        value={formData.designation} 
-                        onChange={handleInputChange}
-                        placeholder="e.g. Sales Executive"
-                        list="designation-suggestions"
-                      />
-                      <datalist id="designation-suggestions">
-                         {DESIGNATIONS.map(d => <option key={d.value} value={d.value} />)}
-                      </datalist>
-                    </div>
-                  </div>
-
-                  {/* Shift & Password */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="shift" className="flex items-center gap-2">
-                        <Clock className="h-4 w-4" />
-                        Shift *
-                      </Label>
-                      <Select 
-                        value={formData.shift} 
-                        onValueChange={(v) => handleSelectChange('shift', v)} 
-                        disabled={shiftsLoading}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a shift" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {shiftsLoading ? (
-                            <SelectItem value="loading" disabled>Loading shifts...</SelectItem>
-                          ) : shifts.length === 0 ? (
-                            <SelectItem value="none" disabled>No shifts available</SelectItem>
-                          ) : (
-                            shifts.map(shift => (
-                              <SelectItem key={shift._id} value={shift._id}>
-                                {shift.name} ({shift.startTime}-{shift.endTime})
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="password" className="flex items-center gap-2">
-                        <Key className="h-4 w-4" />
-                        Password *
-                      </Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="password"
-                          name="password"
-                          type="text"
-                          value={formData.password}
-                          onChange={handleInputChange}
-                          required
-                          placeholder="Enter password"
-                        />
-                        <Button type="button" variant="outline" onClick={generatePassword} className="whitespace-nowrap">
-                          Generate
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                  </TabsContent>
-
-                  <TabsContent value="financials" className="space-y-4 mt-0">
-                  {/* Target Settings */}
-                  <div className="border-t pt-4 mt-2">
-                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                      <Target className="h-5 w-5" />
-                      Monthly Target Settings
-                    </h3>
-                    
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="monthlyTargetType">Target Type</Label>
-                        <Select 
-                          value={formData.monthlyTargetType} 
-                          onValueChange={(v) => handleSelectChange('monthlyTargetType', v)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {TARGET_TYPES.map(type => (
-                              <SelectItem key={type.value} value={type.value}>
-                                {type.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Digit Target */}
-                        {(formData.monthlyTargetType === 'digit' || formData.monthlyTargetType === 'both') && (
+                  <form
+                    onSubmit={handleCreateAgent}
+                    className="flex flex-col flex-1 overflow-hidden"
+                  >
+                    <div className="flex-1 overflow-y-auto pr-2">
+                      <TabsContent value="profile" className="space-y-4 mt-0">
+                        {/* Basic Information */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label htmlFor="monthlyDigitTarget" className="flex items-center gap-2">
-                              <Hash className="h-4 w-4" />
-                              Digit Target (Quantity)
+                            <Label htmlFor="agentName">Employee Name *</Label>
+                            <Input
+                              id="agentName"
+                              name="agentName"
+                              value={formData.agentName}
+                              onChange={handleInputChange}
+                              required
+                              placeholder="Enter employee full name"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="agentId">
+                              Employee ID *{" "}
+                              <span className="text-xs text-muted-foreground">
+                                (e.g., AB1234)
+                              </span>
                             </Label>
                             <Input
-                              id="monthlyDigitTarget"
-                              name="monthlyDigitTarget"
-                              value={formData.monthlyDigitTarget}
+                              id="agentId"
+                              name="agentId"
+                              value={formData.agentId}
                               onChange={handleInputChange}
-                              placeholder="e.g., 100"
+                              required
+                              placeholder="AB1234"
+                              maxLength={6}
+                              className={
+                                formData.agentId &&
+                                !validateAgentId(formData.agentId)
+                                  ? "border-red-500"
+                                  : ""
+                              }
                             />
-                            <p className="text-xs text-muted-foreground">Number of items (calls, settlements, etc.)</p>
+                            {formData.agentId &&
+                              !validateAgentId(formData.agentId) && (
+                                <p className="text-xs text-red-500">
+                                  Format: 2 letters + 4 digits (e.g., AB1234)
+                                </p>
+                              )}
                           </div>
-                        )}
+                        </div>
 
-                        {/* Amount Target */}
-                        {(formData.monthlyTargetType === 'amount' || formData.monthlyTargetType === 'both') && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label htmlFor="monthlyAmountTarget" className="flex items-center gap-2">
-                              <DollarSign className="h-4 w-4" />
-                              Amount Target (Revenue)
+                            <Label htmlFor="email">Email *</Label>
+                            <Input
+                              id="email"
+                              name="email"
+                              type="email"
+                              value={formData.email}
+                              onChange={handleInputChange}
+                              required
+                              placeholder="employee@example.com"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="phone">Phone Number</Label>
+                            <Input
+                              id="phone"
+                              name="phone"
+                              value={formData.phone}
+                              onChange={handleInputChange}
+                              placeholder="+92 300 1234567"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Employee Details */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="employeeType">Employee Type</Label>
+                            <Select
+                              value={formData.employeeType}
+                              onValueChange={(v) =>
+                                handleSelectChange("employeeType", v)
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {EMPLOYEE_TYPES.map((type) => (
+                                  <SelectItem
+                                    key={type.value}
+                                    value={type.value}
+                                  >
+                                    {type.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="designation">Designation</Label>
+                            <Input
+                              id="designation"
+                              name="designation"
+                              value={formData.designation}
+                              onChange={handleInputChange}
+                              placeholder="e.g. Sales Executive"
+                              list="designation-suggestions"
+                            />
+                            <datalist id="designation-suggestions">
+                              {DESIGNATIONS.map((d) => (
+                                <option key={d.value} value={d.value} />
+                              ))}
+                            </datalist>
+                          </div>
+                        </div>
+
+                        {/* Shift & Password */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label
+                              htmlFor="shift"
+                              className="flex items-center gap-2"
+                            >
+                              <Clock className="h-4 w-4" />
+                              Shift *
+                            </Label>
+                            <Select
+                              value={formData.shift}
+                              onValueChange={(v) =>
+                                handleSelectChange("shift", v)
+                              }
+                              disabled={shiftsLoading}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a shift" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {shiftsLoading ? (
+                                  <SelectItem value="loading" disabled>
+                                    Loading shifts...
+                                  </SelectItem>
+                                ) : shifts.length === 0 ? (
+                                  <SelectItem value="none" disabled>
+                                    No shifts available
+                                  </SelectItem>
+                                ) : (
+                                  shifts.map((shift) => (
+                                    <SelectItem
+                                      key={shift._id}
+                                      value={shift._id}
+                                    >
+                                      {shift.name} ({shift.startTime}-
+                                      {shift.endTime})
+                                    </SelectItem>
+                                  ))
+                                )}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label
+                              htmlFor="password"
+                              className="flex items-center gap-2"
+                            >
+                              <Key className="h-4 w-4" />
+                              Password *
                             </Label>
                             <div className="flex gap-2">
-                              <Select 
-                                value={formData.targetCurrency} 
-                                onValueChange={(v) => handleSelectChange('targetCurrency', v)}
-                                className="w-24"
+                              <Input
+                                id="password"
+                                name="password"
+                                type="text"
+                                value={formData.password}
+                                onChange={handleInputChange}
+                                required
+                                placeholder="Enter password"
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={generatePassword}
+                                className="whitespace-nowrap"
+                              >
+                                Generate
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </TabsContent>
+
+                      <TabsContent
+                        value="financials"
+                        className="space-y-4 mt-0"
+                      >
+                        {/* Target Settings */}
+                        <div className="border-t pt-4 mt-2">
+                          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                            <Target className="h-5 w-5" />
+                            Monthly Target Settings
+                          </h3>
+
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="monthlyTargetType">
+                                Target Type
+                              </Label>
+                              <Select
+                                value={formData.monthlyTargetType}
+                                onValueChange={(v) =>
+                                  handleSelectChange("monthlyTargetType", v)
+                                }
                               >
                                 <SelectTrigger>
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {CURRENCIES.map(currency => (
-                                    <SelectItem key={currency.value} value={currency.value}>
-                                      {currency.value}
+                                  {TARGET_TYPES.map((type) => (
+                                    <SelectItem
+                                      key={type.value}
+                                      value={type.value}
+                                    >
+                                      {type.label}
                                     </SelectItem>
                                   ))}
                                 </SelectContent>
                               </Select>
-                              <Input
-                                id="monthlyAmountTarget"
-                                name="monthlyAmountTarget"
-                                value={formData.monthlyAmountTarget}
-                                onChange={handleInputChange}
-                                placeholder="e.g., 500000"
-                                className="flex-1"
-                              />
                             </div>
-                            <p className="text-xs text-muted-foreground">Revenue or sales amount</p>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {/* Digit Target */}
+                              {(formData.monthlyTargetType === "digit" ||
+                                formData.monthlyTargetType === "both") && (
+                                <div className="space-y-2">
+                                  <Label
+                                    htmlFor="monthlyDigitTarget"
+                                    className="flex items-center gap-2"
+                                  >
+                                    <Hash className="h-4 w-4" />
+                                    Digit Target (Quantity)
+                                  </Label>
+                                  <Input
+                                    id="monthlyDigitTarget"
+                                    name="monthlyDigitTarget"
+                                    value={formData.monthlyDigitTarget}
+                                    onChange={handleInputChange}
+                                    placeholder="e.g., 100"
+                                  />
+                                  <p className="text-xs text-muted-foreground">
+                                    Number of items (calls, settlements, etc.)
+                                  </p>
+                                </div>
+                              )}
+
+                              {/* Amount Target */}
+                              {(formData.monthlyTargetType === "amount" ||
+                                formData.monthlyTargetType === "both") && (
+                                <div className="space-y-2">
+                                  <Label
+                                    htmlFor="monthlyAmountTarget"
+                                    className="flex items-center gap-2"
+                                  >
+                                    <DollarSign className="h-4 w-4" />
+                                    Amount Target (Revenue)
+                                  </Label>
+                                  <div className="flex gap-2">
+                                    <Select
+                                      value={formData.targetCurrency}
+                                      onValueChange={(v) =>
+                                        handleSelectChange("targetCurrency", v)
+                                      }
+                                      className="w-24"
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {CURRENCIES.map((currency) => (
+                                          <SelectItem
+                                            key={currency.value}
+                                            value={currency.value}
+                                          >
+                                            {currency.value}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                    <Input
+                                      id="monthlyAmountTarget"
+                                      name="monthlyAmountTarget"
+                                      value={formData.monthlyAmountTarget}
+                                      onChange={handleInputChange}
+                                      placeholder="e.g., 500000"
+                                      className="flex-1"
+                                    />
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">
+                                    Revenue or sales amount
+                                  </p>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Salary Structure */}
-                  <div className="border-t pt-4 mt-2">
-                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                      <DollarSign className="h-5 w-5" />
-                      Salary Structure & Incentives
-                    </h3>
-                    
-                    {/* Commission Type */}
-                    <div className="mb-4">
-                      <Label htmlFor="commissionType" className="mb-2 block">Commission Structure</Label>
-                      <Select 
-                        value={formData.commissionType} 
-                        onValueChange={(v) => handleSelectChange('commissionType', v)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Basic + Commission">Basic + Commission</SelectItem>
-                          <SelectItem value="Only Commission">Only Commission</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Base Salary */}
-                    {formData.commissionType === 'Basic + Commission' && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="basicSalary">Basic Salary</Label>
-                          <Input
-                            id="basicSalary"
-                            name="basicSalary"
-                            type="number"
-                            value={formData.basicSalary}
-                            onChange={handleInputChange}
-                            placeholder="e.g. 7000"
-                          />
                         </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="attendanceAllowance">Attendance Allowance</Label>
-                          <Input
-                            id="attendanceAllowance"
-                            name="attendanceAllowance"
-                            type="number"
-                            value={formData.attendanceAllowance}
-                            onChange={handleInputChange}
-                            placeholder="e.g. 3000"
-                          />
-                        </div>
-                      </div>
-                    )}
 
-                    {/* Incentives */}
-                    <div className="bg-slate-50 p-4 rounded-md border">
-                        <h4 className="text-sm font-semibold mb-3 text-slate-700">Incentive Settings</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* In Target */}
-                            <div className="space-y-2">
-                                <Label htmlFor="perSaleIncentiveInTarget" className="text-xs font-medium">Incentive (In Target)</Label>
-                                <div className="flex gap-2">
-                                    <Input
-                                        id="perSaleIncentiveInTarget"
-                                        name="perSaleIncentiveInTarget"
-                                        type="number"
-                                        value={formData.perSaleIncentiveInTarget}
-                                        onChange={handleInputChange}
-                                        placeholder="0"
-                                        className="flex-1"
-                                    />
-                                    <Select 
-                                        value={formData.inTargetIncentiveType} 
-                                        onValueChange={(v) => handleSelectChange('inTargetIncentiveType', v)}
-                                        disabled={formData.monthlyTargetType !== 'none' && formData.monthlyTargetType !== 'both'}
-                                    >
-                                        <SelectTrigger className="w-[110px]">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="fixed">Fixed</SelectItem>
-                                            <SelectItem value="percentage">%</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+                        {/* Salary Structure */}
+                        <div className="border-t pt-4 mt-2">
+                          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                            <DollarSign className="h-5 w-5" />
+                            Salary Structure & Incentives
+                          </h3>
+
+                          {/* Commission Type */}
+                          <div className="mb-4">
+                            <Label
+                              htmlFor="commissionType"
+                              className="mb-2 block"
+                            >
+                              Commission Structure
+                            </Label>
+                            <Select
+                              value={formData.commissionType}
+                              onValueChange={(v) =>
+                                handleSelectChange("commissionType", v)
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Basic + Commission">
+                                  Basic + Commission
+                                </SelectItem>
+                                <SelectItem value="Only Commission">
+                                  Only Commission
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {/* Base Salary */}
+                          {formData.commissionType === "Basic + Commission" && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                              <div className="space-y-2">
+                                <Label htmlFor="basicSalary">
+                                  Basic Salary
+                                </Label>
+                                <Input
+                                  id="basicSalary"
+                                  name="basicSalary"
+                                  type="number"
+                                  value={formData.basicSalary}
+                                  onChange={handleInputChange}
+                                  placeholder="e.g. 7000"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="attendanceAllowance">
+                                  Attendance Allowance
+                                </Label>
+                                <Input
+                                  id="attendanceAllowance"
+                                  name="attendanceAllowance"
+                                  type="number"
+                                  value={formData.attendanceAllowance}
+                                  onChange={handleInputChange}
+                                  placeholder="e.g. 3000"
+                                />
+                              </div>
                             </div>
+                          )}
 
-                            {/* After Target */}
-                            <div className="space-y-2">
-                                <Label htmlFor="perSaleIncentiveAfterTarget" className="text-xs font-medium">Incentive (After Target)</Label>
+                          {/* Incentives */}
+                          <div className="bg-slate-50 p-4 rounded-md border">
+                            <h4 className="text-sm font-semibold mb-3 text-slate-700">
+                              Incentive Settings
+                            </h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {/* In Target */}
+                              <div className="space-y-2">
+                                <Label
+                                  htmlFor="perSaleIncentiveInTarget"
+                                  className="text-xs font-medium"
+                                >
+                                  Incentive (In Target)
+                                </Label>
                                 <div className="flex gap-2">
-                                    <Input
-                                        id="perSaleIncentiveAfterTarget"
-                                        name="perSaleIncentiveAfterTarget"
-                                        type="number"
-                                        value={formData.perSaleIncentiveAfterTarget}
-                                        onChange={handleInputChange}
-                                        placeholder="0"
-                                        className="flex-1"
-                                    />
-                                    <Select 
-                                        value={formData.afterTargetIncentiveType} 
-                                        onValueChange={(v) => handleSelectChange('afterTargetIncentiveType', v)}
-                                        disabled={formData.monthlyTargetType !== 'none' && formData.monthlyTargetType !== 'both'}
-                                    >
-                                        <SelectTrigger className="w-[110px]">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="fixed">Fixed</SelectItem>
-                                            <SelectItem value="percentage">%</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                  <Input
+                                    id="perSaleIncentiveInTarget"
+                                    name="perSaleIncentiveInTarget"
+                                    type="number"
+                                    value={formData.perSaleIncentiveInTarget}
+                                    onChange={handleInputChange}
+                                    placeholder="0"
+                                    className="flex-1"
+                                  />
+                                  <Select
+                                    value={formData.inTargetIncentiveType}
+                                    onValueChange={(v) =>
+                                      handleSelectChange(
+                                        "inTargetIncentiveType",
+                                        v,
+                                      )
+                                    }
+                                    disabled={
+                                      formData.monthlyTargetType !== "none" &&
+                                      formData.monthlyTargetType !== "both"
+                                    }
+                                  >
+                                    <SelectTrigger className="w-[110px]">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="fixed">
+                                        Fixed
+                                      </SelectItem>
+                                      <SelectItem value="percentage">
+                                        %
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
                                 </div>
-                            </div>
+                              </div>
 
-                            {/* Percentage On */}
-                            {/* <div className="space-y-2">
+                              {/* After Target */}
+                              <div className="space-y-2">
+                                <Label
+                                  htmlFor="perSaleIncentiveAfterTarget"
+                                  className="text-xs font-medium"
+                                >
+                                  Incentive (After Target)
+                                </Label>
+                                <div className="flex gap-2">
+                                  <Input
+                                    id="perSaleIncentiveAfterTarget"
+                                    name="perSaleIncentiveAfterTarget"
+                                    type="number"
+                                    value={formData.perSaleIncentiveAfterTarget}
+                                    onChange={handleInputChange}
+                                    placeholder="0"
+                                    className="flex-1"
+                                  />
+                                  <Select
+                                    value={formData.afterTargetIncentiveType}
+                                    onValueChange={(v) =>
+                                      handleSelectChange(
+                                        "afterTargetIncentiveType",
+                                        v,
+                                      )
+                                    }
+                                    disabled={
+                                      formData.monthlyTargetType !== "none" &&
+                                      formData.monthlyTargetType !== "both"
+                                    }
+                                  >
+                                    <SelectTrigger className="w-[110px]">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="fixed">
+                                        Fixed
+                                      </SelectItem>
+                                      <SelectItem value="percentage">
+                                        %
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
+
+                              {/* Percentage On */}
+                              {/* <div className="space-y-2">
                                 <Label htmlFor="incentivePercentageOn" className="text-xs font-medium">Percentage Based On</Label>
                                 <Select 
                                     value={formData.incentivePercentageOn} 
@@ -1197,167 +1381,205 @@ export default function AgentsPage() {
                                     </SelectContent>
                                 </Select>
                             </div> */}
-                        </div>
-                    </div>
-                    
-                    {/* Bank Details */}
-                    <div className="bg-slate-50 p-4 rounded-md border mt-4">
-                        <h4 className="text-sm font-semibold mb-3 text-slate-700 flex items-center gap-2">
-                           <Building className="h-4 w-4" /> Bank Account Details
-                        </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
+                            </div>
+                          </div>
+
+                          {/* Bank Details */}
+                          <div className="bg-slate-50 p-4 rounded-md border mt-4">
+                            <h4 className="text-sm font-semibold mb-3 text-slate-700 flex items-center gap-2">
+                              <Building className="h-4 w-4" /> Bank Account
+                              Details
+                            </h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
                                 <Label htmlFor="bankName">Bank Name</Label>
                                 <Input
-                                    id="bankName"
-                                    name="bankName"
-                                    value={formData.bankDetails.bankName}
-                                    onChange={handleBankChange}
-                                    placeholder="e.g. HBL"
+                                  id="bankName"
+                                  name="bankName"
+                                  value={formData.bankDetails.bankName}
+                                  onChange={handleBankChange}
+                                  placeholder="e.g. HBL"
                                 />
-                            </div>
-                             <div className="space-y-2">
-                                <Label htmlFor="accountTitle">Account Title</Label>
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="accountTitle">
+                                  Account Title
+                                </Label>
                                 <Input
-                                    id="accountTitle"
-                                    name="accountTitle"
-                                    value={formData.bankDetails.accountTitle}
-                                    onChange={handleBankChange}
-                                    placeholder="Account Holder Name"
+                                  id="accountTitle"
+                                  name="accountTitle"
+                                  value={formData.bankDetails.accountTitle}
+                                  onChange={handleBankChange}
+                                  placeholder="Account Holder Name"
                                 />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="accountNumber">Account Number</Label>
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="accountNumber">
+                                  Account Number
+                                </Label>
                                 <Input
-                                    id="accountNumber"
-                                    name="accountNumber"
-                                    value={formData.bankDetails.accountNumber}
-                                    onChange={handleBankChange}
-                                    placeholder="Account Number"
+                                  id="accountNumber"
+                                  name="accountNumber"
+                                  value={formData.bankDetails.accountNumber}
+                                  onChange={handleBankChange}
+                                  placeholder="Account Number"
                                 />
-                            </div>
-                             <div className="space-y-2">
+                              </div>
+                              <div className="space-y-2">
                                 <Label htmlFor="iban">IBAN</Label>
                                 <Input
-                                    id="iban"
-                                    name="iban"
-                                    value={formData.bankDetails.iban}
-                                    onChange={handleBankChange}
-                                    placeholder="PK..."
+                                  id="iban"
+                                  name="iban"
+                                  value={formData.bankDetails.iban}
+                                  onChange={handleBankChange}
+                                  placeholder="PK..."
                                 />
-                            </div>
-                            <div className="space-y-2">
+                              </div>
+                              <div className="space-y-2">
                                 <Label htmlFor="branchCode">Branch Code</Label>
                                 <Input
-                                    id="branchCode"
-                                    name="branchCode"
-                                    value={formData.bankDetails.branchCode}
-                                    onChange={handleBankChange}
-                                    placeholder="e.g. 0911"
+                                  id="branchCode"
+                                  name="branchCode"
+                                  value={formData.bankDetails.branchCode}
+                                  onChange={handleBankChange}
+                                  placeholder="e.g. 0911"
                                 />
+                              </div>
                             </div>
+                          </div>
                         </div>
-                    </div>
-                  </div>
-                  </TabsContent>
+                      </TabsContent>
 
-                  <TabsContent value="documents" className="space-y-4 mt-0">
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                           <Label>Document Type</Label>
-                           <Select value={createDocType} onValueChange={setCreateDocType}>
-                             <SelectTrigger>
-                               <SelectValue placeholder="Select type to upload" />
-                             </SelectTrigger>
-                             <SelectContent>
-                               {DOCUMENT_TYPES.filter(type => {
-                                 // Show if multiple allowed OR not already present
-                                 const isMultiple = MULTIPLE_ALLOWED_TYPES.includes(type);
-                                 const isPresent = formData.documents.some(d => d.type === type);
-                                 return isMultiple || !isPresent;
-                               }).map(type => (
-                                 <SelectItem key={type} value={type}>{type}</SelectItem>
-                               ))}
-                             </SelectContent>
-                           </Select>
-                        </div>
-                    
-                        <div className="border p-4 rounded-md border-dashed text-center">
-                            <Input 
-                                type="file" 
-                                // multiple // Disable multiple if we want strictly one type per file, or keep it if logic handles it
-                                onChange={handleFileUpload} 
-                                className="hidden" 
-                                id="doc-upload"
-                                accept="image/*,application/pdf"
-                                disabled={!createDocType}
-                            />
-                            <Label 
-                                htmlFor="doc-upload" 
-                                className={`flex flex-col items-center gap-2 py-4 ${!createDocType ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                      <TabsContent value="documents" className="space-y-4 mt-0">
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label>Document Type</Label>
+                            <Select
+                              value={createDocType}
+                              onValueChange={setCreateDocType}
                             >
-                                {uploading ? <Loader2 className="h-8 w-8 animate-spin text-blue-500" /> : <Upload className="h-8 w-8 text-slate-400" />}
-                                <span className="text-sm text-slate-600">
-                                    {createDocType ? `Click to upload ${createDocType}` : 'Select a document type first'}
-                                </span>
-                                <span className="text-xs text-slate-400">Supports Images & PDF (Max 5MB)</span>
-                            </Label>
-                        </div>
-                    </div>
-                    
-                    {formData.documents.length > 0 && (
-                        <div className="space-y-2">
-                            <h4 className="text-sm font-medium">Uploaded Documents</h4>
-                            <div className="space-y-2">
-                                {formData.documents.map((doc, index) => (
-                                    <div key={index} className="flex items-center justify-between p-2 border rounded-md bg-slate-50">
-                                        <div className="flex items-center gap-2 overflow-hidden">
-                                            <FileText className="h-4 w-4 flex-shrink-0 text-blue-500" />
-                                            <div className="flex flex-col">
-                                                <span className="text-sm font-medium truncate">{doc.name}</span>
-                                                {doc.originalName && <span className="text-xs text-slate-400 truncate">{doc.originalName}</span>}
-                                            </div>
-                                        </div>
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => handleFileDelete(index)}
-                                            className="text-red-500 hover:text-red-700 h-8 w-8 p-0"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </div>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select type to upload" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {DOCUMENT_TYPES.filter((type) => {
+                                  // Show if multiple allowed OR not already present
+                                  const isMultiple =
+                                    MULTIPLE_ALLOWED_TYPES.includes(type);
+                                  const isPresent = formData.documents.some(
+                                    (d) => d.type === type,
+                                  );
+                                  return isMultiple || !isPresent;
+                                }).map((type) => (
+                                  <SelectItem key={type} value={type}>
+                                    {type}
+                                  </SelectItem>
                                 ))}
-                            </div>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="border p-4 rounded-md border-dashed text-center">
+                            <Input
+                              type="file"
+                              // multiple // Disable multiple if we want strictly one type per file, or keep it if logic handles it
+                              onChange={handleFileUpload}
+                              className="hidden"
+                              id="doc-upload"
+                              accept="image/*,application/pdf"
+                              disabled={!createDocType}
+                            />
+                            <Label
+                              htmlFor="doc-upload"
+                              className={`flex flex-col items-center gap-2 py-4 ${!createDocType ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+                            >
+                              {uploading ? (
+                                <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                              ) : (
+                                <Upload className="h-8 w-8 text-slate-400" />
+                              )}
+                              <span className="text-sm text-slate-600">
+                                {createDocType
+                                  ? `Click to upload ${createDocType}`
+                                  : "Select a document type first"}
+                              </span>
+                              <span className="text-xs text-slate-400">
+                                Supports Images & PDF (Max 5MB)
+                              </span>
+                            </Label>
+                          </div>
                         </div>
-                    )}
-                  </TabsContent>
-                  </div>
-                  
-                  <DialogFooter className="pt-4 border-t mt-auto">
-                    <Button
-                      type="submit"
-                      disabled={loading || shifts.length === 0 || !validateAgentId(formData.agentId)}
-                      className="flex-1 blue-button gap-2"
-                    >
-                      {loading ? 'Creating...' : (
-                        <>
-                          <Plus className="h-4 w-4" />
-                          Create Agent
-                        </>
-                      )}
-                    </Button>
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={() => setShowCreateForm(false)} 
-                      className="flex-1"
-                    >
-                      Cancel
-                    </Button>
-                  </DialogFooter>
-                </form>
+
+                        {formData.documents.length > 0 && (
+                          <div className="space-y-2">
+                            <h4 className="text-sm font-medium">
+                              Uploaded Documents
+                            </h4>
+                            <div className="space-y-2">
+                              {formData.documents.map((doc, index) => (
+                                <div
+                                  key={index}
+                                  className="flex items-center justify-between p-2 border rounded-md bg-slate-50"
+                                >
+                                  <div className="flex items-center gap-2 overflow-hidden">
+                                    <FileText className="h-4 w-4 flex-shrink-0 text-blue-500" />
+                                    <div className="flex flex-col">
+                                      <span className="text-sm font-medium truncate">
+                                        {doc.name}
+                                      </span>
+                                      {doc.originalName && (
+                                        <span className="text-xs text-slate-400 truncate">
+                                          {doc.originalName}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleFileDelete(index)}
+                                    className="text-red-500 hover:text-red-700 h-8 w-8 p-0"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </TabsContent>
+                    </div>
+
+                    <DialogFooter className="pt-4 border-t mt-auto">
+                      <Button
+                        type="submit"
+                        disabled={
+                          loading ||
+                          shifts.length === 0 ||
+                          !validateAgentId(formData.agentId)
+                        }
+                        className="flex-1 blue-button gap-2"
+                      >
+                        {loading ? (
+                          "Creating..."
+                        ) : (
+                          <>
+                            <Plus className="h-4 w-4" />
+                            Create Employee
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setShowCreateForm(false)}
+                        className="flex-1"
+                      >
+                        Cancel
+                      </Button>
+                    </DialogFooter>
+                  </form>
                 </Tabs>
               </DialogContent>
             </Dialog>
@@ -1371,551 +1593,684 @@ export default function AgentsPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Edit className="h-5 w-5" />
-              Edit Agent
+              Edit Employee
             </DialogTitle>
             <DialogDescription>
-              Update agent information and settings.
+              Update employee information and settings.
             </DialogDescription>
           </DialogHeader>
-          
-          <Tabs defaultValue="profile" className="flex-1 flex flex-col overflow-hidden">
+
+          <Tabs
+            defaultValue="profile"
+            className="flex-1 flex flex-col overflow-hidden"
+          >
             <TabsList className="grid w-full grid-cols-3 mb-4">
               <TabsTrigger value="profile">Profile & Info</TabsTrigger>
               <TabsTrigger value="financials">Financials & Bank</TabsTrigger>
               <TabsTrigger value="documents">Documents</TabsTrigger>
             </TabsList>
 
-          <form onSubmit={handleEditAgent} className="flex flex-col flex-1 overflow-hidden">
-            <div className="flex-1 overflow-y-auto pr-2">
-            <TabsContent value="profile" className="space-y-4 mt-0">
-            {/* Edit Form Structure - Similar to Create Form */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-agentName">Agent Name *</Label>
-                <Input
-                  id="edit-agentName"
-                  name="agentName"
-                  value={editFormData.agentName}
-                  onChange={handleEditInputChange}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="edit-agentId">Agent ID *</Label>
-                <Input
-                  id="edit-agentId"
-                  name="agentId"
-                  value={editFormData.agentId}
-                  onChange={handleEditInputChange}
-                  required
-                  className={editFormData.agentId && !validateAgentId(editFormData.agentId) ? "border-red-500" : ""}
-                />
-                {editFormData.agentId && !validateAgentId(editFormData.agentId) && (
-                  <p className="text-xs text-red-500">Format: 2 letters + 4 digits (e.g., AB1234)</p>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-email">Email *</Label>
-                <Input
-                  id="edit-email"
-                  name="email"
-                  type="email"
-                  value={editFormData.email}
-                  onChange={handleEditInputChange}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="edit-phone">Phone Number</Label>
-                <Input
-                  id="edit-phone"
-                  name="phone"
-                  value={editFormData.phone}
-                  onChange={handleEditInputChange}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-employeeType">Employee Type</Label>
-                <Select
-                  value={editFormData.employeeType}
-                  onValueChange={(value) => handleEditSelectChange('employeeType', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {EMPLOYEE_TYPES.map(type => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="edit-designation">Designation</Label>
-                <Input
-                  id="edit-designation"
-                  name="designation"
-                  value={editFormData.designation}
-                  onChange={handleEditInputChange}
-                  placeholder="e.g. Sales Executive"
-                  list="edit-designation-suggestions"
-                />
-                <datalist id="edit-designation-suggestions">
-                    {DESIGNATIONS.map(d => <option key={d.value} value={d.value} />)}
-                </datalist>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-shift" className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  Shift *
-                </Label>
-                <Select
-                  value={editFormData.shift}
-                  onValueChange={(value) => handleEditSelectChange('shift', value)}
-                  disabled={shiftsLoading}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {shifts.map(shift => (
-                      <SelectItem key={shift._id} value={shift._id}>
-                        {shift.name} ({shift.startTime} - {shift.endTime})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="edit-status" className="flex items-center gap-2">
-                  {editFormData.isActive ? (
-                    <UserCheck className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <UserX className="h-4 w-4 text-red-600" />
-                  )}
-                  Status
-                </Label>
-                <Select
-                  value={editFormData.isActive.toString()}
-                  onValueChange={(value) => handleEditSelectChange('isActive', value === 'true')}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="true">Active</SelectItem>
-                    <SelectItem value="false">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="financials" className="space-y-4 mt-0">
-            {/* Target Settings */}
-            <div className="border-t pt-4 mt-2">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Target className="h-5 w-5" />
-                Monthly Target Settings
-              </h3>
-              
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-monthlyTargetType">Target Type</Label>
-                  <Select
-                    value={editFormData.monthlyTargetType}
-                    onValueChange={(value) => handleEditSelectChange('monthlyTargetType', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TARGET_TYPES.map(type => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {(editFormData.monthlyTargetType === 'digit' || editFormData.monthlyTargetType === 'both') && (
+            <form
+              onSubmit={handleEditAgent}
+              className="flex flex-col flex-1 overflow-hidden"
+            >
+              <div className="flex-1 overflow-y-auto pr-2">
+                <TabsContent value="profile" className="space-y-4 mt-0">
+                  {/* Edit Form Structure - Similar to Create Form */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="edit-monthlyDigitTarget" className="flex items-center gap-2">
-                        <Hash className="h-4 w-4" />
-                        Digit Target
-                      </Label>
+                      <Label htmlFor="edit-agentName">Employee Name *</Label>
                       <Input
-                        id="edit-monthlyDigitTarget"
-                        name="monthlyDigitTarget"
-                        value={editFormData.monthlyDigitTarget}
+                        id="edit-agentName"
+                        name="agentName"
+                        value={editFormData.agentName}
+                        onChange={handleEditInputChange}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-agentId">Employee ID *</Label>
+                      <Input
+                        id="edit-agentId"
+                        name="agentId"
+                        value={editFormData.agentId}
+                        onChange={handleEditInputChange}
+                        required
+                        className={
+                          editFormData.agentId &&
+                          !validateAgentId(editFormData.agentId)
+                            ? "border-red-500"
+                            : ""
+                        }
+                      />
+                      {editFormData.agentId &&
+                        !validateAgentId(editFormData.agentId) && (
+                          <p className="text-xs text-red-500">
+                            Format: 2 letters + 4 digits (e.g., AB1234)
+                          </p>
+                        )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-email">Email *</Label>
+                      <Input
+                        id="edit-email"
+                        name="email"
+                        type="email"
+                        value={editFormData.email}
+                        onChange={handleEditInputChange}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-phone">Phone Number</Label>
+                      <Input
+                        id="edit-phone"
+                        name="phone"
+                        value={editFormData.phone}
                         onChange={handleEditInputChange}
                       />
                     </div>
-                  )}
+                  </div>
 
-                  {(editFormData.monthlyTargetType === 'amount' || editFormData.monthlyTargetType === 'both') && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="edit-monthlyAmountTarget" className="flex items-center gap-2">
-                        <DollarSign className="h-4 w-4" />
-                        Amount Target
+                      <Label htmlFor="edit-employeeType">Employee Type</Label>
+                      <Select
+                        value={editFormData.employeeType}
+                        onValueChange={(value) =>
+                          handleEditSelectChange("employeeType", value)
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {EMPLOYEE_TYPES.map((type) => (
+                            <SelectItem key={type.value} value={type.value}>
+                              {type.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-designation">Designation</Label>
+                      <Input
+                        id="edit-designation"
+                        name="designation"
+                        value={editFormData.designation}
+                        onChange={handleEditInputChange}
+                        placeholder="e.g. Sales Executive"
+                        list="edit-designation-suggestions"
+                      />
+                      <datalist id="edit-designation-suggestions">
+                        {DESIGNATIONS.map((d) => (
+                          <option key={d.value} value={d.value} />
+                        ))}
+                      </datalist>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="edit-shift"
+                        className="flex items-center gap-2"
+                      >
+                        <Clock className="h-4 w-4" />
+                        Shift *
                       </Label>
-                      <div className="flex gap-2">
+                      <Select
+                        value={editFormData.shift}
+                        onValueChange={(value) =>
+                          handleEditSelectChange("shift", value)
+                        }
+                        disabled={shiftsLoading}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {shifts.map((shift) => (
+                            <SelectItem key={shift._id} value={shift._id}>
+                              {shift.name} ({shift.startTime} - {shift.endTime})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="edit-status"
+                        className="flex items-center gap-2"
+                      >
+                        {editFormData.isActive ? (
+                          <UserCheck className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <UserX className="h-4 w-4 text-red-600" />
+                        )}
+                        Status
+                      </Label>
+                      <Select
+                        value={editFormData.isActive.toString()}
+                        onValueChange={(value) =>
+                          handleEditSelectChange("isActive", value === "true")
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="true">Active</SelectItem>
+                          <SelectItem value="false">Inactive</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="financials" className="space-y-4 mt-0">
+                  {/* Target Settings */}
+                  <div className="border-t pt-4 mt-2">
+                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                      <Target className="h-5 w-5" />
+                      Monthly Target Settings
+                    </h3>
+
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-monthlyTargetType">
+                          Target Type
+                        </Label>
                         <Select
-                          value={editFormData.targetCurrency}
-                          onValueChange={(value) => handleEditSelectChange('targetCurrency', value)}
-                          className="w-24"
+                          value={editFormData.monthlyTargetType}
+                          onValueChange={(value) =>
+                            handleEditSelectChange("monthlyTargetType", value)
+                          }
                         >
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {CURRENCIES.map(currency => (
-                              <SelectItem key={currency.value} value={currency.value}>
-                                {currency.value}
+                            {TARGET_TYPES.map((type) => (
+                              <SelectItem key={type.value} value={type.value}>
+                                {type.label}
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
-                        <Input
-                          id="edit-monthlyAmountTarget"
-                          name="monthlyAmountTarget"
-                          value={editFormData.monthlyAmountTarget}
-                          onChange={handleEditInputChange}
-                          className="flex-1"
-                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {(editFormData.monthlyTargetType === "digit" ||
+                          editFormData.monthlyTargetType === "both") && (
+                          <div className="space-y-2">
+                            <Label
+                              htmlFor="edit-monthlyDigitTarget"
+                              className="flex items-center gap-2"
+                            >
+                              <Hash className="h-4 w-4" />
+                              Digit Target
+                            </Label>
+                            <Input
+                              id="edit-monthlyDigitTarget"
+                              name="monthlyDigitTarget"
+                              value={editFormData.monthlyDigitTarget}
+                              onChange={handleEditInputChange}
+                            />
+                          </div>
+                        )}
+
+                        {(editFormData.monthlyTargetType === "amount" ||
+                          editFormData.monthlyTargetType === "both") && (
+                          <div className="space-y-2">
+                            <Label
+                              htmlFor="edit-monthlyAmountTarget"
+                              className="flex items-center gap-2"
+                            >
+                              <DollarSign className="h-4 w-4" />
+                              Amount Target
+                            </Label>
+                            <div className="flex gap-2">
+                              <Select
+                                value={editFormData.targetCurrency}
+                                onValueChange={(value) =>
+                                  handleEditSelectChange(
+                                    "targetCurrency",
+                                    value,
+                                  )
+                                }
+                                className="w-24"
+                              >
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {CURRENCIES.map((currency) => (
+                                    <SelectItem
+                                      key={currency.value}
+                                      value={currency.value}
+                                    >
+                                      {currency.value}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <Input
+                                id="edit-monthlyAmountTarget"
+                                name="monthlyAmountTarget"
+                                value={editFormData.monthlyAmountTarget}
+                                onChange={handleEditInputChange}
+                                className="flex-1"
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Salary Structure */}
-            <div className="border-t pt-4 mt-2">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <DollarSign className="h-5 w-5" />
-                Salary Structure & Incentives
-              </h3>
-
-              {/* Commission Type */}
-              <div className="mb-4">
-                  <Label htmlFor="edit-commissionType" className="mb-2 block">Commission Structure</Label>
-                  <Select 
-                    value={editFormData.commissionType} 
-                    onValueChange={(v) => handleEditSelectChange('commissionType', v)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Basic + Commission">Basic + Commission</SelectItem>
-                      <SelectItem value="Only Commission">Only Commission</SelectItem>
-                    </SelectContent>
-                  </Select>
-              </div>
-              
-              {editFormData.commissionType === 'Basic + Commission' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-basicSalary">Basic Salary</Label>
-                    <Input
-                      id="edit-basicSalary"
-                      name="basicSalary"
-                      type="number"
-                      value={editFormData.basicSalary}
-                      onChange={handleEditInputChange}
-                      placeholder="e.g. 7000"
-                    />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-attendanceAllowance">Attendance Allowance</Label>
-                    <Input
-                      id="edit-attendanceAllowance"
-                      name="attendanceAllowance"
-                      type="number"
-                      value={editFormData.attendanceAllowance}
-                      onChange={handleEditInputChange}
-                      placeholder="e.g. 3000"
-                    />
-                  </div>
-                </div>
-              )}
 
-              {/* Incentives */}
-              <div className="bg-slate-50 p-4 rounded-md border">
-                  <h4 className="text-sm font-semibold mb-3 text-slate-700">Incentive Settings</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                       {/* In Target */}
-                       <div className="space-y-2">
-                            <Label htmlFor="edit-perSaleIncentiveInTarget" className="text-xs font-medium">Incentive (In Target)</Label>
-                            <div className="flex gap-2">
-                                <Input
-                                    id="edit-perSaleIncentiveInTarget"
-                                    name="perSaleIncentiveInTarget"
-                                    type="number"
-                                    value={editFormData.perSaleIncentiveInTarget}
-                                    onChange={handleEditInputChange}
-                                    placeholder="0"
-                                    className="flex-1"
-                                />
-                                <Select 
-                                    value={editFormData.inTargetIncentiveType} 
-                                    onValueChange={(v) => handleEditSelectChange('inTargetIncentiveType', v)}
-                                    disabled={editFormData.monthlyTargetType !== 'none' && editFormData.monthlyTargetType !== 'both'}
-                                >
-                                    <SelectTrigger className="w-[110px]">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="fixed">Fixed</SelectItem>
-                                        <SelectItem value="percentage">%</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                  {/* Salary Structure */}
+                  <div className="border-t pt-4 mt-2">
+                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                      <DollarSign className="h-5 w-5" />
+                      Salary Structure & Incentives
+                    </h3>
+
+                    {/* Commission Type */}
+                    <div className="mb-4">
+                      <Label
+                        htmlFor="edit-commissionType"
+                        className="mb-2 block"
+                      >
+                        Commission Structure
+                      </Label>
+                      <Select
+                        value={editFormData.commissionType}
+                        onValueChange={(v) =>
+                          handleEditSelectChange("commissionType", v)
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Basic + Commission">
+                            Basic + Commission
+                          </SelectItem>
+                          <SelectItem value="Only Commission">
+                            Only Commission
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {editFormData.commissionType === "Basic + Commission" && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="edit-basicSalary">Basic Salary</Label>
+                          <Input
+                            id="edit-basicSalary"
+                            name="basicSalary"
+                            type="number"
+                            value={editFormData.basicSalary}
+                            onChange={handleEditInputChange}
+                            placeholder="e.g. 7000"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="edit-attendanceAllowance">
+                            Attendance Allowance
+                          </Label>
+                          <Input
+                            id="edit-attendanceAllowance"
+                            name="attendanceAllowance"
+                            type="number"
+                            value={editFormData.attendanceAllowance}
+                            onChange={handleEditInputChange}
+                            placeholder="e.g. 3000"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Incentives */}
+                    <div className="bg-slate-50 p-4 rounded-md border">
+                      <h4 className="text-sm font-semibold mb-3 text-slate-700">
+                        Incentive Settings
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* In Target */}
+                        <div className="space-y-2">
+                          <Label
+                            htmlFor="edit-perSaleIncentiveInTarget"
+                            className="text-xs font-medium"
+                          >
+                            Incentive (In Target)
+                          </Label>
+                          <div className="flex gap-2">
+                            <Input
+                              id="edit-perSaleIncentiveInTarget"
+                              name="perSaleIncentiveInTarget"
+                              type="number"
+                              value={editFormData.perSaleIncentiveInTarget}
+                              onChange={handleEditInputChange}
+                              placeholder="0"
+                              className="flex-1"
+                            />
+                            <Select
+                              value={editFormData.inTargetIncentiveType}
+                              onValueChange={(v) =>
+                                handleEditSelectChange(
+                                  "inTargetIncentiveType",
+                                  v,
+                                )
+                              }
+                              disabled={
+                                editFormData.monthlyTargetType !== "none" &&
+                                editFormData.monthlyTargetType !== "both"
+                              }
+                            >
+                              <SelectTrigger className="w-[110px]">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="fixed">Fixed</SelectItem>
+                                <SelectItem value="percentage">%</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </div>
 
                         {/* After Target */}
                         <div className="space-y-2">
-                            <Label htmlFor="edit-perSaleIncentiveAfterTarget" className="text-xs font-medium">Incentive (After Target)</Label>
-                            <div className="flex gap-2">
-                                <Input
-                                    id="edit-perSaleIncentiveAfterTarget"
-                                    name="perSaleIncentiveAfterTarget"
-                                    type="number"
-                                    value={editFormData.perSaleIncentiveAfterTarget}
-                                    onChange={handleEditInputChange}
-                                    placeholder="0"
-                                    className="flex-1"
-                                />
-                                <Select 
-                                    value={editFormData.afterTargetIncentiveType} 
-                                    onValueChange={(v) => handleEditSelectChange('afterTargetIncentiveType', v)}
-                                    disabled={editFormData.monthlyTargetType !== 'none' && editFormData.monthlyTargetType !== 'both'}
-                                >
-                                    <SelectTrigger className="w-[110px]">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="fixed">Fixed</SelectItem>
-                                        <SelectItem value="percentage">%</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                          <Label
+                            htmlFor="edit-perSaleIncentiveAfterTarget"
+                            className="text-xs font-medium"
+                          >
+                            Incentive (After Target)
+                          </Label>
+                          <div className="flex gap-2">
+                            <Input
+                              id="edit-perSaleIncentiveAfterTarget"
+                              name="perSaleIncentiveAfterTarget"
+                              type="number"
+                              value={editFormData.perSaleIncentiveAfterTarget}
+                              onChange={handleEditInputChange}
+                              placeholder="0"
+                              className="flex-1"
+                            />
+                            <Select
+                              value={editFormData.afterTargetIncentiveType}
+                              onValueChange={(v) =>
+                                handleEditSelectChange(
+                                  "afterTargetIncentiveType",
+                                  v,
+                                )
+                              }
+                              disabled={
+                                editFormData.monthlyTargetType !== "none" &&
+                                editFormData.monthlyTargetType !== "both"
+                              }
+                            >
+                              <SelectTrigger className="w-[110px]">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="fixed">Fixed</SelectItem>
+                                <SelectItem value="percentage">%</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </div>
 
                         {/* Percentage On */}
                         <div className="space-y-2">
-                            <Label htmlFor="edit-incentivePercentageOn" className="text-xs font-medium">Percentage Based On</Label>
-                            <Select 
-                                value={editFormData.incentivePercentageOn} 
-                                onValueChange={(v) => handleEditSelectChange('incentivePercentageOn', v)}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="sale_amount">Sale Amount</SelectItem>
-                                    <SelectItem value="profit">Profit</SelectItem>
-                                    <SelectItem value="revenue">Revenue</SelectItem>
-                                </SelectContent>
-                            </Select>
+                          <Label
+                            htmlFor="edit-incentivePercentageOn"
+                            className="text-xs font-medium"
+                          >
+                            Percentage Based On
+                          </Label>
+                          <Select
+                            value={editFormData.incentivePercentageOn}
+                            onValueChange={(v) =>
+                              handleEditSelectChange("incentivePercentageOn", v)
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="sale_amount">
+                                Sale Amount
+                              </SelectItem>
+                              <SelectItem value="profit">Profit</SelectItem>
+                              <SelectItem value="revenue">Revenue</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
 
                         {/* Min Amount */}
                         <div className="space-y-2">
-                            <Label htmlFor="edit-minSaleAmountForIncentive" className="text-xs font-medium">Min Sale Amount (Eligibility)</Label>
-                            <Input
-                                id="edit-minSaleAmountForIncentive"
-                                name="minSaleAmountForIncentive"
-                                type="number" 
-                                value={editFormData.minSaleAmountForIncentive}
-                                onChange={handleEditInputChange}
-                                placeholder="e.g. 5000"
-                            />
+                          <Label
+                            htmlFor="edit-minSaleAmountForIncentive"
+                            className="text-xs font-medium"
+                          >
+                            Min Sale Amount (Eligibility)
+                          </Label>
+                          <Input
+                            id="edit-minSaleAmountForIncentive"
+                            name="minSaleAmountForIncentive"
+                            type="number"
+                            value={editFormData.minSaleAmountForIncentive}
+                            onChange={handleEditInputChange}
+                            placeholder="e.g. 5000"
+                          />
                         </div>
+                      </div>
+                    </div>
                   </div>
-              </div>
-            </div>
 
-            {/* Bank Details */}
-            <div className="bg-slate-50 p-4 rounded-md border mt-4">
-                <h4 className="text-sm font-semibold mb-3 text-slate-700 flex items-center gap-2">
-                   <Building className="h-4 w-4" /> Bank Account Details
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
+                  {/* Bank Details */}
+                  <div className="bg-slate-50 p-4 rounded-md border mt-4">
+                    <h4 className="text-sm font-semibold mb-3 text-slate-700 flex items-center gap-2">
+                      <Building className="h-4 w-4" /> Bank Account Details
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
                         <Label htmlFor="edit-bankName">Bank Name</Label>
                         <Input
-                            id="edit-bankName"
-                            name="bankName"
-                            value={editFormData.bankDetails.bankName}
-                            onChange={handleEditBankChange}
-                            placeholder="e.g. HBL"
+                          id="edit-bankName"
+                          name="bankName"
+                          value={editFormData.bankDetails.bankName}
+                          onChange={handleEditBankChange}
+                          placeholder="e.g. HBL"
                         />
-                    </div>
-                     <div className="space-y-2">
+                      </div>
+                      <div className="space-y-2">
                         <Label htmlFor="edit-accountTitle">Account Title</Label>
                         <Input
-                            id="edit-accountTitle"
-                            name="accountTitle"
-                            value={editFormData.bankDetails.accountTitle}
-                            onChange={handleEditBankChange}
-                            placeholder="Account Holder Name"
+                          id="edit-accountTitle"
+                          name="accountTitle"
+                          value={editFormData.bankDetails.accountTitle}
+                          onChange={handleEditBankChange}
+                          placeholder="Account Holder Name"
                         />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="edit-accountNumber">Account Number</Label>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-accountNumber">
+                          Account Number
+                        </Label>
                         <Input
-                            id="edit-accountNumber"
-                            name="accountNumber"
-                            value={editFormData.bankDetails.accountNumber}
-                            onChange={handleEditBankChange}
-                            placeholder="Account Number"
+                          id="edit-accountNumber"
+                          name="accountNumber"
+                          value={editFormData.bankDetails.accountNumber}
+                          onChange={handleEditBankChange}
+                          placeholder="Account Number"
                         />
-                    </div>
-                     <div className="space-y-2">
+                      </div>
+                      <div className="space-y-2">
                         <Label htmlFor="edit-iban">IBAN</Label>
                         <Input
-                            id="edit-iban"
-                            name="iban"
-                            value={editFormData.bankDetails.iban}
-                            onChange={handleEditBankChange}
-                            placeholder="PK..."
+                          id="edit-iban"
+                          name="iban"
+                          value={editFormData.bankDetails.iban}
+                          onChange={handleEditBankChange}
+                          placeholder="PK..."
                         />
-                    </div>
-                    <div className="space-y-2">
+                      </div>
+                      <div className="space-y-2">
                         <Label htmlFor="edit-branchCode">Branch Code</Label>
                         <Input
-                            id="edit-branchCode"
-                            name="branchCode"
-                            value={editFormData.bankDetails.branchCode}
-                            onChange={handleEditBankChange}
-                            placeholder="e.g. 0911"
+                          id="edit-branchCode"
+                          name="branchCode"
+                          value={editFormData.bankDetails.branchCode}
+                          onChange={handleEditBankChange}
+                          placeholder="e.g. 0911"
                         />
+                      </div>
                     </div>
-                </div>
-            </div>
-          </TabsContent>
+                  </div>
+                </TabsContent>
 
-          <TabsContent value="documents" className="space-y-4 mt-0">
-            <div className="space-y-4">
-                <div className="space-y-2">
-                    <Label>Document Type</Label>
-                    <Select value={editDocType} onValueChange={setEditDocType}>
+                <TabsContent value="documents" className="space-y-4 mt-0">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Document Type</Label>
+                      <Select
+                        value={editDocType}
+                        onValueChange={setEditDocType}
+                      >
                         <SelectTrigger>
-                        <SelectValue placeholder="Select type to upload" />
+                          <SelectValue placeholder="Select type to upload" />
                         </SelectTrigger>
                         <SelectContent>
-                        {DOCUMENT_TYPES.filter(type => {
-                            const isMultiple = MULTIPLE_ALLOWED_TYPES.includes(type);
+                          {DOCUMENT_TYPES.filter((type) => {
+                            const isMultiple =
+                              MULTIPLE_ALLOWED_TYPES.includes(type);
                             // Ensure documents array exists
                             const docs = editFormData.documents || [];
-                            const isPresent = docs.some(d => d.type === type);
+                            const isPresent = docs.some((d) => d.type === type);
                             return isMultiple || !isPresent;
-                        }).map(type => (
-                            <SelectItem key={type} value={type}>{type}</SelectItem>
-                        ))}
+                          }).map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {type}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
-                    </Select>
-                </div>
+                      </Select>
+                    </div>
 
-                <div className="border p-4 rounded-md border-dashed text-center">
-                    <Input 
-                        type="file" 
-                        onChange={handleEditFileUpload} 
-                        className="hidden" 
+                    <div className="border p-4 rounded-md border-dashed text-center">
+                      <Input
+                        type="file"
+                        onChange={handleEditFileUpload}
+                        className="hidden"
                         id="edit-doc-upload"
                         accept="image/*,application/pdf"
                         disabled={!editDocType}
-                    />
-                    <Label 
-                        htmlFor="edit-doc-upload" 
-                        className={`cursor-pointer flex flex-col items-center gap-2 py-4 ${!editDocType ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
-                    >
-                        {uploading ? <Loader2 className="h-8 w-8 animate-spin text-blue-500" /> : <Upload className="h-8 w-8 text-slate-400" />}
+                      />
+                      <Label
+                        htmlFor="edit-doc-upload"
+                        className={`cursor-pointer flex flex-col items-center gap-2 py-4 ${!editDocType ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+                      >
+                        {uploading ? (
+                          <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                        ) : (
+                          <Upload className="h-8 w-8 text-slate-400" />
+                        )}
                         <span className="text-sm text-slate-600">
-                             {editDocType ? `Click to upload ${editDocType}` : 'Select a document type first'}
+                          {editDocType
+                            ? `Click to upload ${editDocType}`
+                            : "Select a document type first"}
                         </span>
-                        <span className="text-xs text-slate-400">Supports Images & PDF (Max 5MB)</span>
-                    </Label>
-                </div>
-            </div>
-            
-            {editFormData.documents && editFormData.documents.length > 0 && (
-                <div className="space-y-2">
-                    <h4 className="text-sm font-medium">Uploaded Documents</h4>
-                    <div className="space-y-2">
-                        {(editFormData.documents || []).map((doc, index) => (
-                            <div key={index} className="flex items-center justify-between p-2 border rounded-md bg-slate-50">
-                                <div className="flex items-center gap-2 overflow-hidden">
-                                    <FileText className="h-4 w-4 flex-shrink-0 text-blue-500" />
-                                    <div className="flex flex-col">
-                                        <span className="text-sm font-medium truncate">{doc.name}</span>
-                                        {doc.originalName && <span className="text-xs text-slate-400 truncate">{doc.originalName}</span>}
-                                    </div>
-                                </div>
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleEditFileDelete(index)}
-                                    className="text-red-500 hover:text-red-700 h-8 w-8 p-0"
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        ))}
+                        <span className="text-xs text-slate-400">
+                          Supports Images & PDF (Max 5MB)
+                        </span>
+                      </Label>
                     </div>
-                </div>
-            )}
-          </TabsContent>
-          </div>
+                  </div>
 
-          <DialogFooter className="pt-4 border-t mt-auto">
-              <Button
-                type="submit"
-                disabled={loading || !validateAgentId(editFormData.agentId)}
-                className="flex-1 blue-button gap-2"
-              >
-                {loading ? 'Updating...' : (
-                  <>
-                    <Edit className="h-4 w-4" />
-                    Update Agent
-                  </>
-                )}
-              </Button>
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => setShowEditForm(false)} 
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-          </DialogFooter>
-          </form>
+                  {editFormData.documents &&
+                    editFormData.documents.length > 0 && (
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-medium">
+                          Uploaded Documents
+                        </h4>
+                        <div className="space-y-2">
+                          {(editFormData.documents || []).map((doc, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center justify-between p-2 border rounded-md bg-slate-50"
+                            >
+                              <div className="flex items-center gap-2 overflow-hidden">
+                                <FileText className="h-4 w-4 flex-shrink-0 text-blue-500" />
+                                <div className="flex flex-col">
+                                  <span className="text-sm font-medium truncate">
+                                    {doc.name}
+                                  </span>
+                                  {doc.originalName && (
+                                    <span className="text-xs text-slate-400 truncate">
+                                      {doc.originalName}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEditFileDelete(index)}
+                                className="text-red-500 hover:text-red-700 h-8 w-8 p-0"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                </TabsContent>
+              </div>
+
+              <DialogFooter className="pt-4 border-t mt-auto">
+                <Button
+                  type="submit"
+                  disabled={loading || !validateAgentId(editFormData.agentId)}
+                  className="flex-1 blue-button gap-2"
+                >
+                  {loading ? (
+                    "Updating..."
+                  ) : (
+                    <>
+                      <Edit className="h-4 w-4" />
+                      Update Employee
+                    </>
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowEditForm(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+              </DialogFooter>
+            </form>
           </Tabs>
         </DialogContent>
       </Dialog>
 
-      {/* View Agent Modal */}
+      {/* View Employee Modal */}
       <Dialog open={showViewModal} onOpenChange={setShowViewModal}>
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           {selectedAgent && (
@@ -1923,13 +2278,13 @@ export default function AgentsPage() {
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <Eye className="h-5 w-5 text-[#10B5DB]" />
-                  Agent Details
+                  Employee Details
                 </DialogTitle>
                 <DialogDescription>
                   Complete information about {selectedAgent.agentName}
                 </DialogDescription>
               </DialogHeader>
-              
+
               <div className="space-y-6">
                 {/* Agent Header */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
@@ -1937,13 +2292,21 @@ export default function AgentsPage() {
                     {selectedAgent.agentName.charAt(0)}
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900">{selectedAgent.agentName}</h3>
+                    <h3 className="text-xl font-bold text-gray-900">
+                      {selectedAgent.agentName}
+                    </h3>
                     <div className="flex items-center gap-2 mt-1">
                       <Badge className="bg-blue-100 text-blue-800">
                         ID: {selectedAgent.agentId}
                       </Badge>
-                      <Badge className={selectedAgent.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-                        {selectedAgent.isActive ? 'Active' : 'Inactive'}
+                      <Badge
+                        className={
+                          selectedAgent.isActive
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }
+                      >
+                        {selectedAgent.isActive ? "Active" : "Inactive"}
                       </Badge>
                     </div>
                   </div>
@@ -1958,13 +2321,15 @@ export default function AgentsPage() {
                     </div>
                     <p className="text-gray-900">{selectedAgent.email}</p>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <Phone className="h-4 w-4" />
                       <span className="font-medium">Phone:</span>
                     </div>
-                    <p className="text-gray-900">{selectedAgent.phone || 'Not provided'}</p>
+                    <p className="text-gray-900">
+                      {selectedAgent.phone || "Not provided"}
+                    </p>
                   </div>
                 </div>
 
@@ -1979,7 +2344,7 @@ export default function AgentsPage() {
                       {selectedAgent.employeeType}
                     </Badge>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <Briefcase className="h-4 w-4" />
@@ -1998,9 +2363,12 @@ export default function AgentsPage() {
                   {selectedAgent.shift ? (
                     <div className="bg-gray-50 p-3 rounded-lg">
                       <div className="flex items-center justify-between">
-                        <span className="font-medium">{selectedAgent.shift.name}</span>
+                        <span className="font-medium">
+                          {selectedAgent.shift.name}
+                        </span>
                         <Badge className="bg-[#10B5DB]/10 text-[#10B5DB]">
-                          {selectedAgent.shift.startTime} - {selectedAgent.shift.endTime}
+                          {selectedAgent.shift.startTime} -{" "}
+                          {selectedAgent.shift.endTime}
                         </Badge>
                       </div>
                     </div>
@@ -2015,52 +2383,61 @@ export default function AgentsPage() {
                     <Target className="h-4 w-4" />
                     <span className="font-medium">Monthly Targets:</span>
                   </div>
-                  
-                  {selectedAgent.monthlyTargetType === 'none' ? (
+
+                  {selectedAgent.monthlyTargetType === "none" ? (
                     <p className="text-gray-500">No targets set</p>
                   ) : (
                     <div className="bg-gray-50 p-4 rounded-lg space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="font-medium">Target Type:</span>
-                        <Badge className={
-                          selectedAgent.monthlyTargetType === 'digit' ? 'bg-blue-100 text-blue-800' :
-                          selectedAgent.monthlyTargetType === 'amount' ? 'bg-green-100 text-green-800' :
-                          'bg-purple-100 text-purple-800'
-                        }>
-                          {selectedAgent.monthlyTargetType === 'digit' ? 'Digit Target' :
-                           selectedAgent.monthlyTargetType === 'amount' ? 'Amount Target' : 'Both Targets'}
+                        <Badge
+                          className={
+                            selectedAgent.monthlyTargetType === "digit"
+                              ? "bg-blue-100 text-blue-800"
+                              : selectedAgent.monthlyTargetType === "amount"
+                                ? "bg-green-100 text-green-800"
+                                : "bg-purple-100 text-purple-800"
+                          }
+                        >
+                          {selectedAgent.monthlyTargetType === "digit"
+                            ? "Digit Target"
+                            : selectedAgent.monthlyTargetType === "amount"
+                              ? "Amount Target"
+                              : "Both Targets"}
                         </Badge>
                       </div>
-                      
-                      {(selectedAgent.monthlyTargetType === 'digit' || selectedAgent.monthlyTargetType === 'both') && 
-                       selectedAgent.monthlyDigitTarget > 0 && (
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Hash className="h-4 w-4 text-gray-500" />
-                            <span>Digit Target:</span>
+
+                      {(selectedAgent.monthlyTargetType === "digit" ||
+                        selectedAgent.monthlyTargetType === "both") &&
+                        selectedAgent.monthlyDigitTarget > 0 && (
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Hash className="h-4 w-4 text-gray-500" />
+                              <span>Digit Target:</span>
+                            </div>
+                            <span className="font-bold text-lg">
+                              {selectedAgent.monthlyDigitTarget.toLocaleString()}
+                            </span>
                           </div>
-                          <span className="font-bold text-lg">
-                            {selectedAgent.monthlyDigitTarget.toLocaleString()}
-                          </span>
-                        </div>
-                      )}
-                      
-                      {(selectedAgent.monthlyTargetType === 'amount' || selectedAgent.monthlyTargetType === 'both') && 
-                       selectedAgent.monthlyAmountTarget > 0 && (
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <DollarSign className="h-4 w-4 text-gray-500" />
-                            <span>Amount Target:</span>
+                        )}
+
+                      {(selectedAgent.monthlyTargetType === "amount" ||
+                        selectedAgent.monthlyTargetType === "both") &&
+                        selectedAgent.monthlyAmountTarget > 0 && (
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <DollarSign className="h-4 w-4 text-gray-500" />
+                              <span>Amount Target:</span>
+                            </div>
+                            <span className="font-bold text-lg">
+                              {selectedAgent.monthlyAmountTarget.toLocaleString()}{" "}
+                              {selectedAgent.targetCurrency}
+                            </span>
                           </div>
-                          <span className="font-bold text-lg">
-                            {selectedAgent.monthlyAmountTarget.toLocaleString()} {selectedAgent.targetCurrency}
-                          </span>
-                        </div>
-                      )}
+                        )}
                     </div>
                   )}
                 </div>
-
 
                 {/* Salary Information */}
                 <div className="space-y-3">
@@ -2069,90 +2446,140 @@ export default function AgentsPage() {
                     <span className="font-medium">Salary & Compensation:</span>
                   </div>
                   <div className="bg-gray-50 p-4 rounded-lg space-y-4">
-                     {/* Commission Structure Type */}
-                     <div className="flex items-center justify-between border-b pb-2">
-                        <span className="text-gray-600">Structure Type:</span>
-                        <Badge variant="outline" className="border-blue-200 text-blue-700">
-                          {selectedAgent.commissionType || 'Basic + Commission'}
-                        </Badge>
-                     </div>
+                    {/* Commission Structure Type */}
+                    <div className="flex items-center justify-between border-b pb-2">
+                      <span className="text-gray-600">Structure Type:</span>
+                      <Badge
+                        variant="outline"
+                        className="border-blue-200 text-blue-700"
+                      >
+                        {selectedAgent.commissionType || "Basic + Commission"}
+                      </Badge>
+                    </div>
 
-                     {/* Base Salary (if applicable) */}
-                     {(!selectedAgent.commissionType || selectedAgent.commissionType === 'Basic + Commission') && (
-                       <>
-                         <div className="flex items-center justify-between">
-                            <span className="text-gray-600">Basic Salary:</span>
-                            <span className="font-bold">{selectedAgent.basicSalary ? selectedAgent.basicSalary.toLocaleString() : '0'}</span>
-                         </div>
-                         <div className="flex items-center justify-between">
-                            <span className="text-gray-600">Attendance Allowance:</span>
-                            <span className="font-bold">{selectedAgent.attendanceAllowance ? selectedAgent.attendanceAllowance.toLocaleString() : '0'}</span>
-                         </div>
-                       </>
-                     )}
+                    {/* Base Salary (if applicable) */}
+                    {(!selectedAgent.commissionType ||
+                      selectedAgent.commissionType ===
+                        "Basic + Commission") && (
+                      <>
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-600">Basic Salary:</span>
+                          <span className="font-bold">
+                            {selectedAgent.basicSalary
+                              ? selectedAgent.basicSalary.toLocaleString()
+                              : "0"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-600">
+                            Attendance Allowance:
+                          </span>
+                          <span className="font-bold">
+                            {selectedAgent.attendanceAllowance
+                              ? selectedAgent.attendanceAllowance.toLocaleString()
+                              : "0"}
+                          </span>
+                        </div>
+                      </>
+                    )}
 
-                     {/* Incentive Details */}
-                     <div className="border-t pt-2 mt-2">
-                        <span className="text-sm font-semibold text-gray-700 block mb-2">Incentive Structure</span>                        
-                        <div className="grid grid-cols-2 gap-4">
-                            {/* In Target */}
-                            <div className="bg-white p-2 rounded border border-gray-200">
-                                <div className="text-xs text-gray-500 mb-1">In Target</div>
-                                <div className="font-bold text-gray-900">
-                                    {selectedAgent.perSaleIncentiveInTarget ? selectedAgent.perSaleIncentiveInTarget : '0'}
-                                    <span className="text-xs font-normal text-gray-500 ml-1">
-                                        {selectedAgent.inTargetIncentiveType === 'percentage' ? '%' : 'Fixed'}
-                                    </span>
-                                </div>
-                            </div>
-                            
-                            {/* After Target */}
-                            <div className="bg-white p-2 rounded border border-gray-200">
-                                <div className="text-xs text-gray-500 mb-1">After Target</div>
-                                <div className="font-bold text-gray-900">
-                                    {selectedAgent.perSaleIncentiveAfterTarget ? selectedAgent.perSaleIncentiveAfterTarget : '0'}
-                                    <span className="text-xs font-normal text-gray-500 ml-1">
-                                        {selectedAgent.afterTargetIncentiveType === 'percentage' ? '%' : 'Fixed'}
-                                    </span>
-                                </div>
-                            </div>
+                    {/* Incentive Details */}
+                    <div className="border-t pt-2 mt-2">
+                      <span className="text-sm font-semibold text-gray-700 block mb-2">
+                        Incentive Structure
+                      </span>
+                      <div className="grid grid-cols-2 gap-4">
+                        {/* In Target */}
+                        <div className="bg-white p-2 rounded border border-gray-200">
+                          <div className="text-xs text-gray-500 mb-1">
+                            In Target
+                          </div>
+                          <div className="font-bold text-gray-900">
+                            {selectedAgent.perSaleIncentiveInTarget
+                              ? selectedAgent.perSaleIncentiveInTarget
+                              : "0"}
+                            <span className="text-xs font-normal text-gray-500 ml-1">
+                              {selectedAgent.inTargetIncentiveType ===
+                              "percentage"
+                                ? "%"
+                                : "Fixed"}
+                            </span>
+                          </div>
                         </div>
 
-                        {/* Extra Details */}
-                        {(selectedAgent.inTargetIncentiveType === 'percentage' || selectedAgent.afterTargetIncentiveType === 'percentage') && (
-                             <div className="mt-2 text-xs text-gray-500">
-                                Calc on: <span className="font-medium text-gray-700 capitalize">{selectedAgent.incentivePercentageOn?.replace('_', ' ') || 'Sale Amount'}</span>
-                             </div>
-                        )}
-                        {selectedAgent.minSaleAmountForIncentive > 0 && (
-                            <div className="mt-1 text-xs text-gray-500">
-                                Min Sale: <span className="font-medium text-gray-700">{selectedAgent.minSaleAmountForIncentive}</span>
-                            </div>
-                        )}
-                     </div>
+                        {/* After Target */}
+                        <div className="bg-white p-2 rounded border border-gray-200">
+                          <div className="text-xs text-gray-500 mb-1">
+                            After Target
+                          </div>
+                          <div className="font-bold text-gray-900">
+                            {selectedAgent.perSaleIncentiveAfterTarget
+                              ? selectedAgent.perSaleIncentiveAfterTarget
+                              : "0"}
+                            <span className="text-xs font-normal text-gray-500 ml-1">
+                              {selectedAgent.afterTargetIncentiveType ===
+                              "percentage"
+                                ? "%"
+                                : "Fixed"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Extra Details */}
+                      {(selectedAgent.inTargetIncentiveType === "percentage" ||
+                        selectedAgent.afterTargetIncentiveType ===
+                          "percentage") && (
+                        <div className="mt-2 text-xs text-gray-500">
+                          Calc on:{" "}
+                          <span className="font-medium text-gray-700 capitalize">
+                            {selectedAgent.incentivePercentageOn?.replace(
+                              "_",
+                              " ",
+                            ) || "Sale Amount"}
+                          </span>
+                        </div>
+                      )}
+                      {selectedAgent.minSaleAmountForIncentive > 0 && (
+                        <div className="mt-1 text-xs text-gray-500">
+                          Min Sale:{" "}
+                          <span className="font-medium text-gray-700">
+                            {selectedAgent.minSaleAmountForIncentive}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 {/* Account Information */}
                 <div className="border-t pt-4">
-                  <h4 className="font-medium text-gray-700 mb-3">Account Information</h4>
+                  <h4 className="font-medium text-gray-700 mb-3">
+                    Account Information
+                  </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <div className="text-sm text-gray-600">Account Created:</div>
+                      <div className="text-sm text-gray-600">
+                        Account Created:
+                      </div>
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-gray-400" />
                         <span className="text-gray-900">
-                          {new Date(selectedAgent.createdAt).toLocaleDateString()}
+                          {new Date(
+                            selectedAgent.createdAt,
+                          ).toLocaleDateString()}
                         </span>
                       </div>
                     </div>
-                    
+
                     <div className="space-y-1">
                       <div className="text-sm text-gray-600">Last Updated:</div>
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-gray-400" />
                         <span className="text-gray-900">
-                          {new Date(selectedAgent.updatedAt).toLocaleDateString()}
+                          {new Date(
+                            selectedAgent.updatedAt,
+                          ).toLocaleDateString()}
                         </span>
                       </div>
                     </div>
@@ -2186,18 +2613,16 @@ export default function AgentsPage() {
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <CardTitle>Agents List</CardTitle>
+              <CardTitle>Employees List</CardTitle>
               <CardDescription>
-                Showing {filteredAgents.length} of {totalAgents} agents
+                Showing {filteredAgents.length} of {totalAgents} employees
               </CardDescription>
             </div>
-            
+
             <div className="flex items-center gap-2">
-              <div className="text-sm text-gray-600">
-                Page size:
-              </div>
-              <Select 
-                value={pageSize.toString()} 
+              <div className="text-sm text-gray-600">Page size:</div>
+              <Select
+                value={pageSize.toString()}
                 onValueChange={(v) => {
                   setPageSize(parseInt(v));
                   setCurrentPage(1);
@@ -2207,7 +2632,7 @@ export default function AgentsPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {PAGE_SIZES.map(size => (
+                  {PAGE_SIZES.map((size) => (
                     <SelectItem key={size.value} value={size.value.toString()}>
                       {size.label}
                     </SelectItem>
@@ -2228,49 +2653,55 @@ export default function AgentsPage() {
                 className="pl-10"
               />
             </div>
-            
+
             <Select value={selectedShift} onValueChange={setSelectedShift}>
               <SelectTrigger>
                 <SelectValue placeholder="All Shifts" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Shifts</SelectItem>
-                {shifts.map(shift => (
+                {shifts.map((shift) => (
                   <SelectItem key={shift._id} value={shift._id}>
                     {shift.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            
-            <Select value={selectedEmployeeType} onValueChange={setSelectedEmployeeType}>
+
+            <Select
+              value={selectedEmployeeType}
+              onValueChange={setSelectedEmployeeType}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="All Types" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Types</SelectItem>
-                {EMPLOYEE_TYPES.map(type => (
+                {EMPLOYEE_TYPES.map((type) => (
                   <SelectItem key={type.value} value={type.value}>
                     {type.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            
-            <Select value={selectedTargetType} onValueChange={setSelectedTargetType}>
+
+            <Select
+              value={selectedTargetType}
+              onValueChange={setSelectedTargetType}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="All Targets" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Targets</SelectItem>
-                {TARGET_TYPES.map(type => (
+                {TARGET_TYPES.map((type) => (
                   <SelectItem key={type.value} value={type.value}>
                     {type.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            
+
             <Select value={selectedStatus} onValueChange={setSelectedStatus}>
               <SelectTrigger>
                 <SelectValue placeholder="All Status" />
@@ -2289,21 +2720,25 @@ export default function AgentsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[200px]">Agent</TableHead>
+                  <TableHead className="w-[200px]">Employee</TableHead>
                   <TableHead className="w-[150px]">Details</TableHead>
                   <TableHead className="w-[120px]">Targets</TableHead>
                   <TableHead className="w-[100px]">Status</TableHead>
-                  <TableHead className="w-[180px] text-right">Actions</TableHead>
+                  <TableHead className="w-[180px] text-right">
+                    Actions
+                  </TableHead>
                 </TableRow>
               </TableHeader>
-              
+
               <TableBody>
                 {loading ? (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-8">
                       <div className="flex flex-col items-center justify-center gap-2">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#10B5DB]"></div>
-                        <p className="text-sm text-gray-500">Loading agents...</p>
+                        <p className="text-sm text-gray-500">
+                          Loading employees...
+                        </p>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -2314,8 +2749,12 @@ export default function AgentsPage() {
                         <div className="text-gray-400">
                           <Search className="h-12 w-12" />
                         </div>
-                        <p className="text-gray-500 font-medium">No agents found</p>
-                        <p className="text-sm text-gray-400">Try changing your search or filters</p>
+                        <p className="text-gray-500 font-medium">
+                          No employees found
+                        </p>
+                        <p className="text-sm text-gray-400">
+                          Try changing your search or filters
+                        </p>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -2324,11 +2763,15 @@ export default function AgentsPage() {
                     <TableRow key={agent._id} className="hover:bg-gray-50">
                       <TableCell>
                         <div className="space-y-1">
-                          <div className="font-semibold text-gray-900">{agent.agentName}</div>
-                          <div className="text-sm text-gray-500">ID: {agent.agentId}</div>
+                          <div className="font-semibold text-gray-900">
+                            {agent.agentName}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            ID: {agent.agentId}
+                          </div>
                         </div>
                       </TableCell>
-                      
+
                       <TableCell>
                         <div className="space-y-1">
                           <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -2343,82 +2786,103 @@ export default function AgentsPage() {
                           )}
                         </div>
                       </TableCell>
-                      
+
                       <TableCell>
                         <div className="space-y-1">
-                          <Badge variant="outline" className={
-                            agent.monthlyTargetType === 'none' ? 'text-gray-400' :
-                            agent.monthlyTargetType === 'digit' ? 'text-blue-600' :
-                            agent.monthlyTargetType === 'amount' ? 'text-green-600' :
-                            'text-purple-600'
-                          }>
-                            {agent.monthlyTargetType === 'none' ? 'No Target' :
-                             agent.monthlyTargetType === 'digit' ? 'Digit' :
-                             agent.monthlyTargetType === 'amount' ? 'Amount' : 'Both'}
+                          <Badge
+                            variant="outline"
+                            className={
+                              agent.monthlyTargetType === "none"
+                                ? "text-gray-400"
+                                : agent.monthlyTargetType === "digit"
+                                  ? "text-blue-600"
+                                  : agent.monthlyTargetType === "amount"
+                                    ? "text-green-600"
+                                    : "text-purple-600"
+                            }
+                          >
+                            {agent.monthlyTargetType === "none"
+                              ? "No Target"
+                              : agent.monthlyTargetType === "digit"
+                                ? "Digit"
+                                : agent.monthlyTargetType === "amount"
+                                  ? "Amount"
+                                  : "Both"}
                           </Badge>
-                          
-                          {agent.monthlyTargetType !== 'none' && (
+
+                          {agent.monthlyTargetType !== "none" && (
                             <div className="text-xs space-y-0.5">
-                              {(agent.monthlyTargetType === 'digit' || agent.monthlyTargetType === 'both') && 
-                               agent.monthlyDigitTarget > 0 && (
-                                <div className="flex items-center gap-1">
-                                  <Hash className="h-3 w-3" />
-                                  <span>{agent.monthlyDigitTarget.toLocaleString()}</span>
-                                </div>
-                              )}
-                              
-                              {(agent.monthlyTargetType === 'amount' || agent.monthlyTargetType === 'both') && 
-                               agent.monthlyAmountTarget > 0 && (
-                                <div className="flex items-center gap-1">
-                                  <DollarSign className="h-3 w-3" />
-                                  <span>{agent.monthlyAmountTarget.toLocaleString()} {agent.targetCurrency}</span>
-                                </div>
-                              )}
+                              {(agent.monthlyTargetType === "digit" ||
+                                agent.monthlyTargetType === "both") &&
+                                agent.monthlyDigitTarget > 0 && (
+                                  <div className="flex items-center gap-1">
+                                    <Hash className="h-3 w-3" />
+                                    <span>
+                                      {agent.monthlyDigitTarget.toLocaleString()}
+                                    </span>
+                                  </div>
+                                )}
+
+                              {(agent.monthlyTargetType === "amount" ||
+                                agent.monthlyTargetType === "both") &&
+                                agent.monthlyAmountTarget > 0 && (
+                                  <div className="flex items-center gap-1">
+                                    <DollarSign className="h-3 w-3" />
+                                    <span>
+                                      {agent.monthlyAmountTarget.toLocaleString()}{" "}
+                                      {agent.targetCurrency}
+                                    </span>
+                                  </div>
+                                )}
                             </div>
                           )}
                         </div>
                       </TableCell>
-                      
+
                       <TableCell>
-                        <Badge className={
-                          agent.isActive 
-                            ? 'bg-green-100 text-green-800 hover:bg-green-100' 
-                            : 'bg-red-100 text-red-800 hover:bg-red-100'
-                        }>
-                          {agent.isActive ? 'Active' : 'Inactive'}
+                        <Badge
+                          className={
+                            agent.isActive
+                              ? "bg-green-100 text-green-800 hover:bg-green-100"
+                              : "bg-red-100 text-red-800 hover:bg-red-100"
+                          }
+                        >
+                          {agent.isActive ? "Active" : "Inactive"}
                         </Badge>
                       </TableCell>
-                      
+
                       <TableCell>
                         <div className="flex justify-end gap-1">
                           {/* View Button - Always Visible */}
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => router.push(`/dashboard/agents/${agent._id}`)}
+                            onClick={() =>
+                              router.push(`/dashboard/agents/${agent._id}`)
+                            }
                             className="h-8 w-8 p-0 text-gray-600 hover:text-[#10B5DB] hover:bg-[#10B5DB]/10"
                             title="View Full Details"
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
-                          
+
                           {/* Edit Button */}
-                          {hasPermission('agent', 'edit') && (
+                          {hasPermission("agent", "edit") && (
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => handleOpenEdit(agent)}
                               className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                              title="Edit Agent"
+                              title="Edit Employee"
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
                           )}
-                          
+
                           {/* Reset Password */}
-                          {hasPermission('agent', 'edit') && (
-                            <ResetPasswordDialog 
-                              agent={agent} 
+                          {hasPermission("agent", "edit") && (
+                            <ResetPasswordDialog
+                              agent={agent}
                               onSuccess={fetchAgents}
                               trigger={
                                 <Button
@@ -2432,19 +2896,21 @@ export default function AgentsPage() {
                               }
                             />
                           )}
-                          
+
                           {/* Activate/Deactivate */}
-                          {hasPermission('agent', 'edit') && (
+                          {hasPermission("agent", "edit") && (
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleToggleStatus(agent._id, agent.isActive)}
+                              onClick={() =>
+                                handleToggleStatus(agent._id, agent.isActive)
+                              }
                               className={`h-8 w-8 p-0 ${
-                                agent.isActive 
-                                  ? 'text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50' 
-                                  : 'text-green-600 hover:text-green-700 hover:bg-green-50'
+                                agent.isActive
+                                  ? "text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50"
+                                  : "text-green-600 hover:text-green-700 hover:bg-green-50"
                               }`}
-                              title={agent.isActive ? 'Deactivate' : 'Activate'}
+                              title={agent.isActive ? "Deactivate" : "Activate"}
                             >
                               {agent.isActive ? (
                                 <UserX className="h-4 w-4" />
@@ -2453,15 +2919,15 @@ export default function AgentsPage() {
                               )}
                             </Button>
                           )}
-                          
+
                           {/* Delete Button */}
-                          {hasPermission('agent', 'delete') && (
+                          {hasPermission("agent", "delete") && (
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => handleDeleteAgent(agent._id)}
                               className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                              title="Delete Agent"
+                              title="Delete Employee"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -2480,11 +2946,17 @@ export default function AgentsPage() {
         <div className="border-t px-6 py-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-sm text-gray-600">
-              Showing <span className="font-medium">{Math.min(((currentPage - 1) * pageSize) + 1, totalAgents)}</span> to{' '}
-              <span className="font-medium">{Math.min(currentPage * pageSize, totalAgents)}</span> of{' '}
-              <span className="font-medium">{totalAgents}</span> agents
+              Showing{" "}
+              <span className="font-medium">
+                {Math.min((currentPage - 1) * pageSize + 1, totalAgents)}
+              </span>{" "}
+              to{" "}
+              <span className="font-medium">
+                {Math.min(currentPage * pageSize, totalAgents)}
+              </span>{" "}
+              of <span className="font-medium">{totalAgents}</span> employees
             </div>
-            
+
             <div className="flex items-center gap-1">
               <Button
                 variant="outline"
@@ -2496,18 +2968,18 @@ export default function AgentsPage() {
               >
                 <ChevronsLeft className="h-4 w-4" />
               </Button>
-              
+
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
                 className="h-8 w-8 p-0"
                 title="Previous Page"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              
+
               <div className="flex items-center gap-1">
                 {[...Array(Math.min(5, totalPages))].map((_, i) => {
                   let pageNum;
@@ -2520,18 +2992,18 @@ export default function AgentsPage() {
                   } else {
                     pageNum = currentPage - 2 + i;
                   }
-                  
+
                   if (pageNum > 0 && pageNum <= totalPages) {
                     return (
                       <Button
                         key={pageNum}
-                        variant={currentPage === pageNum ? "default" : "outline"}
+                        variant={
+                          currentPage === pageNum ? "default" : "outline"
+                        }
                         size="sm"
                         onClick={() => setCurrentPage(pageNum)}
                         className={`h-8 w-8 p-0 ${
-                          currentPage === pageNum
-                            ? "blue-button"
-                            : ""
+                          currentPage === pageNum ? "blue-button" : ""
                         }`}
                       >
                         {pageNum}
@@ -2541,18 +3013,20 @@ export default function AgentsPage() {
                   return null;
                 })}
               </div>
-              
+
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
                 disabled={currentPage === totalPages}
                 className="h-8 w-8 p-0"
                 title="Next Page"
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
-              
+
               <Button
                 variant="outline"
                 size="sm"

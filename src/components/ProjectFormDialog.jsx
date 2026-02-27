@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { Upload, X, Plus, GripVertical, Image as ImageIcon } from 'lucide-react';
+import { Upload, X, Plus, GripVertical, Image as ImageIcon, Sparkles, Layout, Code2, Globe, FileText, DollarSign, Target, Calendar, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -406,74 +406,190 @@ export function ProjectFormDialog({ open, onOpenChange, onSubmit, isLoading, ini
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] p-0">
-        <DialogHeader className="p-6 pb-0">
-          <DialogTitle>{initialData ? 'Edit Project' : 'Add New Project'}</DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-w-5xl max-h-[92vh] p-0 overflow-hidden border-none shadow-2xl rounded-[32px]">
+        {/* --- PREMIUM HEADER --- */}
+        <div className="bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-500 pt-14 pb-10 px-10 text-white relative overflow-hidden shrink-0 rounded-t-[32px]">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-[80px]" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-900/20 rounded-full -ml-24 -mb-24 blur-[60px]" />
+          
+          <div className="relative z-10 flex items-center justify-between">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="p-1 px-2 rounded-md bg-white/20 backdrop-blur-md text-[10px] font-black uppercase tracking-widest">
+                  Agent Dashboard
+                </div>
+              </div>
+              <DialogTitle className="text-3xl font-black tracking-tight flex items-center gap-3">
+                <div className="p-2.5 bg-white/20 rounded-2xl backdrop-blur-xl border border-white/20 shadow-lg">
+                  {initialData ? <RotateCw className="h-6 w-6" /> : <Sparkles className="h-6 w-6" />}
+                </div>
+                {initialData ? 'Update Sale Entry' : 'Upload New Sale'}
+              </DialogTitle>
+              <p className="text-blue-50 text-sm font-medium opacity-80 mt-2 max-w-md">
+                Enter your project details, tech stack, and revenue information to track your monthly performance.
+              </p>
+            </div>
+          </div>
+        </div>
 
-        <form onSubmit={handleSubmit}>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <div className="px-6">
-              <TabsList className="w-full grid grid-cols-5">
-                <TabsTrigger value="basic">Basic Info</TabsTrigger>
-                <TabsTrigger value="tech">Tech Stack</TabsTrigger>
-                <TabsTrigger value="images">Images</TabsTrigger>
-                <TabsTrigger value="links">Links</TabsTrigger>
-                <TabsTrigger value="details">Details</TabsTrigger>
+        <form onSubmit={handleSubmit} className="flex flex-col h-full overflow-hidden bg-white">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full overflow-hidden">
+            <div className="px-8 pt-6 pb-2 border-b border-slate-100 bg-slate-50/50">
+              <TabsList className="w-full h-12 p-1 bg-slate-200/50 rounded-2xl grid grid-cols-5 gap-1">
+                {[
+                  { id: 'basic', label: 'Info', icon: Layout },
+                  { id: 'tech', label: 'Stack', icon: Code2 },
+                  { id: 'images', label: 'Images', icon: ImageIcon },
+                  { id: 'links', label: 'URLs', icon: Globe },
+                  { id: 'details', label: 'Features', icon: FileText },
+                ].map((t) => (
+                  <TabsTrigger 
+                    key={t.id} 
+                    value={t.id}
+                    className="rounded-xl data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all font-bold text-xs flex items-center gap-2"
+                  >
+                    <t.icon className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">{t.label}</span>
+                  </TabsTrigger>
+                ))}
               </TabsList>
             </div>
 
-            <ScrollArea className="h-[55vh] px-6 mt-4">
-              {/* Basic Info Tab */}
-              <TabsContent value="basic" className="space-y-4 mt-0">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Title *</Label>
-                  <Input
-                    id="title"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleInputChange}
-                    placeholder="Enter project title"
-                  />
+            <ScrollArea className="flex-1 px-8 py-6 h-[50vh]">
+              {/* --- BASIC INFO TAB --- */}
+              <TabsContent value="basic" className="space-y-6 mt-0 focus-visible:ring-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="md:col-span-2 space-y-2">
+                    <Label htmlFor="title" className="text-xs font-black uppercase tracking-wider text-slate-500 ml-1">Project Title *</Label>
+                    <Input
+                      id="title"
+                      name="title"
+                      value={formData.title}
+                      onChange={handleInputChange}
+                      placeholder="e.g., E-commerce App Redesign"
+                      className="h-12 px-4 rounded-xl border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 bg-slate-50/30"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2 space-y-2">
+                    <Label htmlFor="shortDescription" className="text-xs font-black uppercase tracking-wider text-slate-500 ml-1">The Elevator Pitch *</Label>
+                    <Textarea
+                      id="shortDescription"
+                      name="shortDescription"
+                      value={formData.shortDescription}
+                      onChange={handleInputChange}
+                      placeholder="Give a catchy 1-2 sentence overview of the project"
+                      className="rounded-xl border-slate-200 focus:border-blue-500 bg-slate-50/30 min-h-[80px]"
+                      maxLength={300}
+                    />
+                    <div className="flex justify-end">
+                      <span className={`text-[10px] font-bold ${formData.shortDescription.length > 280 ? 'text-rose-500' : 'text-slate-400'}`}>
+                        {formData.shortDescription.length}/300
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="shortDescription">Short Description *</Label>
-                  <Textarea
-                    id="shortDescription"
-                    name="shortDescription"
-                    value={formData.shortDescription}
-                    onChange={handleInputChange}
-                    placeholder="Brief description (max 300 characters)"
-                    maxLength={300}
-                    rows={2}
-                  />
-                  <p className="text-xs text-gray-500">{formData.shortDescription.length}/300</p>
+                {/* --- SALES FOCUS SECTION --- */}
+                <div className="rounded-3xl bg-gradient-to-br from-slate-50 to-blue-50/30 border border-blue-100 p-6 space-y-5 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <DollarSign className="h-16 w-16" />
+                  </div>
+                  
+                  <div className="flex items-center gap-3 border-b border-blue-100/50 pb-4">
+                    <div className="p-2 bg-blue-600 rounded-lg shadow-lg shadow-blue-200">
+                      <Target className="h-4 w-4 text-white" />
+                    </div>
+                    <h3 className="font-black text-sm text-slate-900 uppercase tracking-widest">Revenue & Status</h3>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div className="space-y-2">
+                      <Label htmlFor="price" className="text-[10px] font-black uppercase tracking-widest text-[#10B5DB]">Log Revenue (PKR)</Label>
+                      <div className="relative">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400">₨</div>
+                        <Input
+                          id="price"
+                          name="price"
+                          type="number"
+                          value={formData.price}
+                          onChange={handleInputChange}
+                          placeholder="0.00"
+                          className="pl-10 h-12 rounded-xl border-white bg-white shadow-sm focus:border-blue-500 transition-all font-bold text-lg"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="status" className="text-[10px] font-black uppercase tracking-widest text-[#10B5DB]">Project Status</Label>
+                      <Select
+                        value={formData.status}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
+                      >
+                        <SelectTrigger className="h-12 px-4 rounded-xl border-white bg-white shadow-sm font-bold">
+                          <SelectValue placeholder="Select Status" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl border-slate-100 shadow-xl">
+                          {['Pending', 'In Progress', 'Completed', 'Delivered', 'Cancelled', 'On Hold'].map((st) => (
+                            <SelectItem key={st} value={st} className="rounded-lg my-1 font-medium">
+                              {st}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="deadline" className="text-[10px] font-black uppercase tracking-widest text-[#10B5DB]">Delivery Deadline</Label>
+                      <div className="relative">
+                        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <Input
+                          id="deadline"
+                          name="deadline"
+                          type="date"
+                          value={formData.deadline}
+                          onChange={handleInputChange}
+                          className="pl-12 h-12 rounded-xl border-white bg-white shadow-sm font-bold"
+                        />
+                      </div>
+                    </div>
+
+                    {!isAgentUser && (
+                      <div className="space-y-2">
+                        <Label htmlFor="assignedAgent" className="text-[10px] font-black uppercase tracking-widest text-[#10B5DB]">Assign Revenue To</Label>
+                        <Select
+                            value={formData.assignedAgent}
+                            onValueChange={(value) => setFormData(prev => ({ ...prev, assignedAgent: value }))}
+                            disabled={agentsLoading}
+                        >
+                            <SelectTrigger className="h-12 px-4 rounded-xl border-white bg-white shadow-sm font-bold">
+                                <SelectValue placeholder={agentsLoading ? "Loading..." : "Select Agent"} />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl border-slate-100 shadow-xl">
+                                <SelectItem value="unassigned" className="font-bold text-slate-400">Unassigned</SelectItem>
+                                {revenueAgents.map((agent) => (
+                                    <SelectItem key={agent._id} value={agent._id} className="rounded-lg my-1">
+                                        {agent.agentName}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="fullDescription">Full Description</Label>
-                  <Textarea
-                    id="fullDescription"
-                    name="fullDescription"
-                    value={formData.fullDescription}
-                    onChange={handleInputChange}
-                    placeholder="Detailed project description"
-                    rows={4}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label>Category</Label>
+                    <Label className="text-xs font-black uppercase tracking-wider text-slate-500 ml-1">Category</Label>
                     <Select
                       value={formData.category}
                       onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="h-11 rounded-xl border-slate-200">
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="rounded-xl">
                         {categories.map(cat => (
                           <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                         ))}
@@ -482,15 +598,15 @@ export function ProjectFormDialog({ open, onOpenChange, onSubmit, isLoading, ini
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Project Type</Label>
+                    <Label className="text-xs font-black uppercase tracking-wider text-slate-500 ml-1">Type</Label>
                     <Select
                       value={formData.projectType}
                       onValueChange={(value) => setFormData(prev => ({ ...prev, projectType: value }))}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="h-11 rounded-xl border-slate-200">
                         <SelectValue placeholder="Select type" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="rounded-xl">
                         {projectTypes.map(type => (
                           <SelectItem key={type} value={type}>{type}</SelectItem>
                         ))}
@@ -499,82 +615,17 @@ export function ProjectFormDialog({ open, onOpenChange, onSubmit, isLoading, ini
                   </div>
                 </div>
 
-                {/* Sales & Assignment Section */}
-                <div className="p-4 bg-slate-50 border rounded-lg space-y-4">
-                  <h3 className="font-semibold text-sm text-slate-900 border-b pb-2 mb-2">Sales & Assignment</h3>
-                  <div className={`grid ${isAgentUser ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
-                    <div className="space-y-2">
-                        <Label htmlFor="price">Project Price (Revenue)</Label>
-                        <Input
-                            id="price"
-                            name="price"
-                            type="number"
-                            value={formData.price}
-                            onChange={handleInputChange}
-                            placeholder="0.00"
-                        />
-                    </div>
-
-                    {!isAgentUser && (
-                      <div className="space-y-2">
-                        <Label htmlFor="assignedAgent">Assign Agent (Revenue Target)</Label>
-                        <Select
-                            value={formData.assignedAgent}
-                            onValueChange={(value) => setFormData(prev => ({ ...prev, assignedAgent: value }))}
-                            disabled={agentsLoading}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder={agentsLoading ? "Loading..." : "Select Agent"} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="unassigned">Unassigned</SelectItem>
-                                {revenueAgents.map((agent) => (
-                                    <SelectItem key={agent._id} value={agent._id}>
-                                        {agent.agentName} ({agent.agentId})
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                      </div>
-                    )}
-
-                    <div className="space-y-2">
-                        <Label htmlFor="status">Project Status</Label>
-                         <Select
-                            value={formData.status}
-                            onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select Status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {['Pending', 'In Progress', 'Completed', 'Delivered', 'Cancelled', 'On Hold'].map((st) => (
-                                    <SelectItem key={st} value={st}>{st}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                     
-                     <div className="space-y-2">
-                        <Label htmlFor="deadline">Deadline</Label>
-                        <Input
-                            id="deadline"
-                            name="deadline"
-                            type="date"
-                            value={formData.deadline}
-                            onChange={handleInputChange}
-                        />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
+                <div className="flex items-center gap-4 bg-yellow-50/50 p-4 rounded-2xl border border-yellow-100/50">
+                  <div className="flex items-center gap-3">
                     <Switch
                       checked={formData.isFeatured}
                       onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isFeatured: checked }))}
+                      className="data-[state=checked]:bg-amber-500"
                     />
-                    <Label>Featured Project</Label>
+                    <div>
+                      <Label className="text-sm font-bold text-slate-900">Featured Portfolio Project</Label>
+                      <p className="text-[10px] text-slate-500 font-medium">Display this prominently on your agent profile</p>
+                    </div>
                   </div>
                 </div>
               </TabsContent>
@@ -969,14 +1020,33 @@ export function ProjectFormDialog({ open, onOpenChange, onSubmit, isLoading, ini
             </ScrollArea>
           </Tabs>
 
-          <DialogFooter className="p-6 pt-4 border-t">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isLoading || uploading}>
-              {isLoading || uploading ? 'Saving...' : 'Save Project'}
-            </Button>
-          </DialogFooter>
+            <DialogFooter className="p-6 pt-2 h-24 shrink-0 bg-slate-50 border-t items-center px-8">
+              <Button 
+                type="button" 
+                variant="ghost" 
+                onClick={() => onOpenChange(false)}
+                className="h-12 px-6 rounded-xl font-bold hover:bg-slate-100 transition-colors"
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={isLoading || uploading}
+                className="h-12 px-10 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black shadow-lg shadow-blue-200 transition-all flex items-center gap-2"
+              >
+                {isLoading || uploading ? (
+                  <>
+                    <RotateCw className="h-4 w-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="h-5 w-5" />
+                    {initialData ? 'Update Record' : 'Log Sale Entry'}
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

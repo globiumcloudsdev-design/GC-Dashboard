@@ -31,6 +31,8 @@ export default function LoginPage() {
 
     try {
       const result = await login(email, password);
+      console.log('Login Res', result);
+      
       if (result.success) router.push("/dashboard");
       else setError(result.message);
     } catch (error) {

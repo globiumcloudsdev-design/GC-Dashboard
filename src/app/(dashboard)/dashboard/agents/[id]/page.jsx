@@ -1,21 +1,32 @@
 "use client";
 
-import React, { useState, useEffect, use } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
-import { agentService } from '@/services/agentService';
-import { formatTime, formatDate, formatDateTime, calculateWorkingHours } from '@/utils/timezone';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
+import React, { useState, useEffect, use } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { agentService } from "@/services/agentService";
+import {
+  formatTime,
+  formatDate,
+  formatDateTime,
+  calculateWorkingHours,
+} from "@/utils/timezone";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,7 +43,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { format } from 'date-fns';
+import { format } from "date-fns";
 import {
   Dialog,
   DialogContent,
@@ -41,9 +52,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import {
   ArrowLeft,
   Printer,
@@ -64,10 +75,10 @@ import {
   FileText,
   CheckCircle,
   XCircle,
-  Loader2
-} from 'lucide-react';
-import { toast } from 'sonner';
-import Image from 'next/image';
+  Loader2,
+} from "lucide-react";
+import { toast } from "sonner";
+import Image from "next/image";
 
 const DOCUMENT_TYPES = [
   "CNIC",
@@ -77,13 +88,13 @@ const DOCUMENT_TYPES = [
   "Photos",
   "Bank Letter",
   "Medical Certificate",
-  "Profile Photo"
+  "Profile Photo",
 ];
 
 const MULTIPLE_ALLOWED_TYPES = [
   "Educational Certificates",
   "Experience Certificates",
-  "Photos"
+  "Photos",
 ];
 
 export default function AgentDetailPage({ params }) {
@@ -124,7 +135,7 @@ export default function AgentDetailPage({ params }) {
     totalSales: 0,
     achievedDigits: 0,
     attendanceRate: 0,
-    performance: 0
+    performance: 0,
   });
 
   // Generate list of available months from joining date to now
@@ -151,15 +162,15 @@ export default function AgentDetailPage({ params }) {
 
     // Iterate backwards from current date to start date
     for (let y = currentYear; y >= startYear; y--) {
-      const endM = (y === currentYear) ? currentMonth : 11;
-      const startMVal = (y === startYear) ? startMonth : 0;
+      const endM = y === currentYear ? currentMonth : 11;
+      const startMVal = y === startYear ? startMonth : 0;
 
       for (let m = endM; m >= startMVal; m--) {
         list.push({
           value: `${m + 1}-${y}`,
-          label: `${new Date(2000, m, 1).toLocaleString('default', { month: 'long' })} ${y}`,
+          label: `${new Date(2000, m, 1).toLocaleString("default", { month: "long" })} ${y}`,
           month: m + 1,
-          year: y
+          year: y,
         });
       }
     }
@@ -167,9 +178,9 @@ export default function AgentDetailPage({ params }) {
     if (list.length === 0) {
       list.push({
         value: `${currentMonth + 1}-${currentYear}`,
-        label: `${new Date(2000, currentMonth, 1).toLocaleString('default', { month: 'long' })} ${currentYear}`,
+        label: `${new Date(2000, currentMonth, 1).toLocaleString("default", { month: "long" })} ${currentYear}`,
         month: currentMonth + 1,
-        year: currentYear
+        year: currentYear,
       });
     }
 
@@ -180,27 +191,27 @@ export default function AgentDetailPage({ params }) {
     fetchAgentDetails();
     // Fetch initial data for stats (Current Month)
     fetchAttendance(true);
-    if (agent?.monthlyTargetType === 'digit') {
+    if (agent?.monthlyTargetType === "digit") {
       fetchBookings(true);
-    } else if (agent?.monthlyTargetType === 'amount') {
+    } else if (agent?.monthlyTargetType === "amount") {
       fetchProjects(true);
-    } else if (agent?.monthlyTargetType === 'both') {
+    } else if (agent?.monthlyTargetType === "both") {
       fetchSalesData(true);
     }
   }, [id, agent?.monthlyTargetType]);
 
   useEffect(() => {
-    if (activeTab === 'attendance') fetchAttendance();
-    if (activeTab === 'sales') {
-      if (agent?.monthlyTargetType === 'digit') {
+    if (activeTab === "attendance") fetchAttendance();
+    if (activeTab === "sales") {
+      if (agent?.monthlyTargetType === "digit") {
         fetchBookings();
-      } else if (agent?.monthlyTargetType === 'amount') {
+      } else if (agent?.monthlyTargetType === "amount") {
         fetchProjects();
-      } else if (agent?.monthlyTargetType === 'both') {
+      } else if (agent?.monthlyTargetType === "both") {
         fetchSalesData();
       }
     }
-    if (activeTab === 'payroll') fetchPayrolls();
+    if (activeTab === "payroll") fetchPayrolls();
   }, [activeTab, selectedMonth, selectedYear, agent?.monthlyTargetType]);
 
   async function fetchAgentDetails() {
@@ -213,11 +224,11 @@ export default function AgentDetailPage({ params }) {
       if (data.success && data.agent) {
         setAgent(data.agent);
       } else {
-        toast.error(data.error || 'Failed to load agent details');
+        toast.error(data.error || "Failed to load agent details");
       }
     } catch (error) {
       console.error("Agent fetch error:", error);
-      toast.error('Failed to load agent details');
+      toast.error("Failed to load agent details");
     } finally {
       setLoading(false);
     }
@@ -229,9 +240,10 @@ export default function AgentDetailPage({ params }) {
       const targetMonth = isInitial ? new Date().getMonth() + 1 : selectedMonth;
       const targetYear = isInitial ? new Date().getFullYear() : selectedYear;
 
-
       // Use direct API call
-      const res = await fetch(`/api/attendance?agentId=${id}&month=${targetMonth}&year=${targetYear}`);
+      const res = await fetch(
+        `/api/attendance?agentId=${id}&month=${targetMonth}&year=${targetYear}`,
+      );
       const json = await res.json();
 
       if (json.success) {
@@ -240,20 +252,25 @@ export default function AgentDetailPage({ params }) {
 
         // Calculate Attendance Rate
         const totalDays = attendanceData.length;
-        const presentDays = attendanceData.filter(d =>
-          d.status === 'present' || d.status === 'late'
+        const presentDays = attendanceData.filter(
+          (d) => d.status === "present" || d.status === "late",
         ).length;
-        const rate = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0;
+        const rate =
+          totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0;
 
-        if (isInitial || (targetMonth === new Date().getMonth() + 1 && targetYear === new Date().getFullYear())) {
-          setStats(prev => ({ ...prev, attendanceRate: rate }));
+        if (
+          isInitial ||
+          (targetMonth === new Date().getMonth() + 1 &&
+            targetYear === new Date().getFullYear())
+        ) {
+          setStats((prev) => ({ ...prev, attendanceRate: rate }));
         }
       } else {
-        toast.error(json.message || 'Failed to load attendance');
+        toast.error(json.message || "Failed to load attendance");
       }
     } catch (error) {
       console.error("Attendance fetch error:", error);
-      if (!isInitial) toast.error('Failed to load attendance');
+      if (!isInitial) toast.error("Failed to load attendance");
     } finally {
       if (!isInitial) setAttendanceLoading(false);
     }
@@ -266,35 +283,51 @@ export default function AgentDetailPage({ params }) {
       const targetYear = isInitial ? new Date().getFullYear() : selectedYear;
 
       const start = new Date(targetYear, targetMonth - 1, 1).toISOString();
-      const end = new Date(targetYear, targetMonth, 0, 23, 59, 59).toISOString();
-
+      const end = new Date(
+        targetYear,
+        targetMonth,
+        0,
+        23,
+        59,
+        59,
+      ).toISOString();
 
       // Direct API call
-      const res = await fetch(`/api/promo-codes/agent/${id}/bookings?startDate=${start}&endDate=${end}&limit=1000`);
+      const res = await fetch(
+        `/api/promo-codes/agent/${id}/bookings?startDate=${start}&endDate=${end}&limit=1000`,
+      );
       const json = await res.json();
-
 
       if (json.success) {
         const bookingData = json.data?.bookings || json.data || [];
         if (!isInitial) setBookings(bookingData);
 
         // Calculate Total Sales for digit target
-        const completedBookings = bookingData.filter(b =>
-          b.status === 'completed' || b.status === 'confirmed' || b.status === 'Completed'
+        const completedBookings = bookingData.filter(
+          (b) =>
+            b.status === "completed" ||
+            b.status === "confirmed" ||
+            b.status === "Completed",
         );
-        const total = completedBookings.reduce((sum, b) =>
-          sum + (b.discountedPrice || b.totalPrice || b.amount || 0), 0
+        const total = completedBookings.reduce(
+          (sum, b) =>
+            sum + (b.discountedPrice || b.totalPrice || b.amount || 0),
+          0,
         );
 
-        if (isInitial || (targetMonth === new Date().getMonth() + 1 && targetYear === new Date().getFullYear())) {
-          setStats(prev => ({ ...prev, totalSales: total }));
+        if (
+          isInitial ||
+          (targetMonth === new Date().getMonth() + 1 &&
+            targetYear === new Date().getFullYear())
+        ) {
+          setStats((prev) => ({ ...prev, totalSales: total }));
         }
       } else {
-        toast.error(json.message || 'Failed to load bookings');
+        toast.error(json.message || "Failed to load bookings");
       }
     } catch (error) {
       console.error("Bookings fetch error:", error);
-      if (!isInitial) toast.error('Failed to load bookings');
+      if (!isInitial) toast.error("Failed to load bookings");
     } finally {
       if (!isInitial) setBookingsLoading(false);
     }
@@ -309,11 +342,11 @@ export default function AgentDetailPage({ params }) {
       const start = new Date(targetYear, targetMonth - 1, 1).toISOString();
       const end = new Date(targetYear, targetMonth, 0).toISOString();
 
-
       // Fetch projects assigned to this agent
-      const res = await fetch(`/api/projects?assignedAgent=${id}&startDate=${start}&endDate=${end}&limit=1000`);
+      const res = await fetch(
+        `/api/projects?assignedAgent=${id}&startDate=${start}&endDate=${end}&limit=1000`,
+      );
       const json = await res.json();
-
 
       if (json.success) {
         const projectData = json.data || [];
@@ -321,18 +354,22 @@ export default function AgentDetailPage({ params }) {
 
         // Calculate Total Revenue from Projects
         const total = projectData
-          .filter(p => p.status === 'Completed' || p.status === 'Delivered')
+          .filter((p) => p.status === "Completed" || p.status === "Delivered")
           .reduce((sum, p) => sum + (p.price || 0), 0);
 
-        if (isInitial || (targetMonth === new Date().getMonth() + 1 && targetYear === new Date().getFullYear())) {
-          setStats(prev => ({ ...prev, totalSales: total }));
+        if (
+          isInitial ||
+          (targetMonth === new Date().getMonth() + 1 &&
+            targetYear === new Date().getFullYear())
+        ) {
+          setStats((prev) => ({ ...prev, totalSales: total }));
         }
       } else {
-        toast.error(json.message || 'Failed to load projects');
+        toast.error(json.message || "Failed to load projects");
       }
     } catch (error) {
       console.error("Projects fetch error:", error);
-      if (!isInitial) toast.error('Failed to load projects');
+      if (!isInitial) toast.error("Failed to load projects");
     } finally {
       if (!isInitial) setProjectsLoading(false);
     }
@@ -347,12 +384,15 @@ export default function AgentDetailPage({ params }) {
       const start = new Date(targetYear, targetMonth - 1, 1);
       const end = new Date(targetYear, targetMonth, 0, 23, 59, 59);
 
-
       // Fetch bookings with date filter
-      const bookingsRes = await fetch(`/api/promo-codes/agent/${id}/bookings?startDate=${start.toISOString()}&endDate=${end.toISOString()}&limit=1000`);
+      const bookingsRes = await fetch(
+        `/api/promo-codes/agent/${id}/bookings?startDate=${start.toISOString()}&endDate=${end.toISOString()}&limit=1000`,
+      );
 
       // Fetch ALL projects for agent (we'll filter by date on frontend)
-      const projectsRes = await fetch(`/api/projects?assignedAgent=${id}&limit=1000`);
+      const projectsRes = await fetch(
+        `/api/projects?assignedAgent=${id}&limit=1000`,
+      );
 
       const bookingsJson = await bookingsRes.json();
       const projectsJson = await projectsRes.json();
@@ -360,101 +400,128 @@ export default function AgentDetailPage({ params }) {
       console.log("Combined sales response:", { bookingsJson, projectsJson });
 
       if (bookingsJson.success && projectsJson.success) {
-        const bookingData = bookingsJson.data?.bookings || bookingsJson.data || [];
+        const bookingData =
+          bookingsJson.data?.bookings || bookingsJson.data || [];
         let projectDataAll = projectsJson.data || [];
 
         // Filter projects by selected month using updatedAt or completedAt
-        const projectData = projectDataAll.filter(p => {
-          const relevantDate = p.completedAt ? new Date(p.completedAt) : new Date(p.updatedAt);
+        const projectData = projectDataAll.filter((p) => {
+          const relevantDate = p.completedAt
+            ? new Date(p.completedAt)
+            : new Date(p.updatedAt);
           return relevantDate >= start && relevantDate <= end;
         });
 
-        console.log(`Projects filtered for ${targetMonth}/${targetYear}: ${projectData.length} out of ${projectDataAll.length}`);
+        console.log(
+          `Projects filtered for ${targetMonth}/${targetYear}: ${projectData.length} out of ${projectDataAll.length}`,
+        );
 
         // Combine and sort by date
         const combinedData = [
-          ...bookingData.map(b => ({
+          ...bookingData.map((b) => ({
             ...b,
-            type: 'booking',
+            type: "booking",
             date: b.createdAt,
-            amount: b.discountedPrice || b.totalPrice || b.amount || 0
+            amount: b.discountedPrice || b.totalPrice || b.amount || 0,
           })),
-          ...projectData.map(p => ({
+          ...projectData.map((p) => ({
             ...p,
-            type: 'project',
+            type: "project",
             date: p.completedAt || p.updatedAt || p.createdAt,
-            amount: p.price || 0
-          }))
+            amount: p.price || 0,
+          })),
         ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
         if (!isInitial) setSalesData(combinedData);
 
         // Calculate Total Sales and Digits based on agent's target type
-        const agentTargetType = agent?.monthlyTargetType || 'none';
+        const agentTargetType = agent?.monthlyTargetType || "none";
 
         let totalSales = 0;
         let achievedDigits = 0;
 
-        if (agentTargetType === 'digit') {
+        if (agentTargetType === "digit") {
           // For digit target: count completed bookings, sum their amounts for display
-          const completedBookings = bookingData.filter(b =>
-            b.status === 'completed' || b.status === 'confirmed' || b.status === 'Completed'
+          const completedBookings = bookingData.filter(
+            (b) =>
+              b.status === "completed" ||
+              b.status === "confirmed" ||
+              b.status === "Completed",
           );
           achievedDigits = completedBookings.length;
-          totalSales = completedBookings.reduce((sum, b) =>
-            sum + (b.discountedPrice || b.totalPrice || b.amount || 0), 0
+          totalSales = completedBookings.reduce(
+            (sum, b) =>
+              sum + (b.discountedPrice || b.totalPrice || b.amount || 0),
+            0,
           );
-        } else if (agentTargetType === 'amount') {
+        } else if (agentTargetType === "amount") {
           // For amount target: sum from completed projects only
-          const completedProjects = projectData.filter(p =>
-            p.status === 'Completed' || p.status === 'Delivered'
+          const completedProjects = projectData.filter(
+            (p) => p.status === "Completed" || p.status === "Delivered",
           );
-          totalSales = completedProjects.reduce((sum, p) =>
-            sum + (p.price || 0), 0
+          totalSales = completedProjects.reduce(
+            (sum, p) => sum + (p.price || 0),
+            0,
           );
-        } else if (agentTargetType === 'both') {
+        } else if (agentTargetType === "both") {
           // For both target: digits from bookings, revenue from projects only
-          const completedBookings = bookingData.filter(b =>
-            b.status === 'completed' || b.status === 'confirmed' || b.status === 'Completed'
+          const completedBookings = bookingData.filter(
+            (b) =>
+              b.status === "completed" ||
+              b.status === "confirmed" ||
+              b.status === "Completed",
           );
           achievedDigits = completedBookings.length;
 
-          const completedProjects = projectData.filter(p =>
-            p.status === 'Completed' || p.status === 'Delivered'
+          const completedProjects = projectData.filter(
+            (p) => p.status === "Completed" || p.status === "Delivered",
           );
-          totalSales = completedProjects.reduce((sum, p) =>
-            sum + (p.price || 0), 0
+          totalSales = completedProjects.reduce(
+            (sum, p) => sum + (p.price || 0),
+            0,
           );
         } else {
           // Default: sum both bookings and projects
-          const completedBookings = bookingData.filter(b =>
-            b.status === 'completed' || b.status === 'confirmed' || b.status === 'Completed'
+          const completedBookings = bookingData.filter(
+            (b) =>
+              b.status === "completed" ||
+              b.status === "confirmed" ||
+              b.status === "Completed",
           );
-          const totalBookings = completedBookings.reduce((sum, b) =>
-            sum + (b.discountedPrice || b.totalPrice || b.amount || 0), 0
+          const totalBookings = completedBookings.reduce(
+            (sum, b) =>
+              sum + (b.discountedPrice || b.totalPrice || b.amount || 0),
+            0,
           );
 
-          const completedProjects = projectData.filter(p =>
-            p.status === 'Completed' || p.status === 'Delivered'
+          const completedProjects = projectData.filter(
+            (p) => p.status === "Completed" || p.status === "Delivered",
           );
-          const totalProjects = completedProjects.reduce((sum, p) =>
-            sum + (p.price || 0), 0
+          const totalProjects = completedProjects.reduce(
+            (sum, p) => sum + (p.price || 0),
+            0,
           );
 
           totalSales = totalBookings + totalProjects;
         }
 
-        console.log(`📊 Stats calculated - Digits: ${achievedDigits}, Revenue: ${totalSales}`);
+        console.log(
+          `📊 Stats calculated - Digits: ${achievedDigits}, Revenue: ${totalSales}`,
+        );
 
-        if (isInitial || (targetMonth === new Date().getMonth() + 1 && targetYear === new Date().getFullYear())) {
-          setStats(prev => ({ ...prev, totalSales, achievedDigits }));
+        if (
+          isInitial ||
+          (targetMonth === new Date().getMonth() + 1 &&
+            targetYear === new Date().getFullYear())
+        ) {
+          setStats((prev) => ({ ...prev, totalSales, achievedDigits }));
         }
       } else {
-        toast.error('Failed to load sales data');
+        toast.error("Failed to load sales data");
       }
     } catch (error) {
       console.error("Sales data fetch error:", error);
-      if (!isInitial) toast.error('Failed to load sales data');
+      if (!isInitial) toast.error("Failed to load sales data");
     } finally {
       if (!isInitial) setSalesLoading(false);
     }
@@ -470,11 +537,11 @@ export default function AgentDetailPage({ params }) {
       if (json.success) {
         setPayrolls(json.data || []);
       } else {
-        toast.error(json.message || 'Failed to load payroll history');
+        toast.error(json.message || "Failed to load payroll history");
       }
     } catch (error) {
       console.error("Payroll fetch error:", error);
-      toast.error('Failed to load payroll history');
+      toast.error("Failed to load payroll history");
     } finally {
       setPayrollsLoading(false);
     }
@@ -490,12 +557,12 @@ export default function AgentDetailPage({ params }) {
     try {
       // 1. Upload to Cloudinary
       const formData = new FormData();
-      formData.append('file', selectedFile);
-      formData.append('folder', 'agent-documents');
+      formData.append("file", selectedFile);
+      formData.append("folder", "agent-documents");
 
-      const uploadRes = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
+      const uploadRes = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
       });
       const uploadJson = await uploadRes.json();
 
@@ -509,7 +576,7 @@ export default function AgentDetailPage({ params }) {
         url: uploadJson.data.url,
         type: selectedDocType,
         publicId: uploadJson.data.publicId,
-        uploadedAt: new Date()
+        uploadedAt: new Date(),
       };
 
       // 3. Update Agent
@@ -518,25 +585,24 @@ export default function AgentDetailPage({ params }) {
       const updatedDocs = [...currentDocs, newDoc];
 
       const updateRes = await fetch(`/api/agents/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          documents: updatedDocs
-        })
+          documents: updatedDocs,
+        }),
       });
 
       const updateJson = await updateRes.json();
 
       if (updateJson.success) {
         toast.success("Document uploaded successfully");
-        setAgent(prev => ({ ...prev, documents: updatedDocs }));
+        setAgent((prev) => ({ ...prev, documents: updatedDocs }));
         setIsUploadOpen(false);
         setSelectedFile(null);
         setSelectedDocType("");
       } else {
         throw new Error(updateJson.error || "Failed to update agent");
       }
-
     } catch (error) {
       console.error("Document upload error:", error);
       toast.error(error.message || "Failed to upload document");
@@ -549,38 +615,45 @@ export default function AgentDetailPage({ params }) {
 
   const downloadCSV = (data, fileName) => {
     if (!data.length) {
-      toast.error('No data to export');
+      toast.error("No data to export");
       return;
     }
 
     // Ensure data is properly formatted
     const headers = Object.keys(data[0]);
     const csvContent = [
-      headers.join(','),
-      ...data.map(row => headers.map(header => {
-        const value = row[header];
-        // Handle nested objects and dates
-        if (value instanceof Date) {
-          return `"${format(value, 'yyyy-MM-dd')}"`;
-        }
-        if (typeof value === 'object' && value !== null) {
-          return `"${JSON.stringify(value)}"`;
-        }
-        return `"${String(value || '').replace(/"/g, '""')}"`;
-      }).join(','))
-    ].join('\n');
+      headers.join(","),
+      ...data.map((row) =>
+        headers
+          .map((header) => {
+            const value = row[header];
+            // Handle nested objects and dates
+            if (value instanceof Date) {
+              return `"${format(value, "yyyy-MM-dd")}"`;
+            }
+            if (typeof value === "object" && value !== null) {
+              return `"${JSON.stringify(value)}"`;
+            }
+            return `"${String(value || "").replace(/"/g, '""')}"`;
+          })
+          .join(","),
+      ),
+    ].join("\n");
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
     if (link.download !== undefined) {
       const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', `${fileName}_${new Date().toISOString().split('T')[0]}.csv`);
-      link.style.visibility = 'hidden';
+      link.setAttribute("href", url);
+      link.setAttribute(
+        "download",
+        `${fileName}_${new Date().toISOString().split("T")[0]}.csv`,
+      );
+      link.style.visibility = "hidden";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      toast.success('File downloaded successfully');
+      toast.success("File downloaded successfully");
     }
   };
 
@@ -588,19 +661,18 @@ export default function AgentDetailPage({ params }) {
     window.print();
   };
 
-  const isImage = (url = "") =>
-    url.match(/\.(jpeg|jpg|png)$/i);
+  const isImage = (url = "") => url.match(/\.(jpeg|jpg|png)$/i);
 
-  const isPDF = (url = "") =>
-    url.match(/\.pdf$/i);
-
+  const isPDF = (url = "") => url.match(/\.pdf$/i);
 
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-12 w-12 animate-spin text-blue-500" />
-          <p className="text-lg font-medium text-gray-600">Loading Agent Profile...</p>
+          <p className="text-lg font-medium text-gray-600">
+            Loading Employee Profile...
+          </p>
         </div>
       </div>
     );
@@ -611,8 +683,12 @@ export default function AgentDetailPage({ params }) {
       <div className="flex h-screen items-center justify-center">
         <div className="text-center">
           <User className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-          <h2 className="text-2xl font-bold text-gray-700 mb-2">Agent Not Found</h2>
-          <p className="text-gray-500 mb-6">The agent you're looking for doesn't exist or has been removed.</p>
+          <h2 className="text-2xl font-bold text-gray-700 mb-2">
+            Employee Not Found
+          </h2>
+          <p className="text-gray-500 mb-6">
+            The employee you're looking for doesn't exist or has been removed.
+          </p>
           <Button onClick={() => router.back()}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Go Back
@@ -624,78 +700,96 @@ export default function AgentDetailPage({ params }) {
 
   // Helper function to format currency
   const formatCurrency = (amount) => {
-    let currencySymbol = agent?.targetCurrency || 'PKR';
+    let currencySymbol = agent?.targetCurrency || "PKR";
 
-    if (agent?.monthlyTargetType === 'digit') {
-      currencySymbol = 'USD'; // Will be formatted as $ by custom logic or Intl
+    if (agent?.monthlyTargetType === "digit") {
+      currencySymbol = "USD"; // Will be formatted as $ by custom logic or Intl
     }
 
     // Simple formatting if we just want symbol
-    if (currencySymbol === 'USD') return `$${amount?.toLocaleString() || '0'}`;
-    if (currencySymbol === 'EUR') return `€${amount?.toLocaleString() || '0'}`;
-    if (currencySymbol === 'GBP') return `£${amount?.toLocaleString() || '0'}`;
+    if (currencySymbol === "USD") return `$${amount?.toLocaleString() || "0"}`;
+    if (currencySymbol === "EUR") return `€${amount?.toLocaleString() || "0"}`;
+    if (currencySymbol === "GBP") return `£${amount?.toLocaleString() || "0"}`;
 
-    return `${currencySymbol} ${amount?.toLocaleString('en-PK') || '0'}`;
+    return `${currencySymbol} ${amount?.toLocaleString("en-PK") || "0"}`;
   };
 
   // Helper function to get status badge color
   const getStatusBadge = (status) => {
     const statusMap = {
-      present: 'bg-green-100 text-green-800 border-green-200',
-      late: 'bg-orange-100 text-orange-800 border-orange-200',
-      absent: 'bg-red-100 text-red-800 border-red-200',
-      half_day: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      approved_leave: 'bg-blue-100 text-blue-800 border-blue-200',
-      holiday: 'bg-purple-100 text-purple-800 border-purple-200',
-      weekly_off: 'bg-indigo-100 text-indigo-800 border-indigo-200',
-      pending_leave: 'bg-gray-100 text-gray-800 border-gray-200'
+      present: "bg-green-100 text-green-800 border-green-200",
+      late: "bg-orange-100 text-orange-800 border-orange-200",
+      absent: "bg-red-100 text-red-800 border-red-200",
+      half_day: "bg-yellow-100 text-yellow-800 border-yellow-200",
+      approved_leave: "bg-blue-100 text-blue-800 border-blue-200",
+      holiday: "bg-purple-100 text-purple-800 border-purple-200",
+      weekly_off: "bg-indigo-100 text-indigo-800 border-indigo-200",
+      pending_leave: "bg-gray-100 text-gray-800 border-gray-200",
     };
-    return statusMap[status] || 'bg-gray-100 text-gray-800 border-gray-200';
+    return statusMap[status] || "bg-gray-100 text-gray-800 border-gray-200";
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50">
       <div className="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto space-y-6 print:p-0 print:m-0 print:max-w-none">
-
         {/* Header Section */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 print:hidden">
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
             <div className="flex items-start gap-4 flex-1">
-              <Button variant="ghost" size="icon" onClick={() => router.back()} className="mt-1 hover:bg-slate-100">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => router.back()}
+                className="mt-1 hover:bg-slate-100"
+              >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
                   <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
-                    {agent.agentName || 'Unknown Agent'}
+                    {agent.agentName || "Unknown Agent"}
                   </h1>
-                  <Badge className={agent.isActive ? "bg-green-500 hover:bg-green-600 text-white" : "bg-red-500 hover:bg-red-600 text-white"}>
+                  <Badge
+                    className={
+                      agent.isActive
+                        ? "bg-green-500 hover:bg-green-600 text-white"
+                        : "bg-red-500 hover:bg-red-600 text-white"
+                    }
+                  >
                     {agent.isActive ? (
-                      <><CheckCircle className="h-3 w-3 mr-1" /> Active</>
+                      <>
+                        <CheckCircle className="h-3 w-3 mr-1" /> Active
+                      </>
                     ) : (
-                      <><XCircle className="h-3 w-3 mr-1" /> Inactive</>
+                      <>
+                        <XCircle className="h-3 w-3 mr-1" /> Inactive
+                      </>
                     )}
                   </Badge>
                 </div>
                 <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
-                  <Badge variant="outline" className="font-mono text-xs bg-slate-50 border-slate-300">
-                    {agent.agentId || 'N/A'}
+                  <Badge
+                    variant="outline"
+                    className="font-mono text-xs bg-slate-50 border-slate-300"
+                  >
+                    {agent.agentId || "N/A"}
                   </Badge>
                   <span className="flex items-center gap-1.5">
                     <Briefcase className="h-3.5 w-3.5 text-purple-500" />
-                    {agent.designation || 'Sales Agent'}
+                    {agent.designation || "Sales Agent"}
                   </span>
                   <span className="text-slate-300">•</span>
                   <span className="flex items-center gap-1.5">
                     <Building className="h-3.5 w-3.5 text-blue-500" />
-                    {agent.employeeType || 'Permanent'}
+                    {agent.employeeType || "Permanent"}
                   </span>
                   {agent.shift && (
                     <>
                       <span className="text-slate-300">•</span>
                       <span className="flex items-center gap-1.5">
                         <Clock className="h-3.5 w-3.5 text-orange-500" />
-                        {agent.shift.name} ({agent.shift.startTime} - {agent.shift.endTime})
+                        {agent.shift.name} ({agent.shift.startTime} -{" "}
+                        {agent.shift.endTime})
                       </span>
                     </>
                   )}
@@ -706,16 +800,19 @@ export default function AgentDetailPage({ params }) {
             <div className="flex items-center gap-2">
               <div className="bg-white rounded-md border flex items-center px-2 py-1 shadow-sm print:hidden">
                 <Calendar className="h-4 w-4 mr-2 text-slate-400" />
-                <Select value={`${selectedMonth}-${selectedYear}`} onValueChange={(v) => {
-                  const [m, y] = v.split('-');
-                  setSelectedMonth(parseInt(m));
-                  setSelectedYear(parseInt(y));
-                }}>
+                <Select
+                  value={`${selectedMonth}-${selectedYear}`}
+                  onValueChange={(v) => {
+                    const [m, y] = v.split("-");
+                    setSelectedMonth(parseInt(m));
+                    setSelectedYear(parseInt(y));
+                  }}
+                >
                   <SelectTrigger className="w-[160px] border-0 h-8 focus:ring-0 p-0 text-sm font-medium">
                     <SelectValue placeholder="Select Month" />
                   </SelectTrigger>
                   <SelectContent>
-                    {availableMonths.map(item => (
+                    {availableMonths.map((item) => (
                       <SelectItem key={item.value} value={item.value}>
                         {item.label}
                       </SelectItem>
@@ -725,40 +822,79 @@ export default function AgentDetailPage({ params }) {
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="gap-2 hover:bg-slate-100">
+                  <Button
+                    variant="outline"
+                    className="gap-2 hover:bg-slate-100"
+                  >
                     <FileText className="h-4 w-4" /> Generate Letter
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>Select Letter Type</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => router.push(`/dashboard/agents/${id}/letters/offer`)}>
+                  <DropdownMenuItem
+                    onClick={() =>
+                      router.push(`/dashboard/agents/${id}/letters/offer`)
+                    }
+                  >
                     Offer Letter
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push(`/dashboard/agents/${id}/letters/appointment`)}>
+                  <DropdownMenuItem
+                    onClick={() =>
+                      router.push(`/dashboard/agents/${id}/letters/appointment`)
+                    }
+                  >
                     Appointment Letter
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push(`/dashboard/agents/${id}/letters/confirmation`)}>
+                  <DropdownMenuItem
+                    onClick={() =>
+                      router.push(
+                        `/dashboard/agents/${id}/letters/confirmation`,
+                      )
+                    }
+                  >
                     Confirmation Letter
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push(`/dashboard/agents/${id}/letters/increment`)}>
+                  <DropdownMenuItem
+                    onClick={() =>
+                      router.push(`/dashboard/agents/${id}/letters/increment`)
+                    }
+                  >
                     Increment Letter
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => router.push(`/dashboard/agents/${id}/letters/experience`)}>
+                  <DropdownMenuItem
+                    onClick={() =>
+                      router.push(`/dashboard/agents/${id}/letters/experience`)
+                    }
+                  >
                     Experience Letter
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push(`/dashboard/agents/${id}/letters/relieving`)} className="text-red-600 focus:text-red-700">
+                  <DropdownMenuItem
+                    onClick={() =>
+                      router.push(`/dashboard/agents/${id}/letters/relieving`)
+                    }
+                    className="text-red-600 focus:text-red-700"
+                  >
                     Relieving Letter
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => router.push(`/dashboard/agents/${id}/id-card`)} className="font-medium text-blue-600">
+                  <DropdownMenuItem
+                    onClick={() =>
+                      router.push(`/dashboard/agents/${id}/id-card`)
+                    }
+                    className="font-medium text-blue-600"
+                  >
                     <User className="mr-2 h-4 w-4" /> Employee ID Card
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              <Button onClick={handlePrint} variant="outline" className="gap-2 hover:bg-slate-100">
+              <Button
+                onClick={handlePrint}
+                variant="outline"
+                className="gap-2 hover:bg-slate-100"
+              >
                 <Printer className="h-4 w-4" /> Print
               </Button>
             </div>
@@ -790,16 +926,27 @@ export default function AgentDetailPage({ params }) {
                 Monthly Target
               </CardDescription>
               <CardTitle className="text-3xl font-bold mt-2">
-                {agent.monthlyTargetType === 'digit' && agent.monthlyDigitTarget ? (
-                  <span>{agent.monthlyDigitTarget} <span className="text-base font-normal opacity-80">Sales</span></span>
-                ) : agent.monthlyTargetType === 'amount' && agent.monthlyAmountTarget ? (
+                {agent.monthlyTargetType === "digit" &&
+                agent.monthlyDigitTarget ? (
+                  <span>
+                    {agent.monthlyDigitTarget}{" "}
+                    <span className="text-base font-normal opacity-80">
+                      Sales
+                    </span>
+                  </span>
+                ) : agent.monthlyTargetType === "amount" &&
+                  agent.monthlyAmountTarget ? (
                   <span className="text-2xl">
-                    <span className="text-base font-normal opacity-80 mr-1">{agent.targetCurrency || 'PKR'}</span>
+                    <span className="text-base font-normal opacity-80 mr-1">
+                      {agent.targetCurrency || "PKR"}
+                    </span>
                     {(agent.monthlyAmountTarget || 0).toLocaleString()}
                   </span>
-                ) : agent.monthlyTargetType === 'both' ? (
+                ) : agent.monthlyTargetType === "both" ? (
                   <span className="text-xl">
-                    {agent.monthlyDigitTarget || 0} / {agent.targetCurrency || 'PKR'} {(agent.monthlyAmountTarget || 0).toLocaleString()}
+                    {agent.monthlyDigitTarget || 0} /{" "}
+                    {agent.targetCurrency || "PKR"}{" "}
+                    {(agent.monthlyAmountTarget || 0).toLocaleString()}
                   </span>
                 ) : (
                   <span className="text-2xl opacity-70">No Target</span>
@@ -820,7 +967,8 @@ export default function AgentDetailPage({ params }) {
                 {stats.attendanceRate}%
               </CardTitle>
               <p className="text-xs opacity-80 mt-1">
-                {new Date().toLocaleString('default', { month: 'long' })} {new Date().getFullYear()}
+                {new Date().toLocaleString("default", { month: "long" })}{" "}
+                {new Date().getFullYear()}
               </p>
             </CardHeader>
           </Card>
@@ -834,7 +982,7 @@ export default function AgentDetailPage({ params }) {
                 Next Payroll
               </CardDescription>
               <CardTitle className="text-3xl font-bold mt-2">
-                {new Date().toLocaleString('default', { month: 'long' })} 10
+                {new Date().toLocaleString("default", { month: "long" })} 10
               </CardTitle>
               <p className="text-xs opacity-80 mt-1">Salary Processing Date</p>
             </CardHeader>
@@ -844,57 +992,80 @@ export default function AgentDetailPage({ params }) {
         {/* Performance Progress Bar */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 print:hidden">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-slate-900">Monthly Performance</h3>
+            <h3 className="text-lg font-semibold text-slate-900">
+              Monthly Performance
+            </h3>
             <Badge variant="outline" className="font-mono">
-              {new Date().toLocaleString('default', { month: 'long' })} {new Date().getFullYear()}
+              {new Date().toLocaleString("default", { month: "long" })}{" "}
+              {new Date().getFullYear()}
             </Badge>
           </div>
 
           {(() => {
             let progress = 0;
-            let progressText = '';
-            let targetText = '';
+            let progressText = "";
+            let targetText = "";
 
-            if (agent?.monthlyTargetType === 'digit') {
+            if (agent?.monthlyTargetType === "digit") {
               const completedBookings = stats.achievedDigits || 0;
               const target = agent.monthlyDigitTarget || 0;
-              progress = target > 0 ? Math.min((completedBookings / target) * 100, 100) : 0;
+              progress =
+                target > 0
+                  ? Math.min((completedBookings / target) * 100, 100)
+                  : 0;
               progressText = `${completedBookings} / ${target} Sales`;
               targetText = `Target: ${target} Sales`;
-            } else if (agent?.monthlyTargetType === 'amount') {
+            } else if (agent?.monthlyTargetType === "amount") {
               const target = agent.monthlyAmountTarget || 0;
-              progress = target > 0 ? Math.min((stats.totalSales / target) * 100, 100) : 0;
-              progressText = `${agent.targetCurrency || 'PKR'} ${stats.totalSales.toLocaleString()} / ${(agent.targetCurrency || 'PKR')} ${target.toLocaleString()}`;
-              targetText = `Target: ${agent.targetCurrency || 'PKR'} ${target.toLocaleString()}`;
-            } else if (agent?.monthlyTargetType === 'both') {
+              progress =
+                target > 0
+                  ? Math.min((stats.totalSales / target) * 100, 100)
+                  : 0;
+              progressText = `${agent.targetCurrency || "PKR"} ${stats.totalSales.toLocaleString()} / ${agent.targetCurrency || "PKR"} ${target.toLocaleString()}`;
+              targetText = `Target: ${agent.targetCurrency || "PKR"} ${target.toLocaleString()}`;
+            } else if (agent?.monthlyTargetType === "both") {
               const completedBookings = stats.achievedDigits || 0;
               const digitTarget = agent.monthlyDigitTarget || 0;
               const amountTarget = agent.monthlyAmountTarget || 0;
-              const digitProgress = digitTarget > 0 ? (completedBookings / digitTarget) : 0;
-              const amountProgress = amountTarget > 0 ? (stats.totalSales / amountTarget) : 0;
-              progress = Math.min(((digitProgress + amountProgress) / 2) * 100, 100);
-              progressText = `${completedBookings} Sales & ${agent.targetCurrency || 'PKR'} ${stats.totalSales.toLocaleString()}`;
-              targetText = `Target: ${digitTarget} Sales & ${agent.targetCurrency || 'PKR'} ${amountTarget.toLocaleString()}`;
+              const digitProgress =
+                digitTarget > 0 ? completedBookings / digitTarget : 0;
+              const amountProgress =
+                amountTarget > 0 ? stats.totalSales / amountTarget : 0;
+              progress = Math.min(
+                ((digitProgress + amountProgress) / 2) * 100,
+                100,
+              );
+              progressText = `${completedBookings} Sales & ${agent.targetCurrency || "PKR"} ${stats.totalSales.toLocaleString()}`;
+              targetText = `Target: ${digitTarget} Sales & ${agent.targetCurrency || "PKR"} ${amountTarget.toLocaleString()}`;
             }
 
             return (
               <div className="space-y-3">
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-slate-600">{targetText}</span>
-                  <span className="font-medium text-slate-900">{progressText}</span>
+                  <span className="font-medium text-slate-900">
+                    {progressText}
+                  </span>
                 </div>
                 <div className="w-full bg-slate-200 rounded-full h-3">
                   <div
-                    className={`h-3 rounded-full transition-all duration-500 ${progress >= 100 ? 'bg-green-500' :
-                      progress >= 75 ? 'bg-blue-500' :
-                        progress >= 50 ? 'bg-yellow-500' : 'bg-red-500'
-                      }`}
+                    className={`h-3 rounded-full transition-all duration-500 ${
+                      progress >= 100
+                        ? "bg-green-500"
+                        : progress >= 75
+                          ? "bg-blue-500"
+                          : progress >= 50
+                            ? "bg-yellow-500"
+                            : "bg-red-500"
+                    }`}
                     style={{ width: `${progress}%` }}
                   ></div>
                 </div>
                 <div className="flex justify-between items-center text-xs text-slate-500">
                   <span>0%</span>
-                  <span className="font-medium">{progress.toFixed(1)}% Complete</span>
+                  <span className="font-medium">
+                    {progress.toFixed(1)}% Complete
+                  </span>
                   <span>100%</span>
                 </div>
               </div>
@@ -903,22 +1074,39 @@ export default function AgentDetailPage({ params }) {
         </div>
 
         {/* TABS */}
-        <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="w-full print:hidden">
+        <Tabs
+          defaultValue="overview"
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="w-full print:hidden"
+        >
           <div className="print:hidden bg-white rounded-xl shadow-sm border border-slate-200 p-1">
             <TabsList className="w-full justify-start bg-slate-50 rounded-lg h-auto p-1">
-              <TabsTrigger value="overview" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm px-6 py-3 font-medium">
+              <TabsTrigger
+                value="overview"
+                className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm px-6 py-3 font-medium"
+              >
                 <User className="h-4 w-4 mr-2" />
                 Complete Profile
               </TabsTrigger>
-              <TabsTrigger value="attendance" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm px-6 py-3 font-medium">
+              <TabsTrigger
+                value="attendance"
+                className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm px-6 py-3 font-medium"
+              >
                 <Clock className="h-4 w-4 mr-2" />
                 Attendance
               </TabsTrigger>
-              <TabsTrigger value="sales" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm px-6 py-3 font-medium">
+              <TabsTrigger
+                value="sales"
+                className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm px-6 py-3 font-medium"
+              >
                 <TrendingUp className="h-4 w-4 mr-2" />
                 Sales History
               </TabsTrigger>
-              <TabsTrigger value="payroll" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm px-6 py-3 font-medium">
+              <TabsTrigger
+                value="payroll"
+                className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm px-6 py-3 font-medium"
+              >
                 <CreditCard className="h-4 w-4 mr-2" />
                 Payroll
               </TabsTrigger>
@@ -943,7 +1131,7 @@ export default function AgentDetailPage({ params }) {
                       Full Name
                     </label>
                     <p className="text-base font-semibold text-slate-900">
-                      {agent.agentName || 'N/A'}
+                      {agent.agentName || "N/A"}
                     </p>
                   </div>
                   <div className="space-y-2">
@@ -951,8 +1139,11 @@ export default function AgentDetailPage({ params }) {
                       <Mail className="h-3.5 w-3.5" />
                       Email Address
                     </label>
-                    <p className="text-base font-medium text-slate-900 truncate" title={agent.email}>
-                      {agent.email || 'N/A'}
+                    <p
+                      className="text-base font-medium text-slate-900 truncate"
+                      title={agent.email}
+                    >
+                      {agent.email || "N/A"}
                     </p>
                   </div>
                   <div className="space-y-2">
@@ -961,15 +1152,18 @@ export default function AgentDetailPage({ params }) {
                       Phone Number
                     </label>
                     <p className="text-base font-medium text-slate-900">
-                      {agent.phone || 'Not Provided'}
+                      {agent.phone || "Not Provided"}
                     </p>
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                      Agent ID
+                      Employee ID
                     </label>
-                    <Badge variant="secondary" className="font-mono text-sm px-3 py-1">
-                      {agent.agentId || 'N/A'}
+                    <Badge
+                      variant="secondary"
+                      className="font-mono text-sm px-3 py-1"
+                    >
+                      {agent.agentId || "N/A"}
                     </Badge>
                   </div>
                   <div className="space-y-2">
@@ -977,8 +1171,14 @@ export default function AgentDetailPage({ params }) {
                       Status
                     </label>
                     <div>
-                      <Badge className={agent.isActive ? "bg-green-500 text-white" : "bg-red-500 text-white"}>
-                        {agent.isActive ? 'Active' : 'Inactive'}
+                      <Badge
+                        className={
+                          agent.isActive
+                            ? "bg-green-500 text-white"
+                            : "bg-red-500 text-white"
+                        }
+                      >
+                        {agent.isActive ? "Active" : "Inactive"}
                       </Badge>
                     </div>
                   </div>
@@ -987,7 +1187,9 @@ export default function AgentDetailPage({ params }) {
                       Joining Date
                     </label>
                     <p className="text-base font-medium text-slate-900">
-                      {agent.createdAt ? format(new Date(agent.createdAt), 'dd MMM yyyy') : 'N/A'}
+                      {agent.createdAt
+                        ? format(new Date(agent.createdAt), "dd MMM yyyy")
+                        : "N/A"}
                     </p>
                   </div>
                 </div>
@@ -1009,15 +1211,18 @@ export default function AgentDetailPage({ params }) {
                       Designation
                     </label>
                     <p className="text-base font-semibold text-slate-900">
-                      {agent.designation || 'Sales Agent'}
+                      {agent.designation || "Sales Agent"}
                     </p>
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
                       Employee Type
                     </label>
-                    <Badge variant="outline" className="font-normal bg-purple-50 text-purple-700 border-purple-200 px-3 py-1">
-                      {agent.employeeType || 'Permanent'}
+                    <Badge
+                      variant="outline"
+                      className="font-normal bg-purple-50 text-purple-700 border-purple-200 px-3 py-1"
+                    >
+                      {agent.employeeType || "Permanent"}
                     </Badge>
                   </div>
                   <div className="space-y-2">
@@ -1026,7 +1231,7 @@ export default function AgentDetailPage({ params }) {
                       Shift Assigned
                     </label>
                     <p className="text-base font-medium text-slate-900">
-                      {agent.shift?.name || 'N/A'}
+                      {agent.shift?.name || "N/A"}
                     </p>
                   </div>
                   <div className="space-y-2">
@@ -1034,7 +1239,8 @@ export default function AgentDetailPage({ params }) {
                       Shift Timing
                     </label>
                     <p className="text-base font-medium text-slate-900">
-                      {agent.shift?.startTime || 'N/A'} - {agent.shift?.endTime || 'N/A'}
+                      {agent.shift?.startTime || "N/A"} -{" "}
+                      {agent.shift?.endTime || "N/A"}
                     </p>
                   </div>
                 </div>
@@ -1056,7 +1262,7 @@ export default function AgentDetailPage({ params }) {
                       Commission Type
                     </label>
                     <p className="text-base font-semibold text-slate-900">
-                      {agent.commissionType || 'Basic + Commission'}
+                      {agent.commissionType || "Basic + Commission"}
                     </p>
                   </div>
                   <div className="space-y-2">
@@ -1080,7 +1286,10 @@ export default function AgentDetailPage({ params }) {
                       Total Base
                     </label>
                     <p className="text-lg font-bold text-slate-900">
-                      {formatCurrency((agent.basicSalary || 0) + (agent.attendanceAllowance || 0))}
+                      {formatCurrency(
+                        (agent.basicSalary || 0) +
+                          (agent.attendanceAllowance || 0),
+                      )}
                     </p>
                   </div>
                 </div>
@@ -1097,26 +1306,37 @@ export default function AgentDetailPage({ params }) {
                         In-Target Incentive
                       </label>
                       <p className="text-xl font-bold text-blue-600">
-                        {(agent.perSaleIncentiveInTarget || 0)}
-                        {agent.inTargetIncentiveType === 'percentage' ? '%' : ' PKR'}
+                        {agent.perSaleIncentiveInTarget || 0}
+                        {agent.inTargetIncentiveType === "percentage"
+                          ? "%"
+                          : " PKR"}
                       </p>
-                      <p className="text-xs text-slate-500 mt-1">Per Sale (Before Target)</p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Per Sale (Before Target)
+                      </p>
                     </div>
                     <div className="bg-white rounded-lg p-4 border border-slate-200">
                       <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-2">
                         After-Target Incentive
                       </label>
                       <p className="text-xl font-bold text-purple-600">
-                        {(agent.perSaleIncentiveAfterTarget || 0)}
-                        {agent.afterTargetIncentiveType === 'percentage' ? '%' : ' PKR'}
+                        {agent.perSaleIncentiveAfterTarget || 0}
+                        {agent.afterTargetIncentiveType === "percentage"
+                          ? "%"
+                          : " PKR"}
                       </p>
-                      <p className="text-xs text-slate-500 mt-1">Per Sale (After Target)</p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Per Sale (After Target)
+                      </p>
                     </div>
                   </div>
-                  {(agent.minSaleAmountForIncentive > 0) && (
+                  {agent.minSaleAmountForIncentive > 0 && (
                     <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
                       <p className="text-xs font-medium text-amber-800">
-                        <span className="font-semibold">Minimum Sale for Incentive:</span> {formatCurrency(agent.minSaleAmountForIncentive)}
+                        <span className="font-semibold">
+                          Minimum Sale for Incentive:
+                        </span>{" "}
+                        {formatCurrency(agent.minSaleAmountForIncentive)}
                       </p>
                     </div>
                   )}
@@ -1138,11 +1358,15 @@ export default function AgentDetailPage({ params }) {
                     <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
                       Target Type
                     </label>
-                    <Badge variant="outline" className="text-base font-semibold capitalize px-3 py-1.5">
-                      {agent.monthlyTargetType || 'none'}
+                    <Badge
+                      variant="outline"
+                      className="text-base font-semibold capitalize px-3 py-1.5"
+                    >
+                      {agent.monthlyTargetType || "none"}
                     </Badge>
                   </div>
-                  {(agent.monthlyTargetType === 'digit' || agent.monthlyTargetType === 'both') && (
+                  {(agent.monthlyTargetType === "digit" ||
+                    agent.monthlyTargetType === "both") && (
                     <div className="space-y-2">
                       <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
                         Digit Target
@@ -1152,13 +1376,15 @@ export default function AgentDetailPage({ params }) {
                       </p>
                     </div>
                   )}
-                  {(agent.monthlyTargetType === 'amount' || agent.monthlyTargetType === 'both') && (
+                  {(agent.monthlyTargetType === "amount" ||
+                    agent.monthlyTargetType === "both") && (
                     <div className="space-y-2">
                       <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
                         Amount Target
                       </label>
                       <p className="text-2xl font-bold text-orange-600">
-                        {agent.targetCurrency || 'PKR'} {(agent.monthlyAmountTarget || 0).toLocaleString()}
+                        {agent.targetCurrency || "PKR"}{" "}
+                        {(agent.monthlyAmountTarget || 0).toLocaleString()}
                       </p>
                     </div>
                   )}
@@ -1175,14 +1401,16 @@ export default function AgentDetailPage({ params }) {
                 </h2>
               </div>
               <div className="p-6">
-                {agent.bankDetails && (agent.bankDetails.bankName || agent.bankDetails.accountNumber) ? (
+                {agent.bankDetails &&
+                (agent.bankDetails.bankName ||
+                  agent.bankDetails.accountNumber) ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div className="space-y-2">
                       <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
                         Bank Name
                       </label>
                       <p className="text-base font-semibold text-slate-900">
-                        {agent.bankDetails.bankName || '-'}
+                        {agent.bankDetails.bankName || "-"}
                       </p>
                     </div>
                     <div className="space-y-2">
@@ -1190,7 +1418,7 @@ export default function AgentDetailPage({ params }) {
                         Account Title
                       </label>
                       <p className="text-base font-medium text-slate-900">
-                        {agent.bankDetails.accountTitle || '-'}
+                        {agent.bankDetails.accountTitle || "-"}
                       </p>
                     </div>
                     <div className="space-y-2">
@@ -1198,7 +1426,7 @@ export default function AgentDetailPage({ params }) {
                         Branch Code
                       </label>
                       <p className="text-base font-medium text-slate-900">
-                        {agent.bankDetails.branchCode || '-'}
+                        {agent.bankDetails.branchCode || "-"}
                       </p>
                     </div>
                     <div className="md:col-span-2 space-y-2">
@@ -1206,7 +1434,7 @@ export default function AgentDetailPage({ params }) {
                         Account Number
                       </label>
                       <p className="font-mono text-base font-medium text-slate-900 bg-slate-50 p-3 rounded-lg border border-slate-200">
-                        {agent.bankDetails.accountNumber || '-'}
+                        {agent.bankDetails.accountNumber || "-"}
                       </p>
                     </div>
                     <div className="space-y-2">
@@ -1214,14 +1442,16 @@ export default function AgentDetailPage({ params }) {
                         IBAN
                       </label>
                       <p className="font-mono text-sm font-medium text-slate-900 bg-slate-50 p-3 rounded-lg border border-slate-200 break-all">
-                        {agent.bankDetails.iban || '-'}
+                        {agent.bankDetails.iban || "-"}
                       </p>
                     </div>
                   </div>
                 ) : (
                   <div className="text-center py-12">
                     <Building className="h-12 w-12 mx-auto text-slate-300 mb-3" />
-                    <p className="text-slate-500 italic">No bank account details added yet.</p>
+                    <p className="text-slate-500 italic">
+                      No bank account details added yet.
+                    </p>
                   </div>
                 )}
               </div>
@@ -1237,7 +1467,11 @@ export default function AgentDetailPage({ params }) {
 
                 <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
                   <DialogTrigger asChild>
-                    <Button size="sm" variant="secondary" className="gap-2 text-slate-800 hover:bg-slate-100 font-medium border-0">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="gap-2 text-slate-800 hover:bg-slate-100 font-medium border-0"
+                    >
                       <Upload className="h-4 w-4" /> Upload Document
                     </Button>
                   </DialogTrigger>
@@ -1251,17 +1485,25 @@ export default function AgentDetailPage({ params }) {
                     <div className="space-y-4 py-4">
                       <div className="space-y-2">
                         <Label htmlFor="doc-type">Document Type</Label>
-                        <Select value={selectedDocType} onValueChange={setSelectedDocType}>
+                        <Select
+                          value={selectedDocType}
+                          onValueChange={setSelectedDocType}
+                        >
                           <SelectTrigger>
                             <SelectValue placeholder="Select document type" />
                           </SelectTrigger>
                           <SelectContent>
-                            {DOCUMENT_TYPES.filter(type => {
-                              const isMultiple = MULTIPLE_ALLOWED_TYPES.includes(type);
-                              const isPresent = agent?.documents?.some(d => d.type === type);
+                            {DOCUMENT_TYPES.filter((type) => {
+                              const isMultiple =
+                                MULTIPLE_ALLOWED_TYPES.includes(type);
+                              const isPresent = agent?.documents?.some(
+                                (d) => d.type === type,
+                              );
                               return isMultiple || !isPresent;
-                            }).map(type => (
-                              <SelectItem key={type} value={type}>{type}</SelectItem>
+                            }).map((type) => (
+                              <SelectItem key={type} value={type}>
+                                {type}
+                              </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -1272,16 +1514,33 @@ export default function AgentDetailPage({ params }) {
                           id="file"
                           type="file"
                           accept=".pdf,.jpg,.jpeg,.png"
-                          onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                          onChange={(e) =>
+                            setSelectedFile(e.target.files?.[0] || null)
+                          }
                           className="cursor-pointer file:cursor-pointer"
                         />
                       </div>
                     </div>
                     <DialogFooter>
-                      <Button variant="outline" onClick={() => setIsUploadOpen(false)} disabled={uploading}>Cancel</Button>
-                      <Button onClick={handleUploadDocument} disabled={uploading || !selectedFile || !selectedDocType}>
-                        {uploading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
-                        {uploading ? 'Uploading...' : 'Upload'}
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsUploadOpen(false)}
+                        disabled={uploading}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={handleUploadDocument}
+                        disabled={
+                          uploading || !selectedFile || !selectedDocType
+                        }
+                      >
+                        {uploading ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : (
+                          <Upload className="h-4 w-4 mr-2" />
+                        )}
+                        {uploading ? "Uploading..." : "Upload"}
                       </Button>
                     </DialogFooter>
                   </DialogContent>
@@ -1344,7 +1603,8 @@ export default function AgentDetailPage({ params }) {
                               {doc.name}
                             </p>
                             <p className="text-xs text-slate-500">
-                              Type: <span className="font-semibold">{doc.type}</span>
+                              Type:{" "}
+                              <span className="font-semibold">{doc.type}</span>
                             </p>
                           </div>
                         </div>
@@ -1352,7 +1612,11 @@ export default function AgentDetailPage({ params }) {
                         {/* Actions */}
                         <div className="flex justify-end gap-2 mt-3">
                           <Button size="sm" variant="outline" asChild>
-                            <a href={doc.url} target="_blank" rel="noopener noreferrer">
+                            <a
+                              href={doc.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
                               View
                             </a>
                           </Button>
@@ -1369,7 +1633,9 @@ export default function AgentDetailPage({ params }) {
                 ) : (
                   <div className="text-center py-12">
                     <FileText className="h-12 w-12 mx-auto text-slate-300 mb-3" />
-                    <p className="text-slate-500 italic">No documents uploaded yet.</p>
+                    <p className="text-slate-500 italic">
+                      No documents uploaded yet.
+                    </p>
                   </div>
                 )}
               </div>
@@ -1381,24 +1647,36 @@ export default function AgentDetailPage({ params }) {
             <Card className="shadow-sm">
               <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b bg-slate-50/50 pb-4">
                 <div className="space-y-1">
-                  <CardTitle className="text-xl text-slate-800">Attendance History</CardTitle>
-                  <CardDescription>View monthly attendance records and punctuality stats.</CardDescription>
+                  <CardTitle className="text-xl text-slate-800">
+                    Attendance History
+                  </CardTitle>
+                  <CardDescription>
+                    View monthly attendance records and punctuality stats.
+                  </CardDescription>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 print:hidden">
                   <Button
                     variant="outline"
                     size="sm"
                     className="h-10 bg-white"
-                    onClick={() => downloadCSV(
-                      attendance.map(a => ({
-                        Date: a.date ? format(new Date(a.date), 'dd MMM yyyy') : '-',
-                        Status: a.status?.toUpperCase() || 'ABSENT',
-                        CheckIn: a.checkInTime ? format(new Date(a.checkInTime), 'hh:mm a') : '-',
-                        CheckOut: a.checkOutTime ? format(new Date(a.checkOutTime), 'hh:mm a') : '-',
-                        LateMinutes: a.lateMinutes || 0
-                      })),
-                      `Attendance_${agent.agentName}_${selectedMonth}_${selectedYear}`
-                    )}
+                    onClick={() =>
+                      downloadCSV(
+                        attendance.map((a) => ({
+                          Date: a.date
+                            ? format(new Date(a.date), "dd MMM yyyy")
+                            : "-",
+                          Status: a.status?.toUpperCase() || "ABSENT",
+                          CheckIn: a.checkInTime
+                            ? format(new Date(a.checkInTime), "hh:mm a")
+                            : "-",
+                          CheckOut: a.checkOutTime
+                            ? format(new Date(a.checkOutTime), "hh:mm a")
+                            : "-",
+                          LateMinutes: a.lateMinutes || 0,
+                        })),
+                        `Attendance_${agent.agentName}_${selectedMonth}_${selectedYear}`,
+                      )
+                    }
                     disabled={attendance.length === 0}
                   >
                     <Download className="h-4 w-4 mr-2" /> Export CSV
@@ -1414,13 +1692,18 @@ export default function AgentDetailPage({ params }) {
                         <TableHead>Status</TableHead>
                         <TableHead>Check In</TableHead>
                         <TableHead>Check Out</TableHead>
-                        <TableHead className="text-right">Late (Mins)</TableHead>
+                        <TableHead className="text-right">
+                          Late (Mins)
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {attendanceLoading ? (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center h-40 text-slate-500">
+                          <TableCell
+                            colSpan={5}
+                            className="text-center h-40 text-slate-500"
+                          >
                             <div className="flex flex-col items-center justify-center gap-2">
                               <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
                               Loading records...
@@ -1429,29 +1712,46 @@ export default function AgentDetailPage({ params }) {
                         </TableRow>
                       ) : attendance.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center h-40 text-slate-500">
+                          <TableCell
+                            colSpan={5}
+                            className="text-center h-40 text-slate-500"
+                          >
                             No attendance records found for this month.
                           </TableCell>
                         </TableRow>
                       ) : (
                         attendance.map((rec) => (
-                          <TableRow key={rec._id || rec.date} className="hover:bg-slate-50/50">
+                          <TableRow
+                            key={rec._id || rec.date}
+                            className="hover:bg-slate-50/50"
+                          >
                             <TableCell className="font-medium text-slate-700">
-                              {rec.date ? format(new Date(rec.date), 'EEE, dd MMM yyyy') : '-'}
+                              {rec.date
+                                ? format(new Date(rec.date), "EEE, dd MMM yyyy")
+                                : "-"}
                             </TableCell>
                             <TableCell>
-                              <Badge variant="secondary" className={getStatusBadge(rec.status)}>
-                                {rec.status?.replace('_', ' ').toUpperCase()}
+                              <Badge
+                                variant="secondary"
+                                className={getStatusBadge(rec.status)}
+                              >
+                                {rec.status?.replace("_", " ").toUpperCase()}
                               </Badge>
                             </TableCell>
                             <TableCell className="text-slate-600">
-                              {rec.checkInTime ? format(new Date(rec.checkInTime), 'hh:mm a') : '-'}
+                              {rec.checkInTime
+                                ? format(new Date(rec.checkInTime), "hh:mm a")
+                                : "-"}
                             </TableCell>
                             <TableCell className="text-slate-600">
-                              {rec.checkOutTime ? format(new Date(rec.checkOutTime), 'hh:mm a') : '-'}
+                              {rec.checkOutTime
+                                ? format(new Date(rec.checkOutTime), "hh:mm a")
+                                : "-"}
                             </TableCell>
-                            <TableCell className={`text-right font-medium ${rec.lateMinutes > 0 ? 'text-red-500' : 'text-slate-500'}`}>
-                              {rec.lateMinutes || '-'}
+                            <TableCell
+                              className={`text-right font-medium ${rec.lateMinutes > 0 ? "text-red-500" : "text-slate-500"}`}
+                            >
+                              {rec.lateMinutes || "-"}
                             </TableCell>
                           </TableRow>
                         ))
@@ -1469,14 +1769,18 @@ export default function AgentDetailPage({ params }) {
               <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b bg-slate-50/50 pb-4">
                 <div className="space-y-1">
                   <CardTitle className="text-xl text-slate-800">
-                    {agent?.monthlyTargetType === 'digit' ? 'Sales Bookings' :
-                      agent?.monthlyTargetType === 'amount' ? 'Revenue Projects' :
-                        'Sales & Revenue'}
+                    {agent?.monthlyTargetType === "digit"
+                      ? "Sales Bookings"
+                      : agent?.monthlyTargetType === "amount"
+                        ? "Revenue Projects"
+                        : "Sales & Revenue"}
                   </CardTitle>
                   <CardDescription>
-                    {agent?.monthlyTargetType === 'digit' ? 'Track monthly booking performance and customer details.' :
-                      agent?.monthlyTargetType === 'amount' ? 'Track monthly project revenue and completion status.' :
-                        'Track monthly sales performance across bookings and projects.'}
+                    {agent?.monthlyTargetType === "digit"
+                      ? "Track monthly booking performance and customer details."
+                      : agent?.monthlyTargetType === "amount"
+                        ? "Track monthly project revenue and completion status."
+                        : "Track monthly sales performance across bookings and projects."}
                   </CardDescription>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 print:hidden">
@@ -1486,50 +1790,69 @@ export default function AgentDetailPage({ params }) {
                     className="h-10 bg-white"
                     onClick={() => {
                       let data = [];
-                      const targetCurrency = agent?.targetCurrency || 'PKR';
+                      const targetCurrency = agent?.targetCurrency || "PKR";
 
-                      if (agent?.monthlyTargetType === 'digit') {
-                        data = bookings.map(b => ({
+                      if (agent?.monthlyTargetType === "digit") {
+                        data = bookings.map((b) => ({
                           ID: b.bookingId || b._id,
-                          Customer: (b.formData?.firstName || '') + ' ' + (b.formData?.lastName || ''),
-                          Service: b.bookingType || b.serviceType || 'N/A',
+                          Customer:
+                            (b.formData?.firstName || "") +
+                            " " +
+                            (b.formData?.lastName || ""),
+                          Service: b.bookingType || b.serviceType || "N/A",
                           Amount: `$${(b.discountedPrice || b.totalPrice || 0).toLocaleString()}`,
-                          Status: b.status?.toUpperCase() || 'PENDING',
-                          Date: b.createdAt ? format(new Date(b.createdAt), 'dd MMM yyyy') : 'N/A'
+                          Status: b.status?.toUpperCase() || "PENDING",
+                          Date: b.createdAt
+                            ? format(new Date(b.createdAt), "dd MMM yyyy")
+                            : "N/A",
                         }));
-                      } else if (agent?.monthlyTargetType === 'amount') {
-                        data = projects.map(p => ({
+                      } else if (agent?.monthlyTargetType === "amount") {
+                        data = projects.map((p) => ({
                           ID: p.slug || p._id,
                           Title: p.title,
-                          Client: p.client?.name || 'N/A',
+                          Client: p.client?.name || "N/A",
                           Amount: `${targetCurrency} ${(p.price || 0).toLocaleString()}`,
-                          Status: p.status?.toUpperCase() || 'PENDING',
-                          Date: p.createdAt ? format(new Date(p.createdAt), 'dd MMM yyyy') : 'N/A'
+                          Status: p.status?.toUpperCase() || "PENDING",
+                          Date: p.createdAt
+                            ? format(new Date(p.createdAt), "dd MMM yyyy")
+                            : "N/A",
                         }));
-                      } else if (agent?.monthlyTargetType === 'both') {
-                        data = salesData.map(item => {
-                          const isBooking = item.type === 'booking';
-                          const amount = isBooking ? (item.discountedPrice || item.totalPrice || 0) : (item.price || 0);
-                          const currency = isBooking ? '$' : targetCurrency;
+                      } else if (agent?.monthlyTargetType === "both") {
+                        data = salesData.map((item) => {
+                          const isBooking = item.type === "booking";
+                          const amount = isBooking
+                            ? item.discountedPrice || item.totalPrice || 0
+                            : item.price || 0;
+                          const currency = isBooking ? "$" : targetCurrency;
 
                           return {
                             Type: item.type.toUpperCase(),
-                            ID: isBooking ? (item.bookingId || item._id) : (item.slug || item._id),
-                            Title: isBooking ?
-                              `${item.formData?.firstName || ''} ${item.formData?.lastName || ''}` :
-                              item.title,
+                            ID: isBooking
+                              ? item.bookingId || item._id
+                              : item.slug || item._id,
+                            Title: isBooking
+                              ? `${item.formData?.firstName || ""} ${item.formData?.lastName || ""}`
+                              : item.title,
                             Amount: `${currency} ${amount.toLocaleString()}`,
-                            Status: item.status?.toUpperCase() || 'PENDING',
-                            Date: item.date ? format(new Date(item.date), 'dd MMM yyyy') : 'N/A'
+                            Status: item.status?.toUpperCase() || "PENDING",
+                            Date: item.date
+                              ? format(new Date(item.date), "dd MMM yyyy")
+                              : "N/A",
                           };
                         });
                       }
-                      downloadCSV(data, `Sales_${agent.agentName}_${selectedMonth}_${selectedYear}`);
+                      downloadCSV(
+                        data,
+                        `Sales_${agent.agentName}_${selectedMonth}_${selectedYear}`,
+                      );
                     }}
                     disabled={
-                      (agent?.monthlyTargetType === 'digit' && bookings.length === 0) ||
-                      (agent?.monthlyTargetType === 'amount' && projects.length === 0) ||
-                      (agent?.monthlyTargetType === 'both' && salesData.length === 0)
+                      (agent?.monthlyTargetType === "digit" &&
+                        bookings.length === 0) ||
+                      (agent?.monthlyTargetType === "amount" &&
+                        projects.length === 0) ||
+                      (agent?.monthlyTargetType === "both" &&
+                        salesData.length === 0)
                     }
                   >
                     <Download className="h-4 w-4 mr-2" /> Export CSV
@@ -1542,17 +1865,21 @@ export default function AgentDetailPage({ params }) {
                     <TableHeader className="bg-slate-50">
                       <TableRow>
                         <TableHead className="w-[120px]">
-                          {agent?.monthlyTargetType === 'digit' ? 'Booking ID' :
-                            agent?.monthlyTargetType === 'amount' ? 'Project ID' : 'ID'}
+                          {agent?.monthlyTargetType === "digit"
+                            ? "Booking ID"
+                            : agent?.monthlyTargetType === "amount"
+                              ? "Project ID"
+                              : "ID"}
                         </TableHead>
                         <TableHead>Date</TableHead>
                         <TableHead>
-                          {agent?.monthlyTargetType === 'digit' ? 'Customer' :
-                            agent?.monthlyTargetType === 'amount' ? 'Project Title' : 'Title'}
+                          {agent?.monthlyTargetType === "digit"
+                            ? "Customer"
+                            : agent?.monthlyTargetType === "amount"
+                              ? "Project Title"
+                              : "Title"}
                         </TableHead>
-                        <TableHead className="text-right">
-                          Amount
-                        </TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
                         <TableHead className="text-right">Status</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -1560,27 +1887,30 @@ export default function AgentDetailPage({ params }) {
                       {(() => {
                         let isLoading = false;
                         let data = [];
-                        let noDataText = '';
-                        const targetCurrency = agent?.targetCurrency || 'PKR';
+                        let noDataText = "";
+                        const targetCurrency = agent?.targetCurrency || "PKR";
 
-                        if (agent?.monthlyTargetType === 'digit') {
+                        if (agent?.monthlyTargetType === "digit") {
                           isLoading = bookingsLoading;
                           data = bookings;
-                          noDataText = 'No bookings found for this month.';
-                        } else if (agent?.monthlyTargetType === 'amount') {
+                          noDataText = "No bookings found for this month.";
+                        } else if (agent?.monthlyTargetType === "amount") {
                           isLoading = projectsLoading;
                           data = projects;
-                          noDataText = 'No projects found for this month.';
-                        } else if (agent?.monthlyTargetType === 'both') {
+                          noDataText = "No projects found for this month.";
+                        } else if (agent?.monthlyTargetType === "both") {
                           isLoading = salesLoading;
                           data = salesData;
-                          noDataText = 'No sales data found for this month.';
+                          noDataText = "No sales data found for this month.";
                         }
 
                         if (isLoading) {
                           return (
                             <TableRow>
-                              <TableCell colSpan={5} className="text-center h-40 text-slate-500">
+                              <TableCell
+                                colSpan={5}
+                                className="text-center h-40 text-slate-500"
+                              >
                                 <div className="flex flex-col items-center justify-center gap-2">
                                   <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
                                   Loading sales data...
@@ -1593,7 +1923,10 @@ export default function AgentDetailPage({ params }) {
                         if (data.length === 0) {
                           return (
                             <TableRow>
-                              <TableCell colSpan={5} className="text-center h-40 text-slate-500">
+                              <TableCell
+                                colSpan={5}
+                                className="text-center h-40 text-slate-500"
+                              >
                                 {noDataText}
                               </TableCell>
                             </TableRow>
@@ -1604,17 +1937,18 @@ export default function AgentDetailPage({ params }) {
                           let currency = targetCurrency;
                           let amount = 0;
                           let dateValue;
-                          let titleOrCustomer = '';
-                          let idDisplay = '';
+                          let titleOrCustomer = "";
+                          let idDisplay = "";
 
-                          if (agent?.monthlyTargetType === 'digit') {
+                          if (agent?.monthlyTargetType === "digit") {
                             // Booking
-                            currency = '$';
-                            amount = item.discountedPrice || item.totalPrice || 0;
+                            currency = "$";
+                            amount =
+                              item.discountedPrice || item.totalPrice || 0;
                             dateValue = item.createdAt || item.date;
                             titleOrCustomer = `${item.formData?.firstName} ${item.formData?.lastName}`;
                             idDisplay = item.bookingId || item._id?.slice(-6);
-                          } else if (agent?.monthlyTargetType === 'amount') {
+                          } else if (agent?.monthlyTargetType === "amount") {
                             // Project
                             currency = targetCurrency;
                             amount = item.price || 0;
@@ -1623,21 +1957,32 @@ export default function AgentDetailPage({ params }) {
                             idDisplay = item.slug || item._id?.slice(-6);
                           } else {
                             // Both
-                            const isBooking = item.type === 'booking';
-                            currency = isBooking ? '$' : targetCurrency;
-                            amount = isBooking ? (item.discountedPrice || item.totalPrice || 0) : (item.price || 0);
+                            const isBooking = item.type === "booking";
+                            currency = isBooking ? "$" : targetCurrency;
+                            amount = isBooking
+                              ? item.discountedPrice || item.totalPrice || 0
+                              : item.price || 0;
                             dateValue = item.date || item.createdAt;
-                            titleOrCustomer = isBooking ? `${item.formData?.firstName || ''} ${item.formData?.lastName || ''}` : item.title;
-                            idDisplay = isBooking ? (item.bookingId || item._id?.slice(-6)) : (item.slug || item._id?.slice(-6));
+                            titleOrCustomer = isBooking
+                              ? `${item.formData?.firstName || ""} ${item.formData?.lastName || ""}`
+                              : item.title;
+                            idDisplay = isBooking
+                              ? item.bookingId || item._id?.slice(-6)
+                              : item.slug || item._id?.slice(-6);
                           }
 
                           return (
-                            <TableRow key={item._id} className="hover:bg-slate-50/50">
+                            <TableRow
+                              key={item._id}
+                              className="hover:bg-slate-50/50"
+                            >
                               <TableCell className="font-mono text-xs font-medium text-slate-600 bg-slate-50/50 w-min whitespace-nowrap">
                                 {idDisplay}
                               </TableCell>
                               <TableCell className="text-slate-600">
-                                {dateValue ? format(new Date(dateValue), 'dd MMM yyyy') : 'N/A'}
+                                {dateValue
+                                  ? format(new Date(dateValue), "dd MMM yyyy")
+                                  : "N/A"}
                               </TableCell>
                               <TableCell className="font-medium text-slate-800">
                                 {titleOrCustomer}
@@ -1646,18 +1991,25 @@ export default function AgentDetailPage({ params }) {
                                 {currency} {amount.toLocaleString()}
                               </TableCell>
                               <TableCell className="text-right">
-                                <Badge variant="secondary" className={
-                                  item.status === 'completed' || item.status === 'confirmed' || item.status === 'Completed' || item.status === 'Delivered' ?
-                                    'bg-green-100 text-green-700 border-green-200' :
-                                    item.status === 'cancelled' || item.status === 'Cancelled' ?
-                                      'bg-red-50 text-red-700 border-red-200' :
-                                      'bg-blue-50 text-blue-700 border-blue-200'
-                                }>
-                                  {item.status?.toUpperCase() || 'PENDING'}
+                                <Badge
+                                  variant="secondary"
+                                  className={
+                                    item.status === "completed" ||
+                                    item.status === "confirmed" ||
+                                    item.status === "Completed" ||
+                                    item.status === "Delivered"
+                                      ? "bg-green-100 text-green-700 border-green-200"
+                                      : item.status === "cancelled" ||
+                                          item.status === "Cancelled"
+                                        ? "bg-red-50 text-red-700 border-red-200"
+                                        : "bg-blue-50 text-blue-700 border-blue-200"
+                                  }
+                                >
+                                  {item.status?.toUpperCase() || "PENDING"}
                                 </Badge>
                               </TableCell>
                             </TableRow>
-                          )
+                          );
                         });
                       })()}
                     </TableBody>
@@ -1672,25 +2024,31 @@ export default function AgentDetailPage({ params }) {
             <Card className="shadow-sm">
               <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b bg-slate-50/50 pb-4">
                 <div className="space-y-1">
-                  <CardTitle className="text-xl text-slate-800">Payroll History</CardTitle>
-                  <CardDescription>View past salary slips and payment status.</CardDescription>
+                  <CardTitle className="text-xl text-slate-800">
+                    Payroll History
+                  </CardTitle>
+                  <CardDescription>
+                    View past salary slips and payment status.
+                  </CardDescription>
                 </div>
                 <div className="print:hidden">
                   <Button
                     variant="outline"
                     size="sm"
                     className="h-10 bg-white"
-                    onClick={() => downloadCSV(
-                      payrolls.map(p => ({
-                        Month: `${p.month || 'N/A'}/${p.year || 'N/A'}`,
-                        Basic: p.financials?.basicSalary || 0,
-                        TotalEarnings: p.financials?.grossSalary || 0,
-                        TotalDeductions: p.financials?.totalDeduction || 0,
-                        NetPay: p.financials?.netSalary || 0,
-                        Status: p.status?.toUpperCase() || 'PENDING'
-                      })),
-                      `Payroll_${agent.agentName}`
-                    )}
+                    onClick={() =>
+                      downloadCSV(
+                        payrolls.map((p) => ({
+                          Month: `${p.month || "N/A"}/${p.year || "N/A"}`,
+                          Basic: p.financials?.basicSalary || 0,
+                          TotalEarnings: p.financials?.grossSalary || 0,
+                          TotalDeductions: p.financials?.totalDeduction || 0,
+                          NetPay: p.financials?.netSalary || 0,
+                          Status: p.status?.toUpperCase() || "PENDING",
+                        })),
+                        `Payroll_${agent.agentName}`,
+                      )
+                    }
                     disabled={payrolls.length === 0}
                   >
                     <Download className="h-4 w-4 mr-2" /> Export CSV
@@ -1705,7 +2063,9 @@ export default function AgentDetailPage({ params }) {
                         <TableHead>Period</TableHead>
                         <TableHead>Basic Salary</TableHead>
                         <TableHead>Gross Earning</TableHead>
-                        <TableHead className="text-red-600">Deductions</TableHead>
+                        <TableHead className="text-red-600">
+                          Deductions
+                        </TableHead>
                         <TableHead>Net Pay</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right">Action</TableHead>
@@ -1714,7 +2074,10 @@ export default function AgentDetailPage({ params }) {
                     <TableBody>
                       {payrollsLoading ? (
                         <TableRow>
-                          <TableCell colSpan={7} className="text-center h-40 text-slate-500">
+                          <TableCell
+                            colSpan={7}
+                            className="text-center h-40 text-slate-500"
+                          >
                             <div className="flex flex-col items-center justify-center gap-2">
                               <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
                               Loading payroll history...
@@ -1723,15 +2086,27 @@ export default function AgentDetailPage({ params }) {
                         </TableRow>
                       ) : payrolls.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={7} className="text-center h-40 text-slate-500">
+                          <TableCell
+                            colSpan={7}
+                            className="text-center h-40 text-slate-500"
+                          >
                             No payroll records found.
                           </TableCell>
                         </TableRow>
                       ) : (
                         payrolls.map((payroll) => (
-                          <TableRow key={payroll._id} className="hover:bg-slate-50/50">
+                          <TableRow
+                            key={payroll._id}
+                            className="hover:bg-slate-50/50"
+                          >
                             <TableCell className="font-medium text-slate-700">
-                              {payroll.month ? new Date(2000, payroll.month - 1).toLocaleString('default', { month: 'long' }) : 'N/A'} {payroll.year}
+                              {payroll.month
+                                ? new Date(
+                                    2000,
+                                    payroll.month - 1,
+                                  ).toLocaleString("default", { month: "long" })
+                                : "N/A"}{" "}
+                              {payroll.year}
                             </TableCell>
                             <TableCell className="text-slate-600">
                               {formatCurrency(payroll.financials?.basicSalary)}
@@ -1740,20 +2115,24 @@ export default function AgentDetailPage({ params }) {
                               {formatCurrency(payroll.financials?.grossSalary)}
                             </TableCell>
                             <TableCell className="text-red-500 font-medium">
-                              {formatCurrency(payroll.financials?.totalDeduction)}
+                              {formatCurrency(
+                                payroll.financials?.totalDeduction,
+                              )}
                             </TableCell>
                             <TableCell className="font-bold text-slate-900 bg-slate-50/50">
                               {formatCurrency(payroll.financials?.netSalary)}
                             </TableCell>
                             <TableCell>
-                              <Badge className={
-                                payroll.status === 'paid' ?
-                                  'bg-green-100 text-green-800 border-green-200' :
-                                  payroll.status === 'pending' ?
-                                    'bg-yellow-100 text-yellow-800 border-yellow-200' :
-                                    'bg-gray-100 text-gray-800 border-gray-200'
-                              }>
-                                {payroll.status?.toUpperCase() || 'PENDING'}
+                              <Badge
+                                className={
+                                  payroll.status === "paid"
+                                    ? "bg-green-100 text-green-800 border-green-200"
+                                    : payroll.status === "pending"
+                                      ? "bg-yellow-100 text-yellow-800 border-yellow-200"
+                                      : "bg-gray-100 text-gray-800 border-gray-200"
+                                }
+                              >
+                                {payroll.status?.toUpperCase() || "PENDING"}
                               </Badge>
                             </TableCell>
                             <TableCell className="text-right">
@@ -1761,7 +2140,11 @@ export default function AgentDetailPage({ params }) {
                                 size="sm"
                                 variant="ghost"
                                 className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
-                                onClick={() => router.push(`/dashboard/payroll/payslip/${payroll._id}`)}
+                                onClick={() =>
+                                  router.push(
+                                    `/dashboard/payroll/payslip/${payroll._id}`,
+                                  )
+                                }
                               >
                                 View Slip
                               </Button>
@@ -2014,7 +2397,13 @@ export default function AgentDetailPage({ params }) {
             <div className="flex-1">
               <div className="flex items-center gap-3">
                 <div className="w-20 h-20 relative">
-                  <Image src="/images/GCLogo.png" alt="Globium Clouds" fill className="object-contain" priority />
+                  <Image
+                    src="/images/GCLogo.png"
+                    alt="Globium Clouds"
+                    fill
+                    className="object-contain"
+                    priority
+                  />
                 </div>
 
                 <div>
@@ -2034,16 +2423,17 @@ export default function AgentDetailPage({ params }) {
                     </span>
 
                     <span className="text-[9pt] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-300">
-                      {agent.designation || 'Sales Agent'}
+                      {agent.designation || "Sales Agent"}
                     </span>
 
                     <span
-                      className={`text-[8pt] font-bold px-2 py-0.5 rounded-full ${agent.isActive
-                        ? 'bg-green-100 text-green-800 border border-green-300'
-                        : 'bg-red-100 text-red-800 border border-red-300'
-                        }`}
+                      className={`text-[8pt] font-bold px-2 py-0.5 rounded-full ${
+                        agent.isActive
+                          ? "bg-green-100 text-green-800 border border-green-300"
+                          : "bg-red-100 text-red-800 border border-red-300"
+                      }`}
                     >
-                      {agent.isActive ? 'ACTIVE' : 'INACTIVE'}
+                      {agent.isActive ? "ACTIVE" : "INACTIVE"}
                     </span>
                   </div>
 
@@ -2060,13 +2450,16 @@ export default function AgentDetailPage({ params }) {
                 Monthly Report
               </div>
               <div className="text-lg font-bold text-slate-900">
-                {new Date(selectedYear, selectedMonth - 1).toLocaleString('default', {
-                  month: 'long',
-                  year: 'numeric',
-                })}
+                {new Date(selectedYear, selectedMonth - 1).toLocaleString(
+                  "default",
+                  {
+                    month: "long",
+                    year: "numeric",
+                  },
+                )}
               </div>
               <div className="text-[9pt] text-slate-500 font-medium">
-                Generated: {format(new Date(), 'dd MMM yyyy')}
+                Generated: {format(new Date(), "dd MMM yyyy")}
               </div>
             </div>
           </div>
@@ -2074,20 +2467,26 @@ export default function AgentDetailPage({ params }) {
           {/* PERFORMANCE METRICS - 4 COLUMN */}
           <div className="grid grid-cols-4 gap-3 mb-4">
             <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-300 rounded-lg p-3 text-center">
-              <div className="text-[9pt] font-bold text-blue-800 uppercase mb-1">Total Revenue</div>
-              <div className="text-base font-bold text-blue-900">{formatCurrency(stats.totalSales)}</div>
+              <div className="text-[9pt] font-bold text-blue-800 uppercase mb-1">
+                Total Revenue
+              </div>
+              <div className="text-base font-bold text-blue-900">
+                {formatCurrency(stats.totalSales)}
+              </div>
               <div className="text-[9pt] text-blue-700">Current Month</div>
             </div>
 
             <div className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-300 rounded-lg p-3 text-center">
-              <div className="text-[9pt] font-bold text-purple-800 uppercase mb-1">Target Progress</div>
+              <div className="text-[9pt] font-bold text-purple-800 uppercase mb-1">
+                Target Progress
+              </div>
               <div className="text-base font-bold text-purple-900">
                 {(() => {
                   let progress = 0;
-                  if (agent?.monthlyTargetType === 'digit') {
+                  if (agent?.monthlyTargetType === "digit") {
                     const target = agent.monthlyDigitTarget || 1;
                     progress = (stats.achievedDigits / target) * 100;
-                  } else if (agent?.monthlyTargetType === 'amount') {
+                  } else if (agent?.monthlyTargetType === "amount") {
                     const target = agent.monthlyAmountTarget || 1;
                     progress = (stats.totalSales / target) * 100;
                   }
@@ -2095,33 +2494,41 @@ export default function AgentDetailPage({ params }) {
                 })()}
               </div>
               <div className="text-[9pt] text-purple-700">
-                {agent.monthlyTargetType === 'digit' ? `${stats.achievedDigits} Sales` : 'Revenue Target'}
+                {agent.monthlyTargetType === "digit"
+                  ? `${stats.achievedDigits} Sales`
+                  : "Revenue Target"}
               </div>
             </div>
 
             <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-300 rounded-lg p-3 text-center">
-              <div className="text-[9pt] font-bold text-green-800 uppercase mb-1">Attendance</div>
-              <div className="text-base font-bold text-green-900">{stats.attendanceRate}%</div>
+              <div className="text-[9pt] font-bold text-green-800 uppercase mb-1">
+                Attendance
+              </div>
+              <div className="text-base font-bold text-green-900">
+                {stats.attendanceRate}%
+              </div>
               <div className="text-[9pt] text-green-700">
-                {attendance.length > 0 ?
-                  `${attendance.filter(a => a.status === 'present' || a.status === 'late').length}/${attendance.length} Days`
-                  : 'No Data'
-                }
+                {attendance.length > 0
+                  ? `${attendance.filter((a) => a.status === "present" || a.status === "late").length}/${attendance.length} Days`
+                  : "No Data"}
               </div>
             </div>
 
             <div className="bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-300 rounded-lg p-3 text-center">
-              <div className="text-[9pt] font-bold text-amber-800 uppercase mb-1">Base Salary</div>
-              <div className="text-base font-bold text-amber-900">{formatCurrency(agent.basicSalary || 0)}</div>
+              <div className="text-[9pt] font-bold text-amber-800 uppercase mb-1">
+                Base Salary
+              </div>
+              <div className="text-base font-bold text-amber-900">
+                {formatCurrency(agent.basicSalary || 0)}
+              </div>
               <div className="text-[9pt] text-amber-700">Monthly Fixed</div>
             </div>
           </div>
 
           {/* MONTHLY PAYROLL SECTION */}
           {(() => {
-            const currentMonthPayroll = payrolls.find(p =>
-              p.month === selectedMonth &&
-              p.year === selectedYear
+            const currentMonthPayroll = payrolls.find(
+              (p) => p.month === selectedMonth && p.year === selectedYear,
             );
 
             if (currentMonthPayroll) {
@@ -2130,55 +2537,84 @@ export default function AgentDetailPage({ params }) {
                   <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2">
                     <h3 className="text-sm font-bold text-white flex items-center gap-2">
                       <CreditCard className="h-4 w-4" />
-                      Monthly Payroll - {new Date(selectedYear, selectedMonth - 1).toLocaleString('default', { month: 'long', year: 'numeric' })}
+                      Monthly Payroll -{" "}
+                      {new Date(selectedYear, selectedMonth - 1).toLocaleString(
+                        "default",
+                        { month: "long", year: "numeric" },
+                      )}
                     </h3>
                   </div>
                   <div className="p-4">
                     <div className="grid grid-cols-4 gap-4 mb-4">
                       <div className="bg-white border border-blue-200 rounded-lg p-3 text-center">
-                        <div className="text-[9pt] font-bold text-blue-800 mb-1">Basic Salary</div>
+                        <div className="text-[9pt] font-bold text-blue-800 mb-1">
+                          Basic Salary
+                        </div>
                         <div className="text-base font-bold text-blue-900">
-                          {formatCurrency(currentMonthPayroll.financials?.basicSalary || 0)}
+                          {formatCurrency(
+                            currentMonthPayroll.financials?.basicSalary || 0,
+                          )}
                         </div>
                       </div>
 
                       <div className="bg-white border border-green-200 rounded-lg p-3 text-center">
-                        <div className="text-[9pt] font-bold text-green-800 mb-1">Allowances</div>
+                        <div className="text-[9pt] font-bold text-green-800 mb-1">
+                          Allowances
+                        </div>
                         <div className="text-base font-bold text-green-900">
-                          {formatCurrency((currentMonthPayroll.financials?.totalAllowance || 0) + (currentMonthPayroll.financials?.incentive || 0))}
+                          {formatCurrency(
+                            (currentMonthPayroll.financials?.totalAllowance ||
+                              0) +
+                              (currentMonthPayroll.financials?.incentive || 0),
+                          )}
                         </div>
                       </div>
 
                       <div className="bg-white border border-red-200 rounded-lg p-3 text-center">
-                        <div className="text-[9pt] font-bold text-red-800 mb-1">Deductions</div>
+                        <div className="text-[9pt] font-bold text-red-800 mb-1">
+                          Deductions
+                        </div>
                         <div className="text-base font-bold text-red-900">
-                          {formatCurrency(currentMonthPayroll.financials?.totalDeduction || 0)}
+                          {formatCurrency(
+                            currentMonthPayroll.financials?.totalDeduction || 0,
+                          )}
                         </div>
                       </div>
 
                       <div className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-400 rounded-lg p-3 text-center shadow-sm">
-                        <div className="text-[9pt] font-bold text-blue-800 mb-1">Net Salary</div>
+                        <div className="text-[9pt] font-bold text-blue-800 mb-1">
+                          Net Salary
+                        </div>
                         <div className="text-lg font-bold text-blue-900">
-                          {formatCurrency(currentMonthPayroll.financials?.netSalary || 0)}
+                          {formatCurrency(
+                            currentMonthPayroll.financials?.netSalary || 0,
+                          )}
                         </div>
                       </div>
                     </div>
 
                     <div className="flex justify-between items-center bg-white border border-slate-200 rounded-lg p-3">
                       <div>
-                        <div className="text-[9pt] font-semibold text-slate-700 mb-1">Payment Status</div>
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${currentMonthPayroll.status === 'paid'
-                          ? 'bg-green-100 text-green-800 border border-green-300'
-                          : currentMonthPayroll.status === 'pending'
-                            ? 'bg-yellow-100 text-yellow-800 border border-yellow-300'
-                            : 'bg-red-100 text-red-800 border border-red-300'
-                          }`}>
+                        <div className="text-[9pt] font-semibold text-slate-700 mb-1">
+                          Payment Status
+                        </div>
+                        <span
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${
+                            currentMonthPayroll.status === "paid"
+                              ? "bg-green-100 text-green-800 border border-green-300"
+                              : currentMonthPayroll.status === "pending"
+                                ? "bg-yellow-100 text-yellow-800 border border-yellow-300"
+                                : "bg-red-100 text-red-800 border border-red-300"
+                          }`}
+                        >
                           {currentMonthPayroll.status?.toUpperCase()}
                         </span>
                       </div>
 
                       <div className="text-right">
-                        <div className="text-[9pt] font-semibold text-slate-700 mb-1">Payroll ID</div>
+                        <div className="text-[9pt] font-semibold text-slate-700 mb-1">
+                          Payroll ID
+                        </div>
                         <div className="text-xs font-mono text-slate-600">
                           PAY-{currentMonthPayroll._id?.slice(-8).toUpperCase()}
                         </div>
@@ -2202,41 +2638,59 @@ export default function AgentDetailPage({ params }) {
             <div className="p-4">
               <div className="grid grid-cols-4 gap-3">
                 <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-300 rounded-lg p-3 text-center">
-                  <div className="text-[9pt] font-bold text-green-800 mb-1">Present</div>
+                  <div className="text-[9pt] font-bold text-green-800 mb-1">
+                    Present
+                  </div>
                   <div className="text-xl font-bold text-green-900">
-                    {attendance.filter(a => a.status === 'present' || a.status === 'late').length}
+                    {
+                      attendance.filter(
+                        (a) => a.status === "present" || a.status === "late",
+                      ).length
+                    }
                   </div>
                   <div className="text-[9pt] text-green-700">Days</div>
                 </div>
 
                 <div className="bg-gradient-to-br from-red-50 to-red-100 border border-red-300 rounded-lg p-3 text-center">
-                  <div className="text-[9pt] font-bold text-red-800 mb-1">Absent</div>
+                  <div className="text-[9pt] font-bold text-red-800 mb-1">
+                    Absent
+                  </div>
                   <div className="text-xl font-bold text-red-900">
-                    {attendance.filter(a => a.status === 'absent').length}
+                    {attendance.filter((a) => a.status === "absent").length}
                   </div>
                   <div className="text-[9pt] text-red-700">Days</div>
                 </div>
 
                 <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-300 rounded-lg p-3 text-center">
-                  <div className="text-[9pt] font-bold text-blue-800 mb-1">Leave</div>
+                  <div className="text-[9pt] font-bold text-blue-800 mb-1">
+                    Leave
+                  </div>
                   <div className="text-xl font-bold text-blue-900">
-                    {attendance.filter(a =>
-                      a.status === 'approved_leave' ||
-                      a.status === 'leave' ||
-                      a.status === 'pending_leave'
-                    ).length}
+                    {
+                      attendance.filter(
+                        (a) =>
+                          a.status === "approved_leave" ||
+                          a.status === "leave" ||
+                          a.status === "pending_leave",
+                      ).length
+                    }
                   </div>
                   <div className="text-[9pt] text-blue-700">Days</div>
                 </div>
 
                 <div className="bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-300 rounded-lg p-3 text-center">
-                  <div className="text-[9pt] font-bold text-slate-800 mb-1">Other</div>
+                  <div className="text-[9pt] font-bold text-slate-800 mb-1">
+                    Other
+                  </div>
                   <div className="text-xl font-bold text-slate-900">
-                    {attendance.filter(a =>
-                      a.status === 'half_day' ||
-                      a.status === 'holiday' ||
-                      a.status === 'weekly_off'
-                    ).length}
+                    {
+                      attendance.filter(
+                        (a) =>
+                          a.status === "half_day" ||
+                          a.status === "holiday" ||
+                          a.status === "weekly_off",
+                      ).length
+                    }
                   </div>
                   <div className="text-[9pt] text-slate-700">Days</div>
                 </div>
@@ -2255,33 +2709,47 @@ export default function AgentDetailPage({ params }) {
             <div className="p-4">
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-300 rounded-lg p-3">
-                  <div className="text-[9pt] font-bold text-blue-800 mb-1">Total Transactions</div>
+                  <div className="text-[9pt] font-bold text-blue-800 mb-1">
+                    Total Transactions
+                  </div>
                   <div className="text-base font-bold text-blue-900">
                     {(() => {
-                      if (agent?.monthlyTargetType === 'digit') return bookings.length;
-                      if (agent?.monthlyTargetType === 'amount') return projects.length;
+                      if (agent?.monthlyTargetType === "digit")
+                        return bookings.length;
+                      if (agent?.monthlyTargetType === "amount")
+                        return projects.length;
                       return salesData.length;
                     })()}
                   </div>
                 </div>
 
                 <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-300 rounded-lg p-3">
-                  <div className="text-[9pt] font-bold text-green-800 mb-1">Completed Sales</div>
+                  <div className="text-[9pt] font-bold text-green-800 mb-1">
+                    Completed Sales
+                  </div>
                   <div className="text-base font-bold text-green-900">
                     {(() => {
-                      if (agent?.monthlyTargetType === 'digit') {
-                        return bookings.filter(b =>
-                          b.status === 'completed' || b.status === 'confirmed' || b.status === 'Completed'
+                      if (agent?.monthlyTargetType === "digit") {
+                        return bookings.filter(
+                          (b) =>
+                            b.status === "completed" ||
+                            b.status === "confirmed" ||
+                            b.status === "Completed",
                         ).length;
                       }
-                      if (agent?.monthlyTargetType === 'amount') {
-                        return projects.filter(p =>
-                          p.status === 'Completed' || p.status === 'Delivered'
+                      if (agent?.monthlyTargetType === "amount") {
+                        return projects.filter(
+                          (p) =>
+                            p.status === "Completed" ||
+                            p.status === "Delivered",
                         ).length;
                       }
-                      return salesData.filter(s =>
-                        s.status === 'completed' || s.status === 'confirmed' ||
-                        s.status === 'Completed' || s.status === 'Delivered'
+                      return salesData.filter(
+                        (s) =>
+                          s.status === "completed" ||
+                          s.status === "confirmed" ||
+                          s.status === "Completed" ||
+                          s.status === "Delivered",
                       ).length;
                     })()}
                   </div>
@@ -2294,13 +2762,18 @@ export default function AgentDetailPage({ params }) {
           <div className="border-t border-slate-300 pt-3">
             <div className="flex justify-between items-center text-[8pt] text-slate-600">
               <div>
-                <div className="text-[9pt] font-bold text-slate-800 mb-1">HR Department</div>
+                <div className="text-[9pt] font-bold text-slate-800 mb-1">
+                  HR Department
+                </div>
                 <div>Contact: hr@globiumclouds.com | Phone: (021) 123-4567</div>
               </div>
               <div className="text-right">
-                <div className="text-[9pt] font-bold text-slate-800 mb-1">Document Reference</div>
+                <div className="text-[9pt] font-bold text-slate-800 mb-1">
+                  Document Reference
+                </div>
                 <div className="font-mono text-[8pt] bg-slate-100 px-2 py-1 rounded border">
-                  {agent.agentId}-{selectedMonth.toString().padStart(2, '0')}{selectedYear}-{format(new Date(), 'ddMMyy')}
+                  {agent.agentId}-{selectedMonth.toString().padStart(2, "0")}
+                  {selectedYear}-{format(new Date(), "ddMMyy")}
                 </div>
                 <div className="mt-1 text-[7pt] italic">
                   Computer generated document • Valid without signature

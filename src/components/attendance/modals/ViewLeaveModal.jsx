@@ -13,25 +13,33 @@ export default function ViewLeaveModal({
   viewingLeave,
   canApproveLeave,
   onApprove,
-  onReject
+  onReject,
 }) {
   if (!viewingLeave) return null;
-  
+
   const getStatusColor = (status) => {
-    switch(status) {
-      case 'approved': return 'bg-green-100 text-green-800 border-green-200';
-      case 'rejected': return 'bg-red-100 text-red-800 border-red-200';
-      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    switch (status) {
+      case "approved":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "rejected":
+        return "bg-red-100 text-red-800 border-red-200";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
   const getLeaveTypeIcon = (type) => {
-    switch(type) {
-      case 'sick': return '🤒';
-      case 'casual': return '🏖️';
-      case 'emergency': return '🚨';
-      default: return '📋';
+    switch (type) {
+      case "sick":
+        return "🤒";
+      case "casual":
+        return "🏖️";
+      case "emergency":
+        return "🚨";
+      default:
+        return "📋";
     }
   };
 
@@ -62,27 +70,29 @@ export default function ViewLeaveModal({
             <div>
               <p className="text-sm text-gray-600 mb-1">Name</p>
               <p className="font-medium text-gray-900">
-                {viewingLeave.user 
-                  ? `${viewingLeave.user.firstName} ${viewingLeave.user.lastName}` 
-                  : viewingLeave.agent?.agentName || '—'}
+                {viewingLeave.user
+                  ? `${viewingLeave.user.firstName} ${viewingLeave.user.lastName}`
+                  : viewingLeave.agent?.agentName || "—"}
               </p>
             </div>
             <div>
               <p className="text-sm text-gray-600 mb-1">Email</p>
               <p className="font-medium text-gray-900">
-                {viewingLeave.user?.email || viewingLeave.agent?.email || '—'}
+                {viewingLeave.user?.email || viewingLeave.agent?.email || "—"}
               </p>
             </div>
             <div>
               <p className="text-sm text-gray-600 mb-1">Type</p>
               <p className="font-medium text-gray-900">
-                {viewingLeave.user ? 'User' : 'Agent'}
+                {viewingLeave.user ? "User" : "Employee"}
               </p>
             </div>
             {viewingLeave.agent?.agentId && (
               <div>
-                <p className="text-sm text-gray-600 mb-1">Agent ID</p>
-                <p className="font-medium text-gray-900">{viewingLeave.agent.agentId}</p>
+                <p className="text-sm text-gray-600 mb-1">Employee ID</p>
+                <p className="font-medium text-gray-900">
+                  {viewingLeave.agent.agentId}
+                </p>
               </div>
             )}
           </div>
@@ -104,44 +114,63 @@ export default function ViewLeaveModal({
             </div>
             <div>
               <p className="text-sm text-gray-600 mb-1">Duration</p>
-              <p className="font-medium text-gray-900">{calculateLeaveDays()} day(s)</p>
+              <p className="font-medium text-gray-900">
+                {calculateLeaveDays()} day(s)
+              </p>
             </div>
             <div>
               <p className="text-sm text-gray-600 mb-1">Start Date</p>
-              <p className="font-medium text-gray-900">{formatToPakistaniDate(viewingLeave.startDate)}</p>
+              <p className="font-medium text-gray-900">
+                {formatToPakistaniDate(viewingLeave.startDate)}
+              </p>
             </div>
             <div>
               <p className="text-sm text-gray-600 mb-1">End Date</p>
-              <p className="font-medium text-gray-900">{formatToPakistaniDate(viewingLeave.endDate)}</p>
+              <p className="font-medium text-gray-900">
+                {formatToPakistaniDate(viewingLeave.endDate)}
+              </p>
             </div>
             <div className="md:col-span-2">
               <p className="text-sm text-gray-600 mb-1">Reason</p>
               <p className="font-medium text-gray-900 bg-white p-3 rounded border">
-                {viewingLeave.reason || '—'}
+                {viewingLeave.reason || "—"}
               </p>
             </div>
           </div>
         </div>
 
         {/* Status Information */}
-        <div className={`p-4 rounded-lg border ${
-          viewingLeave.status === 'approved' ? 'bg-green-50 border-green-200' :
-          viewingLeave.status === 'rejected' ? 'bg-red-50 border-red-200' :
-          'bg-yellow-50 border-yellow-200'
-        }`}>
+        <div
+          className={`p-4 rounded-lg border ${
+            viewingLeave.status === "approved"
+              ? "bg-green-50 border-green-200"
+              : viewingLeave.status === "rejected"
+                ? "bg-red-50 border-red-200"
+                : "bg-yellow-50 border-yellow-200"
+          }`}
+        >
           <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
-            {viewingLeave.status === 'approved' ? (
-              <><CheckCircle className="h-5 w-5 text-green-600" /> Status: Approved</>
-            ) : viewingLeave.status === 'rejected' ? (
-              <><XCircle className="h-5 w-5 text-red-600" /> Status: Rejected</>
+            {viewingLeave.status === "approved" ? (
+              <>
+                <CheckCircle className="h-5 w-5 text-green-600" /> Status:
+                Approved
+              </>
+            ) : viewingLeave.status === "rejected" ? (
+              <>
+                <XCircle className="h-5 w-5 text-red-600" /> Status: Rejected
+              </>
             ) : (
-              <><Clock className="h-5 w-5 text-yellow-600" /> Status: Pending</>
+              <>
+                <Clock className="h-5 w-5 text-yellow-600" /> Status: Pending
+              </>
             )}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-gray-600 mb-1">Current Status</p>
-              <Badge className={`${getStatusColor(viewingLeave.status)} text-sm px-3 py-1`}>
+              <Badge
+                className={`${getStatusColor(viewingLeave.status)} text-sm px-3 py-1`}
+              >
                 {viewingLeave.status.toUpperCase()}
               </Badge>
             </div>
@@ -156,7 +185,8 @@ export default function ViewLeaveModal({
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Reviewed By</p>
                   <p className="font-medium text-gray-900">
-                    {viewingLeave.reviewedBy?.firstName} {viewingLeave.reviewedBy?.lastName}
+                    {viewingLeave.reviewedBy?.firstName}{" "}
+                    {viewingLeave.reviewedBy?.lastName}
                   </p>
                 </div>
                 <div>
@@ -180,14 +210,10 @@ export default function ViewLeaveModal({
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
-          <Button
-            variant="outline"
-            onClick={onClose}
-            className="flex-1 w-full"
-          >
+          <Button variant="outline" onClick={onClose} className="flex-1 w-full">
             Close
           </Button>
-          {canApproveLeave && viewingLeave.status === 'pending' && (
+          {canApproveLeave && viewingLeave.status === "pending" && (
             <>
               <Button
                 onClick={onApprove}

@@ -1,234 +1,84 @@
-// import React, { useContext } from 'react';
-// import { ThemeContext } from '../context/ThemeContext';
-
-// const TodayDetailsCard = ({ todayAttendance }) => {
-//   const { theme } = useContext(ThemeContext);
-
-//   const formatTime = (dateString) => {
-//     if (!dateString) return '--:--';
-//     return new Date(dateString).toLocaleTimeString('en-US', {
-//       hour: '2-digit',
-//       minute: '2-digit',
-//     });
-//   };
-
-//   return (
-//     <div style={{
-//       padding: 20,
-//       borderRadius: 12,
-//       marginBottom: 16,
-//       border: `1px solid ${theme.colors.border}`,
-//       backgroundColor: theme.colors.card,
-//       color: theme.colors.text,
-//     }}>
-//       <h3 style={{
-//         fontSize: 18,
-//         fontWeight: 'bold',
-//         marginBottom: 16,
-//         textAlign: 'center',
-//         color: theme.colors.text,
-//       }}>
-//         📊 Today's Details
-//       </h3>
-
-//       <div style={{
-//         display: 'flex',
-//         justifyContent: 'space-between',
-//         alignItems: 'center',
-//         padding: '8px 0',
-//       }}>
-//         <span style={{ fontSize: 14, flex: 1, color: theme.colors.textSecondary }}>
-//           Check-in Time:
-//         </span>
-//         <span style={{ fontSize: 14, flex: 1, fontWeight: '600', textAlign: 'right', color: theme.colors.text }}>
-//           {formatTime(todayAttendance.checkInTime)}
-//         </span>
-//       </div>
-
-//       {todayAttendance.checkOutTime && (
-//         <div style={{
-//           display: 'flex',
-//           justifyContent: 'space-between',
-//           alignItems: 'center',
-//           padding: '8px 0',
-//         }}>
-//           <span style={{ fontSize: 14, flex: 1, color: theme.colors.textSecondary }}>
-//             Check-out Time:
-//           </span>
-//           <span style={{ fontSize: 14, flex: 1, fontWeight: '600', textAlign: 'right', color: theme.colors.text }}>
-//             {formatTime(todayAttendance.checkOutTime)}
-//           </span>
-//         </div>
-//       )}
-
-//       {todayAttendance.isLate && (
-//         <div style={{
-//           display: 'flex',
-//           justifyContent: 'space-between',
-//           alignItems: 'center',
-//           padding: '8px 0',
-//         }}>
-//           <span style={{ fontSize: 14, flex: 1, color: theme.colors.textSecondary }}>
-//             Late Duration:
-//           </span>
-//           <span style={{ fontSize: 14, fontWeight: 'bold', color: '#FF6B6B', flex: 1, textAlign: 'right' }}>
-//             {todayAttendance.lateMinutes} minutes
-//           </span>
-//         </div>
-//       )}
-
-//       {todayAttendance.isOvertime && (
-//         <div style={{
-//           display: 'flex',
-//           justifyContent: 'space-between',
-//           alignItems: 'center',
-//           padding: '8px 0',
-//         }}>
-//           <span style={{ fontSize: 14, flex: 1, color: theme.colors.textSecondary }}>
-//             Overtime:
-//           </span>
-//           <span style={{ fontSize: 14, fontWeight: 'bold', color: '#4CAF50', flex: 1, textAlign: 'right' }}>
-//             {todayAttendance.overtimeMinutes} minutes
-//           </span>
-//         </div>
-//       )}
-
-//       <div style={{
-//         display: 'flex',
-//         justifyContent: 'space-between',
-//         alignItems: 'center',
-//         padding: '8px 0',
-//       }}>
-//         <span style={{ fontSize: 14, flex: 1, color: theme.colors.textSecondary }}>
-//           Status:
-//         </span>
-//         <span style={{
-//           fontSize: 14,
-//           fontWeight: 'bold',
-//           color: todayAttendance.status === 'present' ? '#4CAF50' : '#FF9800',
-//           flex: 1,
-//           textAlign: 'right',
-//         }}>
-//           {(todayAttendance.status || 'PRESENT').toUpperCase()}
-//         </span>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default TodayDetailsCard;
-
-
-
-
-
-import React, { useContext } from 'react';
-import { ThemeContext } from '../context/ThemeContext';
-import { formatTime } from '@/utils/timezone';
+// src/components/TodayDetailsCard.jsx
+import React from "react";
+import { formatTime } from "@/utils/timezone";
 
 const TodayDetailsCard = ({ todayAttendance }) => {
-  const { theme } = useContext(ThemeContext);
+  if (!todayAttendance) return null;
+
+  const statusMap = {
+    present: { label: "Present", cls: "bg-green-100  text-green-700" },
+    late: { label: "Late", cls: "bg-amber-100  text-amber-700" },
+    absent: { label: "Absent", cls: "bg-red-100    text-red-700" },
+    half_day: { label: "Half Day", cls: "bg-blue-100   text-blue-700" },
+    overtime: { label: "Overtime", cls: "bg-indigo-100 text-indigo-700" },
+  };
+
+  const { label: statusLabel, cls: statusCls } = statusMap[
+    todayAttendance.status
+  ] || {
+    label: (todayAttendance.status || "Present").toUpperCase(),
+    cls: "bg-gray-100 text-gray-700",
+  };
+
+  const rows = [
+    {
+      label: "Check-in Time",
+      value: formatTime(todayAttendance.checkInTime),
+      mono: true,
+    },
+    ...(todayAttendance.checkOutTime
+      ? [
+          {
+            label: "Check-out Time",
+            value: formatTime(todayAttendance.checkOutTime),
+            mono: true,
+          },
+        ]
+      : []),
+    ...(todayAttendance.isLate
+      ? [
+          {
+            label: "Late By",
+            value: `${todayAttendance.lateMinutes} minutes`,
+            valueClass: "text-orange-600 font-semibold",
+          },
+        ]
+      : []),
+    ...(todayAttendance.isOvertime
+      ? [
+          {
+            label: "Overtime",
+            value: `${todayAttendance.overtimeMinutes} minutes`,
+            valueClass: "text-blue-600 font-semibold",
+          },
+        ]
+      : []),
+  ];
 
   return (
-    <div style={{
-      padding: 20,
-      borderRadius: 12,
-      marginBottom: 16,
-      border: `1px solid ${theme.colors.border}`,
-      backgroundColor: theme.colors.card,
-      color: theme.colors.text,
-    }}>
-      <h3 style={{
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 16,
-        textAlign: 'center',
-        color: theme.colors.text,
-      }}>
-        📊 Today's Details
-      </h3>
-
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '8px 0',
-      }}>
-        <span style={{ fontSize: 14, flex: 1, color: theme.colors.textSecondary }}>
-          Check-in Time:
-        </span>
-        <span style={{ fontSize: 14, flex: 1, fontWeight: '600', textAlign: 'right', color: theme.colors.text }}>
-          {formatTime(todayAttendance.checkInTime)}
+    <div className="space-y-2">
+      {/* Status badge */}
+      <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+        <span className="text-sm text-gray-500 font-medium">Status</span>
+        <span
+          className={`text-xs font-bold px-3 py-1 rounded-full ${statusCls}`}
+        >
+          {statusLabel}
         </span>
       </div>
-
-      {todayAttendance.checkOutTime && (
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '8px 0',
-        }}>
-          <span style={{ fontSize: 14, flex: 1, color: theme.colors.textSecondary }}>
-            Check-out Time:
-          </span>
-          <span style={{ fontSize: 14, flex: 1, fontWeight: '600', textAlign: 'right', color: theme.colors.text }}>
-            {formatTime(todayAttendance.checkOutTime)}
+      {rows.map(({ label, value, mono, valueClass }) => (
+        <div
+          key={label}
+          className="flex items-center justify-between py-1 border-b border-gray-50 last:border-0"
+        >
+          <span className="text-sm text-gray-500 font-medium">{label}</span>
+          <span
+            className={`text-sm font-semibold text-gray-800 ${mono ? "font-mono" : ""} ${valueClass || ""}`}
+          >
+            {value}
           </span>
         </div>
-      )}
-
-      {todayAttendance.isLate && (
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '8px 0',
-        }}>
-          <span style={{ fontSize: 14, flex: 1, color: theme.colors.textSecondary }}>
-            Late Duration:
-          </span>
-          <span style={{ fontSize: 14, fontWeight: 'bold', color: '#FF6B6B', flex: 1, textAlign: 'right' }}>
-            {todayAttendance.lateMinutes} minutes
-          </span>
-        </div>
-      )}
-
-      {todayAttendance.isOvertime && (
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '8px 0',
-        }}>
-          <span style={{ fontSize: 14, flex: 1, color: theme.colors.textSecondary }}>
-            Overtime:
-          </span>
-          <span style={{ fontSize: 14, fontWeight: 'bold', color: '#4CAF50', flex: 1, textAlign: 'right' }}>
-            {todayAttendance.overtimeMinutes} minutes
-          </span>
-        </div>
-      )}
-
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '8px 0',
-      }}>
-        <span style={{ fontSize: 14, flex: 1, color: theme.colors.textSecondary }}>
-          Status:
-        </span>
-        <span style={{
-          fontSize: 14,
-          fontWeight: 'bold',
-          color: todayAttendance.status === 'present' ? '#4CAF50' : '#FF9800',
-          flex: 1,
-          textAlign: 'right',
-        }}>
-          {(todayAttendance.status || 'PRESENT').toUpperCase()}
-        </span>
-      </div>
+      ))}
     </div>
   );
 };

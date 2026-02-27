@@ -63,7 +63,7 @@ export default function AgentLoginPage() {
 
         <div className="text-center">
           <h2 className="mt-4 text-2xl font-bold text-gray-900">
-            Sign in to your agent account
+            Sign in to your employee account
           </h2>
         </div>
 
@@ -91,7 +91,7 @@ export default function AgentLoginPage() {
               htmlFor="agentId"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Agent ID
+              Employee ID
             </label>
             <input
               id="agentId"
@@ -101,7 +101,7 @@ export default function AgentLoginPage() {
               value={agentId}
               onChange={(e) => setAgentId(e.target.value)}
               className="block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              placeholder="Enter your agent ID"
+              placeholder="Enter your employee ID"
             />
           </div>
 
