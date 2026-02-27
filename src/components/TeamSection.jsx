@@ -172,6 +172,7 @@ export default function TeamSection() {
   const [teamMembers, setTeamMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const sectionRef = useRef(null); // Define sectionRef
+  const [initialSlide, setInitialSlide] = useState(0);
 
   useEffect(() => {
     const fetchTeamMembers = async () => {
