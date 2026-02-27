@@ -3,8 +3,8 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Agent from "@/Models/Agent";
 import Payroll from "@/Models/Payroll";
-import Notification from "@/Models/Notification";
 import { calculatePayrollLogic, getAllAgentsSalesStatus } from "@/lib/payrollUtils";
+import { createAndSendNotification } from "@/lib/notificationHelper";
 
 /**
  * POST - Bulk Generate Payroll for All Active Agents
@@ -16,19 +16,19 @@ import { calculatePayrollLogic, getAllAgentsSalesStatus } from "@/lib/payrollUti
 export async function POST(request) {
   try {
     await connectDB();
-    
+
     const { month, year, skipZeroSales = true, manualOverrides = {} } = await request.json();
 
     if (!month || !year) {
-      return NextResponse.json({ 
-        success: false, 
-        message: "Month and Year are required" 
+      return NextResponse.json({
+        success: false,
+        message: "Month and Year are required"
       }, { status: 400 });
     }
 
     // Get all active agents with their sales status
     const agentsStatus = await getAllAgentsSalesStatus(month, year);
-    
+
     const results = {
       generated: [],
       failed: [],
@@ -39,13 +39,13 @@ export async function POST(request) {
     // Process each agent
     for (const agentStatus of agentsStatus) {
       const { agent, hasTarget, hasZeroSales, salesData, targetType } = agentStatus;
-      
+
       try {
         // Check if already exists
-        const existing = await Payroll.findOne({ 
-          agent: agent._id, 
-          month, 
-          year 
+        const existing = await Payroll.findOne({
+          agent: agent._id,
+          month,
+          year
         });
 
         if (existing) {
@@ -61,13 +61,13 @@ export async function POST(request) {
         if (hasZeroSales && skipZeroSales) {
           // First pass: Calculate preview and add to zeroSales list (don't generate yet)
           const previewResult = await calculatePayrollLogic(
-            agent._id, 
-            month, 
-            year, 
+            agent._id,
+            month,
+            year,
             {}, // No informed overrides
             0 // Zero sales
           );
-          
+
           results.zeroSales.push({
             agentId: agent._id,
             agentName: agent.agentName,
@@ -106,15 +106,15 @@ export async function POST(request) {
         // Second pass (skipZeroSales=false): Generate payroll for all agents
         // Get manual override if provided, otherwise use null (attendance-based salary only)
         // Important: Use explicit undefined check to preserve zero values
-        const manualSalesOverride = manualOverrides[agent._id.toString()] !== undefined 
-          ? manualOverrides[agent._id.toString()] 
+        const manualSalesOverride = manualOverrides[agent._id.toString()] !== undefined
+          ? manualOverrides[agent._id.toString()]
           : null;
 
         // Calculate payroll
         const result = await calculatePayrollLogic(
-          agent._id, 
-          month, 
-          year, 
+          agent._id,
+          month,
+          year,
           {}, // No informed overrides for bulk generation
           manualSalesOverride
         );
@@ -127,12 +127,12 @@ export async function POST(request) {
           basicSalary: result.basicSalary,
           attendanceAllowance: result.attendanceAllowance,
           perSaleIncentive: result.agent.perSaleIncentive || 0,
-          
+
           totalDaysInMonth: result.totalDaysInMonth,
           workingDays: result.workingDays,
           presentDays: result.presentDays,
           totalLates: result.totalLates,
-          
+
           uninformedLates: result.uninformedLates,
           informedLates: result.informedLates,
           uninformedAbsents: result.uninformedAbsents,
@@ -140,30 +140,30 @@ export async function POST(request) {
           convertedAbsents: result.convertedAbsents,
           absentDays: result.uninformedAbsents + result.informedAbsents,
           latePenaltyCount: result.latePenaltyCount,
-          
+
           // Sales stats
           targetType: result.targetType || 'none',
           salesCount: result.salesCount || 0,
           revenue: result.revenue || 0,
           completedBookingsCount: result.completedBookings?.length || 0,
           completedProjectsCount: result.completedProjects?.length || 0,
-          
+
           perDaySalary: result.perDaySalary,
           lateDeductionAmount: Math.round(result.lateDeductionAmount),
           absentDeductionAmount: Math.round(result.absentDeductionAmount),
-          
+
           earnedAllowance: result.earnedAllowance,
           earnedIncentive: result.earnedIncentive,
           grossSalary: result.grossSalary,
           totalDeduction: Math.round(result.totalDeduction),
           netSalary: Math.round(result.netSalary),
-          
+
           status: 'generated',
           notes: result.allowanceCutReason ? `Allowance Cut: ${result.allowanceCutReason}` : ""
         });
 
-        // Send notification to agent
-        await Notification.create({
+        // Send notification to agent (Database + FCM Push)
+        await createAndSendNotification({
           title: `Salary Generated for ${month}/${year}`,
           message: `Your salary for ${month}/${year} has been generated. Net Salary: PKR ${Math.round(result.netSalary).toLocaleString()}`,
           type: "info",
@@ -192,17 +192,17 @@ export async function POST(request) {
       }
     }
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       message: `Payroll generation completed. Generated: ${results.generated.length}, Failed: ${results.failed.length}, Zero Sales: ${results.zeroSales.length}, Already Generated: ${results.alreadyGenerated.length}`,
       data: results
     });
 
   } catch (error) {
     console.error("Bulk Generate Payroll Error:", error);
-    return NextResponse.json({ 
-      success: false, 
-      message: error.message 
+    return NextResponse.json({
+      success: false,
+      message: error.message
     }, { status: 500 });
   }
 }
